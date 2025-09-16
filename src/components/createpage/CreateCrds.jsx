@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FiEdit3, FiImage, FiFileText, FiCode, FiVideo, FiFeather } from "react-icons/fi";
 
 // Demo data for the "Start Creating" cards, with react-icons
@@ -68,6 +69,7 @@ const badgeStyle = (badgeColor) => ({
 });
 
 export const CreateCrds = () => {
+  const navigate = useNavigate();
   return (
     <div
       style={{
@@ -91,14 +93,32 @@ export const CreateCrds = () => {
         }}
       >
         {cards.map((card, i) => (
-          <Card key={i} card={card} />
+          <Card
+            key={i}
+            card={card}
+            onStart={() => {
+              if (card.title === "AI Design Generator") {
+                navigate("/ai-design");
+              } else if (card.title === "Image Creator") {
+                navigate("/image-creator");
+              } else if (card.title === "Content Writer") {
+                navigate("/content-writer");
+              } else if (card.title === "Code Generator") {
+                navigate("/code-generator");
+              } else if (card.title === "Video Producer") {
+                navigate("/video-producer");
+              } else if (card.title === "Brand Builder") {
+                navigate("/brand-builder");
+              }
+            }}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-const Card = ({ card }) => {
+const Card = ({ card, onStart }) => {
   return (
     <div
       style={{
@@ -198,6 +218,7 @@ const Card = ({ card }) => {
           letterSpacing: "0.01em",
           cursor: "pointer",
         }}
+        onClick={onStart}
       >
         Start Creating
       </button>
