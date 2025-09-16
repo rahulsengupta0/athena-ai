@@ -10,6 +10,7 @@ import CodeGenerator from './components/createpage/CardsPages/CodeGenerator';
 import VideoProducer from './components/createpage/CardsPages/VideoProducer';
 import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
 import { Project } from './pages/Project';
+import { Favourites } from './pages/Favorites';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/brand-builder" element={<BrandBuilder />} />
             
             <Route path="/projects" element={<Project/>} />
+            <Route path="/favorites" element={<Favourites/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
