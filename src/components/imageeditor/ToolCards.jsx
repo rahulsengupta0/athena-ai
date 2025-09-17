@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lower } from './Lower';
 import {
   MdAutoAwesome,
   MdStar,
@@ -8,14 +9,25 @@ import {
 } from 'react-icons/md';
 
 const styles = {
+  pageContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '100vh',
+  },
+  cardGridWrapper: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
   cardGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit,minmax(315px,1fr))',
     gap: 32,
     margin: '30px 0',
+    flexGrow: 1,
   },
   card: {
-    background: 'white',
+    backgroundColor: 'white',
     borderRadius: 18,
     boxShadow: '0 2px 24px rgba(217,210,237,0.11)',
     border: 'none',
@@ -113,42 +125,47 @@ export default function ToolCards() {
   const [hovered, setHovered] = useState(null);
 
   return (
-    <div style={styles.cardGrid}>
-      {toolCards.map((tool, i) => (
-        <div
-          key={tool.key}
-          style={{
-            ...styles.card,
-            ...(hovered === i ? styles.cardHover : {}),
-          }}
-          onMouseEnter={() => setHovered(i)}
-          onMouseLeave={() => setHovered(null)}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={styles.cardIcon}>{CARD_ICONS[tool.key]}</span>
-            <span
+    <div style={styles.pageContainer}>
+      <div style={styles.cardGridWrapper}>
+        <div style={styles.cardGrid}>
+          {toolCards.map((tool, i) => (
+            <div
+              key={tool.key}
               style={{
-                ...styles.cardBadge,
-                ...(tool.badge === 'Beta' ? styles.cardBadgeDark : {}),
+                ...styles.card,
+                ...(hovered === i ? styles.cardHover : {}),
               }}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
             >
-              {tool.badge}
-            </span>
-          </div>
-          <span style={styles.cardTitle}>{tool.title}</span>
-          <span style={styles.cardDesc}>{tool.desc}</span>
-          <button
-            style={{
-              ...styles.cardAction,
-              ...(hovered === i ? styles.cardActionHover : {}),
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#7442cc')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#906BFF')}
-          >
-            Try Now
-          </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={styles.cardIcon}>{CARD_ICONS[tool.key]}</span>
+                <span
+                  style={{
+                    ...styles.cardBadge,
+                    ...(tool.badge === 'Beta' ? styles.cardBadgeDark : {}),
+                  }}
+                >
+                  {tool.badge}
+                </span>
+              </div>
+              <span style={styles.cardTitle}>{tool.title}</span>
+              <span style={styles.cardDesc}>{tool.desc}</span>
+              <button
+                style={{
+                  ...styles.cardAction,
+                  ...(hovered === i ? styles.cardActionHover : {}),
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#7442cc')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#906BFF')}
+              >
+                Try Now
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+      <Lower />
     </div>
   );
 }
