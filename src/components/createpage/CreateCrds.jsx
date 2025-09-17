@@ -98,18 +98,19 @@ export const CreateCrds = () => {
             card={card}
             onStart={() => {
               if (card.title === "AI Design Generator") {
-                navigate("/ai-design");
+                navigate("/create/ai-design");
               } else if (card.title === "Image Creator") {
-                navigate("/image-creator");
+                navigate("/create/image-creator");
               } else if (card.title === "Content Writer") {
-                navigate("/content-writer");
+                navigate("/create/content-writer");
               } else if (card.title === "Code Generator") {
-                navigate("/code-generator");
+                navigate("/create/code-generator");
               } else if (card.title === "Video Producer") {
-                navigate("/video-producer");
+                navigate("/create/video-producer");
               } else if (card.title === "Brand Builder") {
-                navigate("/brand-builder");
+                navigate("/create/brand-builder");
               }
+              
             }}
           />
         ))}
