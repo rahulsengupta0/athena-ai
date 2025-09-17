@@ -14,6 +14,7 @@ import { Favourites } from './pages/Favorites';
 import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
 import { VideoMaker } from './pages/VideoMaker';
+import { Analatics } from './pages/Analatics';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="/ai-generator" element={<AiGenerator/>} />
             <Route path="/image-editor" element={<ImageEdit/>} />
             <Route path="/video-maker" element={<VideoMaker/>} />
+            <Route path="/analytics" element={<Analatics/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
