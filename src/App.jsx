@@ -13,6 +13,7 @@ import { Project } from './pages/Project';
 import { Favourites } from './pages/Favorites';
 import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
+import { VideoMaker } from './pages/VideoMaker';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/favorites" element={<Favourites/>} />
             <Route path="/ai-generator" element={<AiGenerator/>} />
             <Route path="/image-editor" element={<ImageEdit/>} />
+            <Route path="/video-maker" element={<VideoMaker/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
