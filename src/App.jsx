@@ -11,6 +11,8 @@ import VideoProducer from './components/createpage/CardsPages/VideoProducer';
 import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
 import { Project } from './pages/Project';
 import { Favourites } from './pages/Favorites';
+import { AiGenerator } from './pages/AiGenerator';
+import { ImageEdit } from './pages/ImageEdit';
 
 function App() {
   return (
@@ -21,15 +23,18 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<Create />} />
-            <Route path="/ai-design" element={<AIDesign />} />
-            <Route path="/image-creator" element={<ImageCreator />} />
-            <Route path="/content-writer" element={<ContentWriter />} />
-            <Route path="/code-generator" element={<CodeGenerator />} />
-            <Route path="/video-producer" element={<VideoProducer />} />
-            <Route path="/brand-builder" element={<BrandBuilder />} />
+<Route path="/create/ai-design" element={<AIDesign />} />
+<Route path="/create/image-creator" element={<ImageCreator />} />
+<Route path="/create/content-writer" element={<ContentWriter />} />
+<Route path="/create/code-generator" element={<CodeGenerator />} />
+<Route path="/create/video-producer" element={<VideoProducer />} />
+<Route path="/create/brand-builder" element={<BrandBuilder />} />
+
             
             <Route path="/projects" element={<Project/>} />
             <Route path="/favorites" element={<Favourites/>} />
+            <Route path="/ai-generator" element={<AiGenerator/>} />
+            <Route path="/image-editor" element={<ImageEdit/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
