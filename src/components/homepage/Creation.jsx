@@ -104,35 +104,58 @@ const ShareIcon = () => (
 );
 
 export const Creation = () => {
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [isTablet, setIsTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      setIsTablet(width > 768 && width <= 1024);
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div
       style={{
         minHeight: "100vh",
         background: "linear-gradient(120deg,#f8f0ff 0%, #f5f8ff 100%)",
-        padding: "40px 0",
+        padding: isMobile ? "16px 0" : "36px 0",
+        width: "100%",
+        overflowX: "hidden",
       }}
     >
       <div
         style={{
           maxWidth: 1200,
           margin: "0 auto",
-          padding: "0 28px",
+          padding: isMobile ? "0 14px" : isTablet ? "0 22px" : "0 24px",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         {/* Title and actions with icons */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-start" : "center",
             justifyContent: "space-between",
-            marginBottom: "18px",
+            marginBottom: isMobile ? "16px" : "16px",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "16px" : "0",
+            width: "100%",
           }}
         >
           <h1
             style={{
-              fontSize: "2.1rem",
+              fontSize: isMobile ? "1.8rem" : isTablet ? "2rem" : "2.1rem",
               fontWeight: 700,
               margin: 0,
+              lineHeight: 1.2,
             }}
           >
             Your Creations
@@ -140,8 +163,13 @@ export const Creation = () => {
           <div
             style={{
               display: "flex",
-              gap: 13,
-              fontSize: "1.08rem",
+              gap: isMobile ? "6px" : "12px",
+              fontSize: isMobile ? "0.95rem" : "1.08rem",
+              flexWrap: "wrap",
+              width: isMobile ? "100%" : "auto",
+              justifyContent: isMobile ? "flex-start" : "flex-end",
+              overflowX: isMobile ? "auto" : "visible",
+              WebkitOverflowScrolling: isMobile ? "touch" : undefined,
             }}
           >
             <button
@@ -153,7 +181,13 @@ export const Creation = () => {
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
+                padding: isMobile ? "8px 12px" : "4px 8px",
+                borderRadius: isMobile ? "8px" : "4px",
+                minHeight: isMobile ? "44px" : "auto",
+                transition: "background-color 0.2s",
               }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = "#f5f5f5"}
+              onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
               title="Export All"
             >
               <ExportIcon />
@@ -168,7 +202,13 @@ export const Creation = () => {
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
+                padding: isMobile ? "8px 12px" : "4px 8px",
+                borderRadius: isMobile ? "8px" : "4px",
+                minHeight: isMobile ? "44px" : "auto",
+                transition: "background-color 0.2s",
               }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = "#f5f5f5"}
+              onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
               title="Share"
             >
               <ShareIcon />
@@ -181,8 +221,13 @@ export const Creation = () => {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))",
-            gap: "28px",
+            gridTemplateColumns: isMobile 
+              ? "1fr" 
+              : isTablet 
+                ? "repeat(auto-fit, minmax(280px, 1fr))" 
+                : "repeat(auto-fit, minmax(270px, 1fr))",
+            gap: isMobile ? "14px" : isTablet ? "20px" : "24px",
+            width: "100%",
           }}
         >
           {creations.map((item) => (
@@ -190,39 +235,61 @@ export const Creation = () => {
               key={item.id}
               style={{
                 background: "#fff",
-                borderRadius: 24,
+                borderRadius: isMobile ? 16 : 22,
                 boxShadow: "0 2px 16px #d8ccfb1c",
-                padding: "26px 20px 20px 20px",
+                padding: isMobile ? "16px 14px 14px 14px" : "22px 18px 18px 18px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
                 border: "2px solid transparent",
-                minHeight: 260,
+                minHeight: isMobile ? 220 : 250,
                 position: "relative",
-                transition: "box-shadow 0.2s, border 0.2s",
+                transition: "box-shadow 0.2s, border 0.2s, transform 0.2s",
                 cursor: "pointer",
               }}
               className="creation-card"
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = "0 10px 20px #c5bdfa66";
-                e.currentTarget.style.border = "2px solid #b295ff";
+                if (!isMobile) {
+                  e.currentTarget.style.boxShadow = "0 10px 20px #c5bdfa66";
+                  e.currentTarget.style.border = "2px solid #b295ff";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 2px 16px #d8ccfb1c";
-                e.currentTarget.style.border = "2px solid transparent";
+                if (!isMobile) {
+                  e.currentTarget.style.boxShadow = "0 2px 16px #d8ccfb1c";
+                  e.currentTarget.style.border = "2px solid transparent";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }
+              }}
+              onTouchStart={(e) => {
+                if (isMobile) {
+                  e.currentTarget.style.boxShadow = "0 10px 20px #c5bdfa66";
+                  e.currentTarget.style.border = "2px solid #b295ff";
+                  e.currentTarget.style.transform = "scale(0.98)";
+                }
+              }}
+              onTouchEnd={(e) => {
+                if (isMobile) {
+                  setTimeout(() => {
+                    e.currentTarget.style.boxShadow = "0 2px 16px #d8ccfb1c";
+                    e.currentTarget.style.border = "2px solid transparent";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }, 150);
+                }
               }}
             >
               <div
                 style={{
-                  width: "64px",
-                  height: "64px",
+                  width: isMobile ? "52px" : "64px",
+                  height: isMobile ? "52px" : "64px",
                   background: "#f5f4fb",
-                  borderRadius: 18,
-                  marginBottom: 14,
+                  borderRadius: isMobile ? 14 : 18,
+                  marginBottom: isMobile ? 10 : 14,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "2.6rem",
+                  fontSize: isMobile ? "2rem" : "2.6rem",
                   userSelect: "none",
                 }}
               >
@@ -230,15 +297,18 @@ export const Creation = () => {
               </div>
               <div
                 style={{
-                  fontSize: "1.15rem",
+                  fontSize: isMobile ? "1rem" : "1.12rem",
                   fontWeight: 700,
                   color: "#30325a",
-                  marginBottom: 9,
+                  marginBottom: isMobile ? 6 : 8,
                   lineHeight: "1.3",
                   maxWidth: "90%",
                   textOverflow: "ellipsis",
                   overflow: "hidden",
-                  whiteSpace: "nowrap",
+                  whiteSpace: isMobile ? "normal" : "nowrap",
+                  display: isMobile ? "-webkit-box" : "block",
+                  WebkitLineClamp: isMobile ? 2 : "none",
+                  WebkitBoxOrient: isMobile ? "vertical" : "horizontal",
                 }}
                 title={item.title}
               >
@@ -247,11 +317,15 @@ export const Creation = () => {
               <div
                 style={{
                   color: "#9498a5",
-                  fontSize: "1.01rem",
-                  marginBottom: 20,
+                  fontSize: isMobile ? "0.93rem" : "1rem",
+                  marginBottom: isMobile ? 12 : 18,
                   maxWidth: "95%",
                   lineHeight: 1.3,
-                  minHeight: "35px",
+                  minHeight: isMobile ? "28px" : "34px",
+                  display: isMobile ? "-webkit-box" : "block",
+                  WebkitLineClamp: isMobile ? 2 : "none",
+                  WebkitBoxOrient: isMobile ? "vertical" : "horizontal",
+                  overflow: isMobile ? "hidden" : "visible",
                 }}
               >
                 {item.description}
@@ -259,9 +333,10 @@ export const Creation = () => {
               <div
                 style={{
                   display: "flex",
-                  gap: 10,
+                  gap: isMobile ? 6 : 10,
                   alignItems: "center",
                   marginTop: "auto",
+                  flexWrap: isMobile ? "wrap" : "nowrap",
                 }}
               >
                 <span
@@ -269,9 +344,9 @@ export const Creation = () => {
                     background: "#f7f7fb",
                     color: "#797b90",
                     fontWeight: 600,
-                    fontSize: "0.93rem",
-                    borderRadius: "12px",
-                    padding: "4px 16px",
+                    fontSize: isMobile ? "0.83rem" : "0.9rem",
+                    borderRadius: isMobile ? "10px" : "12px",
+                    padding: isMobile ? "3px 10px" : "4px 14px",
                     letterSpacing: ".02em",
                   }}
                 >
@@ -284,14 +359,27 @@ export const Creation = () => {
                       background: "none",
                       color: "#b1bdd3",
                       borderRadius: "50%",
-                      width: 32,
-                      height: 32,
-                      fontSize: "1.17rem",
+                      width: isMobile ? 36 : 32,
+                      height: isMobile ? 36 : 32,
+                      fontSize: isMobile ? "1.1rem" : "1.17rem",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       userSelect: "none",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMobile) {
+                        e.target.style.color = "#ff6b6b";
+                        e.target.style.transform = "scale(1.1)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile) {
+                        e.target.style.color = "#b1bdd3";
+                        e.target.style.transform = "scale(1)";
+                      }
                     }}
                     title="Favorite"
                   >
@@ -305,14 +393,27 @@ export const Creation = () => {
                       background: "none",
                       color: "#b1bdd3",
                       borderRadius: "50%",
-                      width: 32,
-                      height: 32,
-                      fontSize: "1.17rem",
+                      width: isMobile ? 36 : 32,
+                      height: isMobile ? 36 : 32,
+                      fontSize: isMobile ? "1.1rem" : "1.17rem",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       userSelect: "none",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMobile) {
+                        e.target.style.color = "#4ecdc4";
+                        e.target.style.transform = "scale(1.1)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile) {
+                        e.target.style.color = "#b1bdd3";
+                        e.target.style.transform = "scale(1)";
+                      }
                     }}
                     title="Download"
                   >
@@ -325,13 +426,25 @@ export const Creation = () => {
                       background: "linear-gradient(90deg,#b4a2fa,#8be6ef)",
                       color: "#fff",
                       fontWeight: 600,
-                      fontSize: "1rem",
-                      borderRadius: "9px",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      borderRadius: isMobile ? "8px" : "9px",
                       border: "none",
-                      padding: "4px 18px",
-                      marginLeft: 7,
+                      padding: isMobile ? "6px 14px" : "4px 18px",
+                      marginLeft: isMobile ? 4 : 7,
                       cursor: "pointer",
                       userSelect: "none",
+                      minHeight: isMobile ? "36px" : "auto",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMobile) {
+                        e.target.style.transform = "scale(1.05)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile) {
+                        e.target.style.transform = "scale(1)";
+                      }
                     }}
                     title="Open"
                   >
