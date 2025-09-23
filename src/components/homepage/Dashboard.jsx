@@ -1,53 +1,14 @@
 import React, { useState } from "react";
 
-// Button data structure to allow easy mapping and badge display
 const BUTTONS = [
-  {
-    key: "design",
-    label: "Design for me",
-    tag: "Popular",
-    tagColor: "#ef4444", // Red
-    icon: "🎨",
-  },
-  {
-    key: "create-image",
-    label: "Create an image",
-    tag: "New",
-    tagColor: "#22c55e", // Green
-    icon: "🖼️",
-  },
-  {
-    key: "draft-document",
-    label: "Draft a document",
-    icon: "📄",
-  },
-  {
-    key: "generate-code",
-    label: "Generate code",
-    icon: "💻",
-  },
-  {
-    key: "create-video",
-    label: "Create video",
-    tag: "Pro",
-    tagColor: "#f59e42", // Yellow/Gold
-    icon: "🎬",
-  },
-  {
-    key: "brand-kit",
-    label: "Brand kit",
-    icon: "🎨",
-  },
-  {
-    key: "smart-edit",
-    label: "Smart edit",
-    icon: "✂️",
-  },
-  {
-    key: "ai-assistant",
-    label: "AI assistant",
-    icon: "🤖",
-  },
+  { key: "design", label: "Design for me", tag: "Popular", tagColor: "#ef4444", icon: "🎨" },
+  { key: "create-image", label: "Create an image", tag: "New", tagColor: "#22c55e", icon: "🖼️" },
+  { key: "draft-document", label: "Draft a document", icon: "📄" },
+  { key: "generate-code", label: "Generate code", icon: "💻" },
+  { key: "create-video", label: "Create video", tag: "Pro", tagColor: "#f59e42", icon: "🎬" },
+  { key: "brand-kit", label: "Brand kit", icon: "🎨" },
+  { key: "smart-edit", label: "Smart edit", icon: "✂️" },
+  { key: "ai-assistant", label: "AI assistant", icon: "🤖" },
 ];
 
 const navTabs = [
@@ -56,11 +17,52 @@ const navTabs = [
   { label: "Athena AI", key: "athena-ai", highlight: true },
 ];
 
-export const Dashboard = () => {
+const Dashboard = () => {
   const [selectedButton, setSelectedButton] = useState(null);
   const [activeTab, setActiveTab] = useState("athena-ai");
   const [hoveredButton, setHoveredButton] = useState(null);
   const [clickedButton, setClickedButton] = useState(null);
+
+  const [inputText, setInputText] = useState("");
+  const [outputText, setOutputText] = useState("");
+  const [generatedImage, setGeneratedImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateClick = async () => {
+  if (!inputText.trim()) return;
+  setLoading(true);
+  setOutputText("");
+  setGeneratedImage(null);
+
+  try {
+    if (selectedButton === "create-image") {
+      const response = await fetch("http://localhost:5000/api/image/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+      const data = await response.json();
+      const imageB64 = data.data?.[0]?.b64_json || "";
+      if (imageB64) {
+        setGeneratedImage(`data:image/png;base64,${imageB64}`);
+      } else {
+        setOutputText("No image generated");
+      }
+    } else {
+      const response = await fetch("http://localhost:5000/api/inference/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+      const data = await response.json();
+      setOutputText(data.choices?.[0]?.message?.content || "No response");
+    }
+  } catch (error) {
+    setOutputText("Error: " + error.message);
+  }
+  setLoading(false);
+};
+
 
   return (
     <div
@@ -73,7 +75,6 @@ export const Dashboard = () => {
         padding: "44px 8px 12px 8px",
       }}
     >
-      {/* HERO TITLE */}
       <h1
         style={{
           fontSize: "3.5rem",
@@ -88,7 +89,6 @@ export const Dashboard = () => {
         What will you create today?
       </h1>
 
-      {/* NAVIGATION TABS */}
       <div
         style={{
           display: "flex",
@@ -104,16 +104,12 @@ export const Dashboard = () => {
             style={{
               padding: "8px 28px",
               borderRadius: "22px",
-              background:
-                activeTab === tab.key
-                  ? "linear-gradient(90deg,#b692f6,#80c7fb)"
-                  : "#fff",
+              background: activeTab === tab.key ? "linear-gradient(90deg,#b692f6,#80c7fb)" : "#fff",
               color: activeTab === tab.key ? "#fff" : "#52576d",
               fontWeight: 600,
               fontSize: "1.13rem",
               border: activeTab === tab.key ? "none" : "1.5px solid #eee",
-              boxShadow:
-                activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
+              boxShadow: activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
               transition: "all 0.18s",
               cursor: "pointer",
             }}
@@ -123,7 +119,6 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* MAIN PROMPT/SEARCH AREA */}
       <div
         style={{
           background: "#fff",
@@ -138,7 +133,6 @@ export const Dashboard = () => {
           border: "1.5px solid #f1eeff",
         }}
       >
-        {/* Input and create buttons */}
         <div
           style={{
             width: "100%",
@@ -162,6 +156,7 @@ export const Dashboard = () => {
               justifyContent: "center",
               cursor: "pointer",
             }}
+            onClick={() => setSelectedButton(null)}
           >
             +
           </button>
@@ -179,8 +174,12 @@ export const Dashboard = () => {
               marginRight: 10,
               color: "#52576d",
             }}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
           />
           <button
+            onClick={handleCreateClick}
+            disabled={loading || !selectedButton}
             style={{
               background: "linear-gradient(90deg,#8ee0fb,#a892fd)",
               color: "#fff",
@@ -206,11 +205,55 @@ export const Dashboard = () => {
             >
               ✨
             </span>
-            Create
+            {loading ? "Generating..." : "Create"}
           </button>
         </div>
+        {outputText && (
+          <div
+            style={{
+              width: "100%",
+              minHeight: 60,
+              border: "1.5px solid #f2edfc",
+              borderRadius: 14,
+              padding: 16,
+              background: "#faf7ff",
+              color: "#5c4a80",
+              fontSize: "1.15rem",
+              fontWeight: 600,
+            }}
+          >
+            {outputText}
+          </div>
+        )}
+        {generatedImage && (
+  <>
+    <img
+      src={generatedImage}
+      alt="Generated"
+      style={{ maxWidth: "600px", marginTop: "20px", borderRadius: "12px" }}
+    />
+    <a
+      href={generatedImage}
+      download="generated-image.png"
+      style={{
+        display: "inline-block",
+        marginTop: "14px",
+        padding: "10px 22px",
+        background: "linear-gradient(90deg,#a08afc,#3dcaff)",
+        color: "#fff",
+        fontWeight: 600,
+        borderRadius: "8px",
+        textDecoration: "none",
+        fontSize: "1rem",
+        boxShadow: "0 2px 12px #a1a1d966",
+        transition: "background 0.15s",
+      }}
+    >
+      ⬇️ Download
+    </a>
+  </>
+)}
 
-        {/* FEATURE BUTTONS */}
         <div
           style={{
             display: "flex",
@@ -231,9 +274,7 @@ export const Dashboard = () => {
               style={{
                 border: "1.2px solid #ededf5",
                 background:
-                  selectedButton === btn.key
-                    ? "linear-gradient(90deg,#cfdffe,#fdebfd 80%)"
-                    : "#f8f9ff",
+                  selectedButton === btn.key ? "linear-gradient(90deg,#cfdffe,#fdebfd 80%)" : "#f8f9ff",
                 boxShadow:
                   selectedButton === btn.key
                     ? "0 2px 8px #b2a5ed55"
@@ -251,8 +292,6 @@ export const Dashboard = () => {
                 cursor: "pointer",
                 position: "relative",
                 minWidth: "100px",
-
-                // Animation styles
                 transform:
                   clickedButton === btn.key
                     ? "scale(0.95)"
@@ -286,8 +325,6 @@ export const Dashboard = () => {
           ))}
         </div>
       </div>
-
-      {/* Compliance Footer */}
       <div
         style={{
           marginTop: 30,

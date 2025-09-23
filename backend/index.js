@@ -2,16 +2,23 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(cors());             // Enable CORS
+app.use(express.json());     // JSON parsing
+const imageRoutes = require('./routes/imageRoutes');
+app.use('/api/image', imageRoutes);
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// Import your inference routes
+const inferenceRoutes = require('./routes/inferenceRoutes');
+app.use('/api/inference', inferenceRoutes);
+
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .catch(console.error);
 
-// Example route
 app.get('/', (req, res) => res.send('API is working'));
 
 const PORT = process.env.PORT || 5000;
