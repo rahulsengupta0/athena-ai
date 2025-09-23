@@ -15,6 +15,7 @@ import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
 import { VideoMaker } from './pages/VideoMaker';
 import { Analatics } from './pages/Analatics';
+// import Settings from './pages/Setting';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="/image-editor" element={<ImageEdit/>} />
             <Route path="/video-maker" element={<VideoMaker/>} />
             <Route path="/analytics" element={<Analatics/>} />
+            {/* <Route path="/settings" element={<Settings/>} /> */}
             {/* Add more routes here if needed */}
           </Routes>
         </div>
