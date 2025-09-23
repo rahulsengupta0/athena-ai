@@ -54,7 +54,7 @@ const NAV_ITEMS = [
     key: "contentWriter",
     icon: <FiFileText size={18} />,
     section: "AI Tools",
-    path: "/content-writer"
+    path: "/create/content-writer"
   },
   {
     label: "Video Maker",
