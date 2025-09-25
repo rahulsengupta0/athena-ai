@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings } from 'react-icons/fi';
+import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX } from 'react-icons/fi';
 
 const NAV_ITEMS = [
   {
@@ -54,7 +54,7 @@ const NAV_ITEMS = [
     key: "contentWriter",
     icon: <FiFileText size={18} />,
     section: "AI Tools",
-    path: "/content-writer"
+    path: "/create/content-writer"
   },
   {
     label: "Video Maker",
@@ -139,21 +139,97 @@ const SideBar = () => {
   const location = useLocation();
   const activePath = location.pathname;
 
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  // Detect viewport size
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Auto close drawer on route change for mobile
+  React.useEffect(() => {
+    if (isMobile) setIsOpen(false);
+  }, [activePath, isMobile]);
+
+  // Prevent background scroll when mobile drawer is open
+  React.useEffect(() => {
+    if (!isMobile) return;
+    const originalOverflow = document.body.style.overflow;
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = originalOverflow || '';
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow || '';
+    };
+  }, [isOpen, isMobile]);
+
+  const drawerWidth = isMobile ? Math.min(window.innerWidth, 420) : 260;
+  const sidebarStyle = {
+    width: drawerWidth,
+    background: sidebarBg,
+    color: textColor,
+    height: "100vh",
+    position: "fixed",
+    top: 0,
+    left: 0,
+    borderRight: "1px solid #e5e5e9",
+    display: "flex",
+    flexDirection: "column",
+    transition: "transform 0.25s ease",
+    transform: isMobile ? (isOpen ? "translateX(0)" : "translateX(-100%)") : "none",
+    willChange: isMobile ? "transform" : undefined,
+    zIndex: 1000,
+    boxShadow: isMobile && isOpen ? "0 10px 30px rgba(0,0,0,0.15)" : "none",
+  };
+
   return (
-    <div
-      style={{
-        width: 260,
-        background: sidebarBg,
-        color: textColor,
-        height: "100vh",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        borderRight: "1px solid #e5e5e9",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <>
+      {/* Mobile hamburger */}
+      {isMobile && (
+        <button
+          aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          onClick={() => setIsOpen((v) => !v)}
+          style={{
+            position: "fixed",
+            top: 12,
+            left: 12,
+            zIndex: 1100,
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            border: "1px solid #e5e5e9",
+            background: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
+            cursor: "pointer",
+          }}
+        >
+          {isOpen ? <FiX size={20} color={iconColor} /> : <FiMenu size={20} color={iconColor} />}
+        </button>
+      )}
+
+      {/* Overlay */}
+      {isMobile && isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.25)",
+            zIndex: 900,
+          }}
+        />
+      )}
+
+      <div style={sidebarStyle}>
       {/* Header */}
       <div style={{ padding: "28px 20px 12px 20px", display: "flex", alignItems: "center", gap: 10 }}>
         <div
@@ -194,7 +270,10 @@ const SideBar = () => {
                 return (
                   <li key={item.key}>
                     <button
-                      onClick={() => navigate(item.path)}
+                      onClick={() => {
+                        navigate(item.path);
+                        if (isMobile) setIsOpen(false);
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -265,6 +344,7 @@ const SideBar = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

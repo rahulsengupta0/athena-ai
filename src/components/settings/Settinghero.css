@@ -1,0 +1,352 @@
+.settings-hero {
+  background: #ffffff;
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.settings-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.settings-section:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.section-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Website Section Styles */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.website-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.website-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.website-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Password Section Styles */
+.password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0;
+}
+
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input {
+  width: 100%;
+  padding: 0.875rem 3rem 0.875rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.password-input::placeholder {
+  color: #9ca3af;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.password-toggle:focus {
+  outline: none;
+  color: #7c3aed;
+  background-color: #f3f4f6;
+}
+
+/* Button Styles */
+.save-btn,
+.update-password-btn {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+  align-self: flex-start;
+  letter-spacing: 0.025em;
+}
+
+.save-btn:hover,
+.update-password-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -2px rgba(124, 58, 237, 0.3);
+}
+
+.save-btn:active,
+.update-password-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px -1px rgba(124, 58, 237, 0.3);
+}
+
+.save-btn:focus,
+.update-password-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+
+.save-btn:disabled,
+.update-password-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-btn:disabled:hover,
+.update-password-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Animation for smooth transitions */
+.settings-section {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.settings-section:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .settings-hero {
+    padding: 1rem;
+  }
+  
+  .settings-container {
+    gap: 2rem;
+  }
+  
+  .settings-section {
+    padding: 1.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+  }
+  
+  .save-btn,
+  .update-password-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-hero {
+    padding: 0.5rem;
+  }
+  
+  .settings-section {
+    padding: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.125rem;
+  }
+  
+  .section-description {
+    font-size: 0.8rem;
+  }
+  
+  .website-input,
+  .password-input {
+    font-size: 0.8rem;
+    padding: 0.75rem 0.875rem;
+  }
+  
+  .password-input {
+    padding-right: 2.5rem;
+  }
+  
+  .password-toggle {
+    right: 0.75rem;
+  }
+  
+  .save-btn,
+  .update-password-btn {
+    font-size: 0.8rem;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .settings-section {
+    border: 2px solid #000000;
+  }
+  
+  .website-input,
+  .password-input {
+    border: 2px solid #000000;
+  }
+  
+  .website-input:focus,
+  .password-input:focus {
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .settings-section {
+    animation: none;
+  }
+  
+  .save-btn,
+  .update-password-btn {
+    transition: none;
+  }
+  
+  .save-btn:hover,
+  .update-password-btn:hover {
+    transform: none;
+  }
+}
+
+/* Focus visible for better accessibility */
+.save-btn:focus-visible,
+.update-password-btn:focus-visible,
+.password-toggle:focus-visible,
+.website-input:focus-visible,
+.password-input:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+/* Loading state */
+.saving {
+  position: relative;
+  color: transparent;
+}
+
+.saving::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

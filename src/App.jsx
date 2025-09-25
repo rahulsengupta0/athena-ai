@@ -15,13 +15,16 @@ import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
 import { VideoMaker } from './pages/VideoMaker';
 import { Analatics } from './pages/Analatics';
+import { Setting } from './pages/Setting';
+import Help from './pages/Help';
+import { Team } from './pages/Team';
 
 function App() {
   return (
     <Router>
       <div>
         <SideBar />
-        <div style={{ marginLeft: 260, padding: '0px', minHeight: "100vh" }}>
+        <div className="app-content">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<Create />} />
@@ -39,6 +42,9 @@ function App() {
             <Route path="/image-editor" element={<ImageEdit/>} />
             <Route path="/video-maker" element={<VideoMaker/>} />
             <Route path="/analytics" element={<Analatics/>} />
+            <Route path="/settings" element={<Setting/>} />
+            <Route path="/help-support" element={<Help/>} />
+            <Route path="/team" element={<Team/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
