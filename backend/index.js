@@ -10,6 +10,12 @@ app.use(express.json());     // JSON parsing
 const imageRoutes = require('./routes/imageRoutes');
 app.use('/api/image', imageRoutes);
 
+const videoRoutes = require("./routes/videoRoutes");
+app.use("/api/video", videoRoutes);
+
+const logoRoutes = require('./routes/logoRoutes'); // add this line
+app.use('/api', logoRoutes); // add this line
+
 // Import your inference routes
 const inferenceRoutes = require('./routes/inferenceRoutes');
 app.use('/api/inference', inferenceRoutes);

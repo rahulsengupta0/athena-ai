@@ -17,6 +17,20 @@ const navTabs = [
   { label: "Athena AI", key: "athena-ai", highlight: true },
 ];
 
+const downloadButtonStyle = {
+  display: "inline-block",
+  marginTop: "14px",
+  padding: "10px 22px",
+  background: "linear-gradient(90deg,#a08afc,#3dcaff)",
+  color: "#fff",
+  fontWeight: 600,
+  borderRadius: "8px",
+  textDecoration: "none",
+  fontSize: "1rem",
+  boxShadow: "0 2px 12px #a1a1d966",
+  transition: "background 0.15s",
+};
+
 const Dashboard = () => {
   const [selectedButton, setSelectedButton] = useState(null);
   const [activeTab, setActiveTab] = useState("athena-ai");
@@ -26,43 +40,105 @@ const Dashboard = () => {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
   const [generatedImage, setGeneratedImage] = useState(null);
+  const [generatedVideo, setGeneratedVideo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+
+  const handleGenerateLogo = async () => {
+    setLoading(true);
+    setOutputText("");
+    setGeneratedImage(null);
+    try {
+      const response = await fetch("http://localhost:5000/api/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setOutputText("Error: " + (errorData.error || "Unknown error"));
+        setLoading(false);
+        return;
+      }
+      const data = await response.json();
+
+      // Decode base64 JSON string to text
+      const decodedJsonStr = atob(data.imageBase64);
+
+      // Parse JSON to extract actual image URL
+      const parsedJson = JSON.parse(decodedJsonStr);
+
+      const imageUrl = parsedJson.images?.[0]?.url;
+
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
+      } else {
+        setOutputText("No image URL found in response.");
+      }
+    } catch (error) {
+      setOutputText("Error: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateClick = async () => {
-  if (!inputText.trim()) return;
-  setLoading(true);
-  setOutputText("");
-  setGeneratedImage(null);
+    if (!inputText.trim() || !selectedButton) return;
 
-  try {
-    if (selectedButton === "create-image") {
-      const response = await fetch("http://localhost:5000/api/image/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: inputText }),
-      });
-      const data = await response.json();
-      const imageB64 = data.data?.[0]?.b64_json || "";
-      if (imageB64) {
-        setGeneratedImage(`data:image/png;base64,${imageB64}`);
+    setOutputText("");
+    setGeneratedImage(null);
+    setGeneratedVideo(null);
+
+    try {
+      if (selectedButton === "design") {
+        await handleGenerateLogo();
+      } else if (selectedButton === "create-image") {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/image/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        const imageB64 = data.data?.[0]?.b64_json || "";
+        if (imageB64.length > 50) {
+          setGeneratedImage(`data:image/png;base64,${imageB64}`);
+        } else {
+          setOutputText("No image generated");
+        }
+        setLoading(false);
+      } else if (selectedButton === "create-video") {
+        setVideoLoading(true);
+        const response = await fetch("http://localhost:5000/api/video/generate-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        if (data.videoBase64) {
+          const videoUrl = `data:${data.mimeType};base64,${data.videoBase64}`;
+          setGeneratedVideo(videoUrl);
+        } else {
+          setOutputText("No video generated");
+        }
+        setVideoLoading(false);
       } else {
-        setOutputText("No image generated");
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/inference/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        setOutputText(data.choices?.[0]?.message?.content || "No response");
+        setLoading(false);
       }
-    } else {
-      const response = await fetch("http://localhost:5000/api/inference/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: inputText }),
-      });
-      const data = await response.json();
-      setOutputText(data.choices?.[0]?.message?.content || "No response");
+    } catch (error) {
+      setOutputText("Error: " + error.message);
+      setLoading(false);
+      setVideoLoading(false);
     }
-  } catch (error) {
-    setOutputText("Error: " + error.message);
-  }
-  setLoading(false);
-};
-
+  };
 
   return (
     <div
@@ -179,7 +255,7 @@ const Dashboard = () => {
           />
           <button
             onClick={handleCreateClick}
-            disabled={loading || !selectedButton}
+            disabled={loading || videoLoading || !selectedButton}
             style={{
               background: "linear-gradient(90deg,#8ee0fb,#a892fd)",
               color: "#fff",
@@ -205,7 +281,7 @@ const Dashboard = () => {
             >
               ✨
             </span>
-            {loading ? "Generating..." : "Create"}
+            {loading || videoLoading ? "Generating..." : "Create"}
           </button>
         </div>
         {outputText && (
@@ -225,34 +301,48 @@ const Dashboard = () => {
             {outputText}
           </div>
         )}
-        {generatedImage && (
-  <>
-    <img
-      src={generatedImage}
-      alt="Generated"
-      style={{ maxWidth: "600px", marginTop: "20px", borderRadius: "12px" }}
-    />
-    <a
-      href={generatedImage}
-      download="generated-image.png"
-      style={{
-        display: "inline-block",
-        marginTop: "14px",
-        padding: "10px 22px",
-        background: "linear-gradient(90deg,#a08afc,#3dcaff)",
-        color: "#fff",
-        fontWeight: 600,
-        borderRadius: "8px",
-        textDecoration: "none",
-        fontSize: "1rem",
-        boxShadow: "0 2px 12px #a1a1d966",
-        transition: "background 0.15s",
-      }}
-    >
-      ⬇️ Download
-    </a>
-  </>
-)}
+        {generatedImage ? (
+          <>
+            <img
+              src={generatedImage}
+              alt="Generated"
+              style={{ maxWidth: "600px", marginTop: "20px", borderRadius: "12px" }}
+            />
+            <a href={generatedImage} download="generated-logo.png" style={downloadButtonStyle}>
+              ⬇️ Download Logo
+            </a>
+          </>
+        ) : (
+          outputText && <div style={{ color: "#b00", fontWeight: "bold", marginTop: "16px" }}>{outputText}</div>
+        )}
+        {generatedVideo && (
+          <div style={{ marginTop: 20 }}>
+            <video
+              controls
+              src={generatedVideo}
+              style={{ maxWidth: "600px", borderRadius: "12px" }}
+            />
+            <a
+              href={generatedVideo}
+              download="generated-video.mp4"
+              style={{
+                display: "inline-block",
+                marginTop: "14px",
+                padding: "10px 22px",
+                background: "linear-gradient(90deg,#a08afc,#3dcaff)",
+                color: "#fff",
+                fontWeight: 600,
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontSize: "1rem",
+                boxShadow: "0 2px 12px #a1a1d966",
+                transition: "background 0.15s",
+              }}
+            >
+              ⬇️ Download Video
+            </a>
+          </div>
+        )}
 
         <div
           style={{
