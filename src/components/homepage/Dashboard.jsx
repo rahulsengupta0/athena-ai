@@ -1,53 +1,14 @@
 import React, { useState } from "react";
 
-// Button data structure to allow easy mapping and badge display
 const BUTTONS = [
-  {
-    key: "design",
-    label: "Design for me",
-    tag: "Popular",
-    tagColor: "#ef4444", // Red
-    icon: "🎨",
-  },
-  {
-    key: "create-image",
-    label: "Create an image",
-    tag: "New",
-    tagColor: "#22c55e", // Green
-    icon: "🖼️",
-  },
-  {
-    key: "draft-document",
-    label: "Draft a document",
-    icon: "📄",
-  },
-  {
-    key: "generate-code",
-    label: "Generate code",
-    icon: "💻",
-  },
-  {
-    key: "create-video",
-    label: "Create video",
-    tag: "Pro",
-    tagColor: "#f59e42", // Yellow/Gold
-    icon: "🎬",
-  },
-  {
-    key: "brand-kit",
-    label: "Brand kit",
-    icon: "🎨",
-  },
-  {
-    key: "smart-edit",
-    label: "Smart edit",
-    icon: "✂️",
-  },
-  {
-    key: "ai-assistant",
-    label: "AI assistant",
-    icon: "🤖",
-  },
+  { key: "design", label: "Design for me", tag: "Popular", tagColor: "#ef4444", icon: "🎨" },
+  { key: "create-image", label: "Create an image", tag: "New", tagColor: "#22c55e", icon: "🖼️" },
+  { key: "draft-document", label: "Draft a document", icon: "📄" },
+  { key: "generate-code", label: "Generate code", icon: "💻" },
+  { key: "create-video", label: "Create video", tag: "Pro", tagColor: "#f59e42", icon: "🎬" },
+  { key: "brand-kit", label: "Brand kit", icon: "🎨" },
+  { key: "smart-edit", label: "Smart edit", icon: "✂️" },
+  { key: "ai-assistant", label: "AI assistant", icon: "🤖" },
 ];
 
 const navTabs = [
@@ -56,7 +17,21 @@ const navTabs = [
   { label: "Athena AI", key: "athena-ai", highlight: true },
 ];
 
-export const Dashboard = () => {
+const downloadButtonStyle = {
+  display: "inline-block",
+  marginTop: "14px",
+  padding: "10px 22px",
+  background: "linear-gradient(90deg,#a08afc,#3dcaff)",
+  color: "#fff",
+  fontWeight: 600,
+  borderRadius: "8px",
+  textDecoration: "none",
+  fontSize: "1rem",
+  boxShadow: "0 2px 12px #a1a1d966",
+  transition: "background 0.15s",
+};
+
+const Dashboard = () => {
   const [selectedButton, setSelectedButton] = useState(null);
   const [activeTab, setActiveTab] = useState("athena-ai");
   const [hoveredButton, setHoveredButton] = useState(null);
@@ -77,6 +52,109 @@ export const Dashboard = () => {
     return () => window.removeEventListener("resize", handle);
   }, []);
 
+  const [inputText, setInputText] = useState("");
+  const [outputText, setOutputText] = useState("");
+  const [generatedImage, setGeneratedImage] = useState(null);
+  const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+
+  const handleGenerateLogo = async () => {
+    setLoading(true);
+    setOutputText("");
+    setGeneratedImage(null);
+    try {
+      const response = await fetch("http://localhost:5000/api/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setOutputText("Error: " + (errorData.error || "Unknown error"));
+        setLoading(false);
+        return;
+      }
+      const data = await response.json();
+
+      // Decode base64 JSON string to text
+      const decodedJsonStr = atob(data.imageBase64);
+
+      // Parse JSON to extract actual image URL
+      const parsedJson = JSON.parse(decodedJsonStr);
+
+      const imageUrl = parsedJson.images?.[0]?.url;
+
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
+      } else {
+        setOutputText("No image URL found in response.");
+      }
+    } catch (error) {
+      setOutputText("Error: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateClick = async () => {
+    if (!inputText.trim() || !selectedButton) return;
+
+    setOutputText("");
+    setGeneratedImage(null);
+    setGeneratedVideo(null);
+
+    try {
+      if (selectedButton === "design") {
+        await handleGenerateLogo();
+      } else if (selectedButton === "create-image") {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/image/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        const imageB64 = data.data?.[0]?.b64_json || "";
+        if (imageB64.length > 50) {
+          setGeneratedImage(`data:image/png;base64,${imageB64}`);
+        } else {
+          setOutputText("No image generated");
+        }
+        setLoading(false);
+      } else if (selectedButton === "create-video") {
+        setVideoLoading(true);
+        const response = await fetch("http://localhost:5000/api/video/generate-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        if (data.videoBase64) {
+          const videoUrl = `data:${data.mimeType};base64,${data.videoBase64}`;
+          setGeneratedVideo(videoUrl);
+        } else {
+          setOutputText("No video generated");
+        }
+        setVideoLoading(false);
+      } else {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/inference/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        setOutputText(data.choices?.[0]?.message?.content || "No response");
+        setLoading(false);
+      }
+    } catch (error) {
+      setOutputText("Error: " + error.message);
+      setLoading(false);
+      setVideoLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -91,7 +169,6 @@ export const Dashboard = () => {
         boxSizing: "border-box",
       }}
     >
-      {/* HERO TITLE */}
       <h1
         style={{
           fontSize: isSmallMobile ? "1.6rem" : isPhone ? "clamp(1.8rem,6vw,2.8rem)" : "clamp(1.8rem,6vw,3.5rem)",
@@ -108,7 +185,6 @@ export const Dashboard = () => {
         What will you create today?
       </h1>
 
-      {/* NAVIGATION TABS */}
       <div
         style={{
           display: "flex",
@@ -127,18 +203,14 @@ export const Dashboard = () => {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-              padding: isSmallMobile ? "6px 16px" : isPhone ? "7px 18px" : "8px 22px",
-              borderRadius: isSmallMobile ? "18px" : "22px",
-              background:
-                activeTab === tab.key
-                  ? "linear-gradient(90deg,#b692f6,#80c7fb)"
-                  : "#fff",
+              padding: "8px 28px",
+              borderRadius: "22px",
+              background: activeTab === tab.key ? "linear-gradient(90deg,#b692f6,#80c7fb)" : "#fff",
               color: activeTab === tab.key ? "#fff" : "#52576d",
               fontWeight: 600,
               fontSize: isSmallMobile ? "0.85rem" : isPhone ? "0.95rem" : "clamp(0.95rem,2.5vw,1.13rem)",
               border: activeTab === tab.key ? "none" : "1.5px solid #eee",
-              boxShadow:
-                activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
+              boxShadow: activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
               transition: "all 0.18s",
               cursor: "pointer",
               minHeight: isSmallMobile ? "36px" : isPhone ? "40px" : "auto",
@@ -150,7 +222,6 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* MAIN PROMPT/SEARCH AREA */}
       <div
         style={{
           background: "#fff",
@@ -167,7 +238,6 @@ export const Dashboard = () => {
           boxSizing: "border-box",
         }}
       >
-        {/* Input and create buttons */}
         <div
           style={{
             width: "100%",
@@ -194,6 +264,7 @@ export const Dashboard = () => {
               cursor: "pointer",
               flexShrink: 0,
             }}
+            onClick={() => setSelectedButton(null)}
           >
             +
           </button>
@@ -212,8 +283,12 @@ export const Dashboard = () => {
               color: "#52576d",
               minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
             }}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
           />
           <button
+            onClick={handleCreateClick}
+            disabled={loading || videoLoading || !selectedButton}
             style={{
               background: "linear-gradient(90deg,#8ee0fb,#a892fd)",
               color: "#fff",
@@ -252,11 +327,69 @@ export const Dashboard = () => {
             >
               ✨
             </span>
-            Create
+            {loading || videoLoading ? "Generating..." : "Create"}
           </button>
         </div>
+        {outputText && (
+          <div
+            style={{
+              width: "100%",
+              minHeight: 60,
+              border: "1.5px solid #f2edfc",
+              borderRadius: 14,
+              padding: 16,
+              background: "#faf7ff",
+              color: "#5c4a80",
+              fontSize: "1.15rem",
+              fontWeight: 600,
+            }}
+          >
+            {outputText}
+          </div>
+        )}
+        {generatedImage ? (
+          <>
+            <img
+              src={generatedImage}
+              alt="Generated"
+              style={{ maxWidth: "600px", marginTop: "20px", borderRadius: "12px" }}
+            />
+            <a href={generatedImage} download="generated-logo.png" style={downloadButtonStyle}>
+              ⬇️ Download Logo
+            </a>
+          </>
+        ) : (
+          outputText && <div style={{ color: "#b00", fontWeight: "bold", marginTop: "16px" }}>{outputText}</div>
+        )}
+        {generatedVideo && (
+          <div style={{ marginTop: 20 }}>
+            <video
+              controls
+              src={generatedVideo}
+              style={{ maxWidth: "600px", borderRadius: "12px" }}
+            />
+            <a
+              href={generatedVideo}
+              download="generated-video.mp4"
+              style={{
+                display: "inline-block",
+                marginTop: "14px",
+                padding: "10px 22px",
+                background: "linear-gradient(90deg,#a08afc,#3dcaff)",
+                color: "#fff",
+                fontWeight: 600,
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontSize: "1rem",
+                boxShadow: "0 2px 12px #a1a1d966",
+                transition: "background 0.15s",
+              }}
+            >
+              ⬇️ Download Video
+            </a>
+          </div>
+        )}
 
-        {/* FEATURE BUTTONS */}
         <div
           style={{
             display: "flex",
@@ -277,9 +410,7 @@ export const Dashboard = () => {
               style={{
                 border: "1.2px solid #ededf5",
                 background:
-                  selectedButton === btn.key
-                    ? "linear-gradient(90deg,#cfdffe,#fdebfd 80%)"
-                    : "#f8f9ff",
+                  selectedButton === btn.key ? "linear-gradient(90deg,#cfdffe,#fdebfd 80%)" : "#f8f9ff",
                 boxShadow:
                   selectedButton === btn.key
                     ? "0 2px 8px #b2a5ed55"
@@ -296,11 +427,7 @@ export const Dashboard = () => {
                 gap: isSmallMobile ? 5 : 7,
                 cursor: "pointer",
                 position: "relative",
-                minWidth: isSmallMobile ? "calc(50% - 4px)" : isPhone ? "calc(50% - 5px)" : "120px",
-                flex: isSmallMobile ? "1 1 calc(50% - 4px)" : isPhone ? "1 1 calc(50% - 5px)" : "0 0 auto",
-                minHeight: isSmallMobile ? "36px" : isPhone ? "40px" : "auto",
-
-                // Animation styles
+                minWidth: "100px",
                 transform:
                   clickedButton === btn.key
                     ? "scale(0.95)"
@@ -335,8 +462,6 @@ export const Dashboard = () => {
           ))}
         </div>
       </div>
-
-      {/* Compliance Footer */}
       <div
         style={{
           marginTop: isSmallMobile ? 20 : isPhone ? 24 : 30,
