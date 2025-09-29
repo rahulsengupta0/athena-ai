@@ -18,6 +18,7 @@ import { Analatics } from './pages/Analatics';
 import { Setting } from './pages/Setting';
 import Help from './pages/Help';
 import { Team } from './pages/Team';
+import CanvaClone from './pages/CanvaClone';
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
             <Route path="/settings" element={<Setting/>} />
             <Route path="/help-support" element={<Help/>} />
             <Route path="/team" element={<Team/>} />
+            <Route path="/canva-clone" element={<CanvaClone/>} />
             {/* Add more routes here if needed */}
           </Routes>
         </div>
