@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   MdOutlineImage,
   MdUploadFile,
@@ -119,6 +119,27 @@ const TABS = ['Tools', 'Editor', 'Recent', 'Gallery'];
 
 export default function AiImageEditor() {
   const [tab, setTab] = useState('Tools');
+  const [selectedImageURL, setSelectedImageURL] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleChooseFile = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setSelectedImageURL(prev => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return url;
+    });
+  };
+
+  const handleStartEditing = () => {
+    if (!selectedImageURL) return;
+    setTab('Editor');
+  };
 
   return (
     <div style={styles.page}>
@@ -134,10 +155,24 @@ export default function AiImageEditor() {
           </div>
         </div>
         <div style={styles.btnRow}>
-          <button style={styles.uploadBtn}>
-            <MdUploadFile /> Upload Image
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <button style={styles.uploadBtn} onClick={handleChooseFile}>
+            <MdUploadFile /> {selectedImageURL ? 'Change Image' : 'Upload Image'}
           </button>
-          <button style={styles.actionBtn}>
+          <button
+            style={{
+              ...styles.actionBtn,
+              ...(selectedImageURL ? {} : { filter: 'grayscale(1) opacity(0.65)', cursor: 'not-allowed' }),
+            }}
+            onClick={handleStartEditing}
+            disabled={!selectedImageURL}
+          >
             <MdAutoAwesome /> Start Editing
           </button>
         </div>
@@ -158,7 +193,12 @@ export default function AiImageEditor() {
 
       {/* Tab Content */}
       {tab === 'Tools' && <ToolCards />}
-      {tab === 'Editor' && <EditorSection />}
+      {tab === 'Editor' && (
+        <EditorSection
+          initialImageURL={selectedImageURL}
+          onBackToTools={() => setTab('Tools')}
+        />
+      )}
       {tab === 'Recent' && (
         <div style={styles.emptyPanel}>No recent edits yet.</div>
       )}

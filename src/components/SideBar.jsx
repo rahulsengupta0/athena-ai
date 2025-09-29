@@ -50,6 +50,15 @@ const NAV_ITEMS = [
     path: "/image-editor"
   },
   {
+    label: "Canva Clone",
+    key: "canvaClone",
+    icon: <FiGrid size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/canva-clone"
+  },
+  {
     label: "Content Writer",
     key: "contentWriter",
     icon: <FiFileText size={18} />,
