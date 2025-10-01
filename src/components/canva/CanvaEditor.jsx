@@ -66,6 +66,7 @@ const CanvaEditor = () => {
     templates: true,
     canvas: true,
   });
+  const [hasChosenTemplate, setHasChosenTemplate] = useState(false);
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
@@ -528,6 +529,7 @@ const CanvaEditor = () => {
     setLayers([]);
     setSelectedLayer(null);
     saveToHistory([]);
+    setHasChosenTemplate(true);
   };
 
   // Zoom functionality
@@ -713,6 +715,7 @@ const CanvaEditor = () => {
       backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
       backgroundSize: '20px 20px'
     },
+    
     rightSidebar: {
       width: isRightSidebarCollapsed ? '60px' : '280px',
       minWidth: isRightSidebarCollapsed ? '60px' : '280px',
@@ -857,7 +860,7 @@ const CanvaEditor = () => {
     <div style={styles.container}>
       
       {/* Left Sidebar */}
-      <div style={styles.leftSidebar}>
+      <div style={styles.leftSidebar} className="custom-scrollbar">
         {/* Header */}
         <div style={{ 
           padding: "0 0 20px 0", 
@@ -1734,21 +1737,95 @@ const CanvaEditor = () => {
         </div>
 
         {/* Canvas Area */}
-        <div style={styles.canvasArea} ref={canvasAreaRef}>
+        <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
           <div 
             style={styles.canvas} 
             onClick={handleCanvasClick} 
+            onMouseDown={handleDrawingMouseDown}
             onMouseMove={handleCanvasMouseMove}
             onMouseLeave={handleCanvasMouseLeave}
             ref={canvasRef}
           >
-            {layers.length === 0 ? (
-              <div style={{ textAlign: 'center', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                <div style={{ fontSize: '48px', marginBottom: '10px' }}>🎨</div>
-                <div>Click here to add elements</div>
-                <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-                  Select a tool from the left sidebar first
+            {layers.length === 0 && !hasChosenTemplate ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 20
+                }}
+              >
+                <div
+                  style={{
+                    textAlign: 'center',
+                    width: 'min(640px, 90%)',
+                    background: 'white',
+                    border: '1px solid #e1e5e9',
+                    borderRadius: 12,
+                    padding: 20,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
+                  }}
+                >
+                <div style={{ fontSize: '40px', marginBottom: 8 }}>🎨</div>
+                <div style={{ fontWeight: 700, fontSize: '16px', color: '#111827', marginBottom: 4 }}>
+                  Choose a template to get started
                 </div>
+                <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: 14 }}>
+                  Pick a preset below. You can still adjust the canvas later.
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                    gap: 10,
+                    textAlign: 'left'
+                  }}
+                >
+                  {templates.map(template => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleTemplateSelect(template)}
+                      title={`${template.name} - ${template.width}×${template.height}`}
+                      style={{
+                        cursor: 'pointer',
+                        padding: 10,
+                        border: '1px solid #e5e7eb',
+                        borderRadius: 10,
+                        background: 'white',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                        transition: 'box-shadow 0.15s ease, transform 0.05s ease',
+                        alignItems: 'flex-start'
+                      }}
+                      onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                      onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'}
+                      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <div style={{ fontSize: 18 }}>{template.thumbnail}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{template.name}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280' }}>{template.width}×{template.height}</div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: '#2563eb',
+                          backgroundColor: '#e0ecff',
+                          padding: '2px 6px',
+                          borderRadius: 999
+                        }}
+                      >
+                        {template.category}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
               </div>
             ) : (
               layers.map(layer => (
@@ -1930,11 +2007,12 @@ const CanvaEditor = () => {
               </svg>
             )}
           </div>
+          
         </div>
       </div>
 
       {/* Right Sidebar */}
-      <div style={styles.rightSidebar}>
+      <div style={styles.rightSidebar} className="custom-scrollbar">
         {/* Toggle Button */}
         <div style={{ 
           display: 'flex', 
