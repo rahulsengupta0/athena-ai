@@ -270,7 +270,7 @@ const SideBar = () => {
         />
       )}
 
-      <div style={sidebarStyle}>
+      <div style={sidebarStyle} className="custom-scrollbar">
       {/* Header */}
       <div style={{ 
         padding: isCollapsed && !isMobile ? "28px 12px 12px 12px" : "28px 20px 12px 20px", 
@@ -303,7 +303,7 @@ const SideBar = () => {
         minHeight: 0, 
         overflowY: "auto",
         marginTop: isCollapsed && !isMobile ? "60px" : "0"
-      }}>
+      }} className="custom-scrollbar">
         {SECTIONS.map((section) => (
           <div key={section}>
             {(!isCollapsed || isMobile) && (

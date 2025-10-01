@@ -327,7 +327,7 @@ const LayerManager = ({ layers, selectedLayer, onLayerSelect, onLayerUpdate, onL
         </button>
       </div>
       
-      <div style={styles.layerList}>
+      <div style={styles.layerList} className="custom-scrollbar">
         {layers.length === 0 ? (
           <div style={styles.emptyState}>
             <FiLayers style={styles.emptyIcon} />
