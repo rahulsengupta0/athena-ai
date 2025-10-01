@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
+import TopToolbar from './TopToolbar';
+import LeftSidebar from './LeftSidebar';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
@@ -70,6 +72,21 @@ const CanvaEditor = () => {
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
+  // Custom scroller state
+  const [scrollMetrics, setScrollMetrics] = useState({
+    contentWidth: 0,
+    contentHeight: 0,
+    viewportWidth: 0,
+    viewportHeight: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+    hThumbSize: 0,
+    vThumbSize: 0,
+    hThumbPos: 0,
+    vThumbPos: 0,
+    showH: false,
+    showV: false
+  });
 
   const toggleSection = (key) => {
     setOpenSections(prev => {
@@ -84,9 +101,134 @@ const CanvaEditor = () => {
   };
   const canvasRef = useRef(null);
   const canvasAreaRef = useRef(null);
+  const contentWrapperRef = useRef(null);
   const fileInputRef = useRef(null);
   const lastPointRef = useRef(null);
   const lastTimeRef = useRef(0);
+  const hDragRef = useRef({ isDragging: false, startX: 0, startScrollLeft: 0 });
+  const vDragRef = useRef({ isDragging: false, startY: 0, startScrollTop: 0 });
+
+  const SCROLLER_THICKNESS = 12; // px
+  const SCROLLER_MARGIN = 8; // px within the container
+
+  const updateScrollMetrics = useCallback(() => {
+    const area = canvasAreaRef.current;
+    const contentEl = contentWrapperRef.current;
+    if (!area || !contentEl) return;
+
+    const contentWidth = contentEl.scrollWidth || contentEl.offsetWidth || 0;
+    const contentHeight = contentEl.scrollHeight || contentEl.offsetHeight || 0;
+    const viewportWidth = area.clientWidth;
+    const viewportHeight = area.clientHeight;
+    const scrollLeft = area.scrollLeft;
+    const scrollTop = area.scrollTop;
+
+    const showH = contentWidth > viewportWidth + 1;
+    const showV = contentHeight > viewportHeight + 1;
+
+    // Track sizes account for the opposite scrollbar presence
+    const hTrackLen = Math.max(0, viewportWidth - (showV ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+    const vTrackLen = Math.max(0, viewportHeight - (showH ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+
+    const minThumb = 24;
+    const hThumbSize = !showH ? 0 : Math.max(minThumb, Math.floor((viewportWidth / contentWidth) * hTrackLen));
+    const vThumbSize = !showV ? 0 : Math.max(minThumb, Math.floor((viewportHeight / contentHeight) * vTrackLen));
+
+    const hScrollable = Math.max(1, contentWidth - viewportWidth);
+    const vScrollable = Math.max(1, contentHeight - viewportHeight);
+    const hMovable = Math.max(0, hTrackLen - hThumbSize);
+    const vMovable = Math.max(0, vTrackLen - vThumbSize);
+
+    const hThumbPos = !showH ? 0 : Math.min(hMovable, Math.floor((scrollLeft / hScrollable) * hMovable));
+    const vThumbPos = !showV ? 0 : Math.min(vMovable, Math.floor((scrollTop / vScrollable) * vMovable));
+
+    setScrollMetrics({
+      contentWidth,
+      contentHeight,
+      viewportWidth,
+      viewportHeight,
+      scrollLeft,
+      scrollTop,
+      hThumbSize,
+      vThumbSize,
+      hThumbPos,
+      vThumbPos,
+      showH,
+      showV
+    });
+  }, [SCROLLER_MARGIN, SCROLLER_THICKNESS]);
+
+  // Sync scroll metrics on layout-affecting changes
+  useEffect(() => {
+    updateScrollMetrics();
+  }, [zoom, pan, canvasSize.width, canvasSize.height, layers.length, hasChosenTemplate, updateScrollMetrics]);
+
+  useEffect(() => {
+    const area = canvasAreaRef.current;
+    if (!area) return;
+    const onScroll = () => updateScrollMetrics();
+    area.addEventListener('scroll', onScroll, { passive: true });
+    const onResize = () => updateScrollMetrics();
+    window.addEventListener('resize', onResize);
+    // Observe size changes of the content wrapper for reliable updates
+    let ro;
+    if ('ResizeObserver' in window && contentWrapperRef.current) {
+      ro = new ResizeObserver(() => updateScrollMetrics());
+      ro.observe(contentWrapperRef.current);
+    }
+    // Initial
+    updateScrollMetrics();
+    return () => {
+      area.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      if (ro) ro.disconnect();
+    };
+  }, [updateScrollMetrics]);
+
+  // Drag handlers for custom scrollers
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      const area = canvasAreaRef.current;
+      if (!area) return;
+      // Horizontal drag
+      if (hDragRef.current.isDragging) {
+        e.preventDefault();
+        const { startX, startScrollLeft } = hDragRef.current;
+        const dx = e.clientX - startX;
+        const hTrackLen = Math.max(0, scrollMetrics.viewportWidth - (scrollMetrics.showV ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+        const movable = Math.max(1, hTrackLen - scrollMetrics.hThumbSize);
+        const scrollable = Math.max(1, scrollMetrics.contentWidth - scrollMetrics.viewportWidth);
+        const scrollDelta = (dx / movable) * scrollable;
+        area.scrollLeft = Math.min(scrollable, Math.max(0, startScrollLeft + scrollDelta));
+        updateScrollMetrics();
+      }
+      // Vertical drag
+      if (vDragRef.current.isDragging) {
+        e.preventDefault();
+        const { startY, startScrollTop } = vDragRef.current;
+        const dy = e.clientY - startY;
+        const vTrackLen = Math.max(0, scrollMetrics.viewportHeight - (scrollMetrics.showH ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+        const movable = Math.max(1, vTrackLen - scrollMetrics.vThumbSize);
+        const scrollable = Math.max(1, scrollMetrics.contentHeight - scrollMetrics.viewportHeight);
+        const scrollDelta = (dy / movable) * scrollable;
+        area.scrollTop = Math.min(scrollable, Math.max(0, startScrollTop + scrollDelta));
+        updateScrollMetrics();
+      }
+    };
+    const onMouseUp = () => {
+      if (hDragRef.current.isDragging || vDragRef.current.isDragging) {
+        hDragRef.current.isDragging = false;
+        vDragRef.current.isDragging = false;
+        document.body.style.cursor = 'default';
+      }
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [scrollMetrics, updateScrollMetrics]);
 
   // Convert mouse/touch client coordinates into untransformed canvas coordinates,
   // accounting for the current zoom and pan transforms applied via CSS.
@@ -606,6 +748,59 @@ const CanvaEditor = () => {
     setIsMouseOverCanvas(false);
   };
 
+  const handleHThumbMouseDown = (e) => {
+    e.preventDefault();
+    const area = canvasAreaRef.current;
+    if (!area) return;
+    hDragRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      startScrollLeft: area.scrollLeft
+    };
+    document.body.style.cursor = 'grabbing';
+  };
+
+  const handleVThumbMouseDown = (e) => {
+    e.preventDefault();
+    const area = canvasAreaRef.current;
+    if (!area) return;
+    vDragRef.current = {
+      isDragging: true,
+      startY: e.clientY,
+      startScrollTop: area.scrollTop
+    };
+    document.body.style.cursor = 'grabbing';
+  };
+
+  const handleHTrackClick = (e) => {
+    // Jump scroll to clicked position relative to track
+    const area = canvasAreaRef.current;
+    if (!area) return;
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left - SCROLLER_MARGIN;
+    const hTrackLen = Math.max(0, scrollMetrics.viewportWidth - (scrollMetrics.showV ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+    const movable = Math.max(1, hTrackLen - scrollMetrics.hThumbSize);
+    const ratio = Math.min(1, Math.max(0, clickX / movable));
+    const scrollable = Math.max(0, scrollMetrics.contentWidth - scrollMetrics.viewportWidth);
+    area.scrollLeft = Math.floor(ratio * scrollable);
+    updateScrollMetrics();
+  };
+
+  const handleVTrackClick = (e) => {
+    const area = canvasAreaRef.current;
+    if (!area) return;
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const clickY = e.clientY - rect.top - SCROLLER_MARGIN;
+    const vTrackLen = Math.max(0, scrollMetrics.viewportHeight - (scrollMetrics.showH ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0) - SCROLLER_MARGIN * 2);
+    const movable = Math.max(1, vTrackLen - scrollMetrics.vThumbSize);
+    const ratio = Math.min(1, Math.max(0, clickY / movable));
+    const scrollable = Math.max(0, scrollMetrics.contentHeight - scrollMetrics.viewportHeight);
+    area.scrollTop = Math.floor(ratio * scrollable);
+    updateScrollMetrics();
+  };
+
   const handleCanvasClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -692,9 +887,10 @@ const CanvaEditor = () => {
     canvasArea: {
       flex: 1,
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
       padding: '20px',
+      paddingRight: isRightSidebarCollapsed ? '28px' : '320px',
       position: 'relative',
       overflow: 'auto',
       minWidth: 0
@@ -706,12 +902,13 @@ const CanvaEditor = () => {
       border: '2px solid #e1e5e9',
       borderRadius: '8px',
       position: 'relative',
+      marginRight: isRightSidebarCollapsed ? 0 : 320,
       cursor: selectedTool === 'select' ? 'default' : 
               selectedTool === 'eraser' ? 'crosshair' :
               ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
       overflow: 'hidden',
       transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
-      transformOrigin: 'center center',
+      transformOrigin: 'top left',
       backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
       backgroundSize: '20px 20px'
     },
@@ -1664,88 +1861,53 @@ const CanvaEditor = () => {
       {/* Main Area */}
       <div style={styles.mainArea}>
         {/* Top Toolbar */}
-        <div style={styles.topToolbar}>
-          {/* History Controls */}
-          <button style={styles.toolbarButton} onClick={undo} disabled={historyIndex <= 0}>
-            <FiRotateCcw size={16} />
-            Undo
-          </button>
-          <button style={styles.toolbarButton} onClick={redo} disabled={historyIndex >= history.length - 1}>
-            <FiRotateCw size={16} />
-            Redo
-          </button>
-          
-          <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
-          
-          {/* Zoom Controls */}
-          <button style={styles.toolbarButton} onClick={handleZoomOut}>
-            <FiZoomOut size={16} />
-          </button>
-          <span style={{ fontSize: '14px', color: '#666', padding: '0 8px' }}>
-            {zoom}%
-          </span>
-          <button style={styles.toolbarButton} onClick={handleZoomIn}>
-            <FiZoomIn size={16} />
-          </button>
-          <button style={styles.toolbarButton} onClick={handleZoomReset}>
-            <FiMaximize size={16} />
-          </button>
-          <button style={styles.toolbarButton} onClick={handleFitToScreen} title="Fit to Screen">
-            <FiMinimize size={16} />
-          </button>
-          
-          <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
-          
-          {/* View Controls */}
-          <button 
-            style={{
-              ...styles.toolbarButton,
-              backgroundColor: showGrid ? '#3182ce' : 'white',
-              color: showGrid ? 'white' : '#666'
-            }}
-            onClick={() => setShowGrid(!showGrid)}
-            title="Toggle Grid"
-          >
-            <FiGrid size={16} />
-          </button>
-          
-          <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
-          
-          {/* File Operations */}
-          <button style={styles.toolbarButton}>
-            <FiSave size={16} />
-            Save
-          </button>
-          <button style={styles.toolbarButton}>
-            <FiDownload size={16} />
-            Export
-          </button>
-          <button style={styles.toolbarButton}>
-            <FiCopy size={16} />
-            Duplicate
-          </button>
-          
-          <div style={{ flex: 1 }} />
-          
-          {/* Status Info */}
-          <span style={{ fontSize: '14px', color: '#666', marginRight: '16px' }}>
-            {canvasSize.width} × {canvasSize.height}
-          </span>
-          <span style={{ fontSize: '14px', color: '#666' }}>
-            {selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)}
-          </span>
-        </div>
+        <TopToolbar
+          styles={styles}
+          undo={undo}
+          redo={redo}
+          historyIndex={historyIndex}
+          historyLength={history.length}
+          zoom={zoom}
+          handleZoomOut={handleZoomOut}
+          handleZoomIn={handleZoomIn}
+          handleZoomReset={handleZoomReset}
+          handleFitToScreen={handleFitToScreen}
+          showGrid={showGrid}
+          setShowGrid={setShowGrid}
+          canvasSize={canvasSize}
+          selectedTool={selectedTool}
+        />
 
         {/* Canvas Area */}
         <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
-          <div 
-            style={styles.canvas} 
-            onClick={handleCanvasClick} 
-            onMouseDown={handleDrawingMouseDown}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseLeave={handleCanvasMouseLeave}
-            ref={canvasRef}
+          <div ref={contentWrapperRef}
+            style={{
+              width: canvasSize.width,
+              height: canvasSize.height,
+              position: 'relative'
+            }}
           >
+            {/* Invisible spacer to create scrollable area proportional to zoom */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: canvasSize.width * (zoom / 100),
+                height: canvasSize.height * (zoom / 100),
+                pointerEvents: 'none',
+                opacity: 0
+              }}
+            />
+            <div 
+              style={styles.canvas} 
+              onClick={handleCanvasClick} 
+              onMouseDown={handleDrawingMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseLeave={handleCanvasMouseLeave}
+              ref={canvasRef}
+            >
             {layers.length === 0 && !hasChosenTemplate ? (
               <div
                 style={{
@@ -2006,8 +2168,73 @@ const CanvaEditor = () => {
                 />
               </svg>
             )}
+            </div>
           </div>
-          
+          {/* Custom Scrollers */}
+          {scrollMetrics.showH && (
+            <div
+              onMouseDown={handleHTrackClick}
+              style={{
+                position: 'absolute',
+                left: SCROLLER_MARGIN,
+                right: SCROLLER_MARGIN + (scrollMetrics.showV ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0),
+                bottom: SCROLLER_MARGIN,
+                height: SCROLLER_THICKNESS,
+                background: '#e5e7eb',
+                borderRadius: 6,
+                cursor: 'pointer',
+                zIndex: 2000,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+              }}
+            >
+              <div
+                onMouseDown={handleHThumbMouseDown}
+                style={{
+                  position: 'absolute',
+                  left: scrollMetrics.hThumbPos,
+                  top: 0,
+                  height: SCROLLER_THICKNESS,
+                  width: scrollMetrics.hThumbSize,
+                  background: '#9ca3af',
+                  borderRadius: 6,
+                  cursor: 'grab',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                }}
+              />
+            </div>
+          )}
+          {scrollMetrics.showV && (
+            <div
+              onMouseDown={handleVTrackClick}
+              style={{
+                position: 'absolute',
+                top: SCROLLER_MARGIN,
+                bottom: SCROLLER_MARGIN + (scrollMetrics.showH ? SCROLLER_THICKNESS + SCROLLER_MARGIN : 0),
+                right: SCROLLER_MARGIN,
+                width: SCROLLER_THICKNESS,
+                background: '#e5e7eb',
+                borderRadius: 6,
+                cursor: 'pointer',
+                zIndex: 2000,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+              }}
+            >
+              <div
+                onMouseDown={handleVThumbMouseDown}
+                style={{
+                  position: 'absolute',
+                  top: scrollMetrics.vThumbPos,
+                  left: 0,
+                  width: SCROLLER_THICKNESS,
+                  height: scrollMetrics.vThumbSize,
+                  background: '#9ca3af',
+                  borderRadius: 6,
+                  cursor: 'grab',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
