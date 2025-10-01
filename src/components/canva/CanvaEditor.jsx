@@ -48,6 +48,15 @@ const CanvaEditor = () => {
     blur: 0,
     opacity: 100
   });
+  const [drawingSettings, setDrawingSettings] = useState({
+    brushSize: 5,
+    brushColor: '#000000',
+    isDrawing: false,
+    drawingMode: 'brush', // 'brush', 'pen', 'eraser'
+    opacity: 100
+  });
+  const [drawingData, setDrawingData] = useState([]);
+  const [currentPath, setCurrentPath] = useState([]);
   const [openSections, setOpenSections] = useState({
     selection: true,
     text: true,
@@ -57,6 +66,9 @@ const CanvaEditor = () => {
     templates: true,
     canvas: true,
   });
+  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
 
   const toggleSection = (key) => {
     setOpenSections(prev => {
@@ -72,6 +84,86 @@ const CanvaEditor = () => {
   const canvasRef = useRef(null);
   const canvasAreaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const lastPointRef = useRef(null);
+  const lastTimeRef = useRef(0);
+
+  // Convert mouse/touch client coordinates into untransformed canvas coordinates,
+  // accounting for the current zoom and pan transforms applied via CSS.
+  const getCanvasPoint = useCallback((clientX, clientY) => {
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return { x: 0, y: 0 };
+    const rect = canvasEl.getBoundingClientRect();
+    const rawX = clientX - rect.left;
+    const rawY = clientY - rect.top;
+    const scale = zoom / 100;
+    // Inverse of transform: scale(scale) translate(pan.x, pan.y)
+    // Since translate is applied before scale in CSS (right-to-left),
+    // the inverse mapping is: p = (d / scale) - pan
+    const x = rawX / scale - pan.x;
+    const y = rawY / scale - pan.y;
+    return { x, y };
+  }, [zoom, pan]);
+
+  const getDistance = (a, b) => {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.hypot(dx, dy);
+  };
+
+  // Eraser functionality - only affect drawing layers under cursor
+  const handleEraserAction = (x, y) => {
+    const eraserRadius = drawingSettings.brushSize / 2;
+    
+    // Find layers that intersect with the eraser area
+    const layersToErase = layers.filter(layer => {
+      if (!layer.visible) return false;
+      // Only allow erasing on drawing layers; ignore shapes/images/text entirely
+      if (layer.type !== 'drawing') return false;
+      
+      // Check if eraser circle intersects with layer bounds
+      const layerLeft = layer.x;
+      const layerRight = layer.x + layer.width;
+      const layerTop = layer.y;
+      const layerBottom = layer.y + layer.height;
+      
+      // Check if eraser circle intersects with layer rectangle
+      const closestX = Math.max(layerLeft, Math.min(x, layerRight));
+      const closestY = Math.max(layerTop, Math.min(y, layerBottom));
+      const distance = Math.hypot(x - closestX, y - closestY);
+      
+      return distance <= eraserRadius;
+    });
+    
+    if (layersToErase.length > 0) {
+      // Only modify drawing layers; keep all other layers intact
+      const newLayers = layers.map(layer => {
+        const layerToErase = layersToErase.find(l => l.id === layer.id);
+        if (!layerToErase) return layer;
+        
+        // For drawing layers, create holes by removing path points near the eraser
+        const newPath = layer.path.filter(point => {
+          const distance = Math.hypot(point.x - (x - layer.x), point.y - (y - layer.y));
+          return distance > eraserRadius;
+        });
+        
+        if (newPath.length < 2) {
+          // If too few points remain, delete only this drawing layer
+          return null;
+        }
+        
+        return { ...layer, path: newPath };
+      }).filter(Boolean);
+      
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+      
+      // Clear selection if selected layer was erased
+      const erasedLayerIds = layersToErase.map(l => l.id);
+      if (erasedLayerIds.includes(selectedLayer)) {
+        setSelectedLayer(null);
+      }
+    }
+  };
 
   // History management
   const saveToHistory = (newLayers) => {
@@ -98,6 +190,15 @@ const CanvaEditor = () => {
   const handleToolSelect = (toolId) => {
     setSelectedTool(toolId);
     setSelectedLayer(null);
+    
+    // Set drawing mode when selecting drawing tools
+    if (['brush', 'pen', 'eraser'].includes(toolId)) {
+      setDrawingSettings(prev => ({ ...prev, drawingMode: toolId }));
+    }
+  };
+
+  const handleDrawingSettingsChange = (property, value) => {
+    setDrawingSettings(prev => ({ ...prev, [property]: value }));
   };
 
   const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
@@ -244,6 +345,8 @@ const CanvaEditor = () => {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       setSelectedLayer(layerId);
+    } else if (['brush', 'pen', 'eraser'].includes(selectedTool)) {
+      handleDrawingMouseDown(e);
     }
   };
 
@@ -253,42 +356,126 @@ const CanvaEditor = () => {
       const deltaY = e.clientY - resizeStart.y;
       const newWidth = Math.max(10, resizeStart.width + deltaX);
       const newHeight = Math.max(10, resizeStart.height + deltaY);
-      const newLayers = layers.map(layer =>
+      setLayers(prevLayers => prevLayers.map(layer =>
         layer.id === resizeStart.layerId
           ? { ...layer, width: newWidth, height: newHeight }
           : layer
-      );
-      setLayers(newLayers);
+      ));
       return;
     }
     if (isDragging && selectedLayer) {
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
       
-      const newLayers = layers.map(layer => 
+      setLayers(prevLayers => prevLayers.map(layer => 
         layer.id === selectedLayer 
           ? { ...layer, x: layer.x + deltaX, y: layer.y + deltaY }
           : layer
-      );
-      setLayers(newLayers);
+      ));
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, [isDragging, selectedLayer, dragStart, layers, isResizing, resizeStart]);
+    if (drawingSettings.isDrawing && ['brush', 'pen', 'eraser'].includes(selectedTool)) {
+      const now = performance.now();
+      const minMs = 8; // throttle
+      if (now - lastTimeRef.current < minMs) return;
+      const point = getCanvasPoint(e.clientX, e.clientY);
+      
+      if (selectedTool === 'eraser') {
+        // Handle eraser dragging
+        handleEraserAction(point.x, point.y);
+        lastTimeRef.current = now;
+        lastPointRef.current = point;
+        return;
+      }
+      
+      const lastPoint = lastPointRef.current || point;
+      const minDist = Math.max(1, drawingSettings.brushSize * 0.25);
+      if (Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) < minDist) return;
+      lastTimeRef.current = now;
+      lastPointRef.current = point;
+      setCurrentPath(prev => [...prev, { ...point, pressure: 1 }]);
+    }
+  }, [isDragging, selectedLayer, dragStart, isResizing, resizeStart, drawingSettings.isDrawing, selectedTool]);
 
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
-      saveToHistory(layers);
+      setLayers(currentLayers => {
+        saveToHistory(currentLayers);
+        return currentLayers;
+      });
     }
     if (isResizing) {
       setIsResizing(false);
       setResizeStart({ x: 0, y: 0, width: 0, height: 0, layerId: null });
-      saveToHistory(layers);
+      setLayers(currentLayers => {
+        saveToHistory(currentLayers);
+        return currentLayers;
+      });
     }
-  }, [isDragging, isResizing, layers]);
+    if (drawingSettings.isDrawing && selectedTool === 'eraser') {
+      // Eraser doesn't create drawing paths, just erase content
+      setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
+      return;
+    }
+    
+    if (drawingSettings.isDrawing && currentPath.length > 1) {
+      // Calculate bounding box for the drawing path
+      const minX = Math.min(...currentPath.map(p => p.x));
+      const maxX = Math.max(...currentPath.map(p => p.x));
+      const minY = Math.min(...currentPath.map(p => p.y));
+      const maxY = Math.max(...currentPath.map(p => p.y));
+      
+      // Add padding for brush size
+      const padding = Math.max(drawingSettings.brushSize / 2, 5);
+      const width = maxX - minX + padding * 2;
+      const height = maxY - minY + padding * 2;
+      
+      // Only create drawing layer if it has meaningful size
+      if (width > 5 && height > 5) {
+        // Normalize path coordinates relative to the bounding box
+        const normalizedPath = currentPath.map(point => ({
+          ...point,
+          x: point.x - minX + padding,
+          y: point.y - minY + padding
+        }));
+        
+        const newDrawingPath = {
+          id: Date.now(),
+          type: 'drawing',
+          name: `${drawingSettings.drawingMode.charAt(0).toUpperCase() + drawingSettings.drawingMode.slice(1)} Path`,
+          path: normalizedPath,
+          brushSize: drawingSettings.brushSize,
+          color: drawingSettings.brushColor,
+          mode: drawingSettings.drawingMode,
+          opacity: drawingSettings.opacity,
+          x: minX - padding,
+          y: minY - padding,
+          width: Math.max(width, 20),
+          height: Math.max(height, 20),
+          visible: true,
+          locked: false
+        };
+        
+        setLayers(prevLayers => {
+          const newLayers = [...prevLayers, newDrawingPath];
+          saveToHistory(newLayers);
+          return newLayers;
+        });
+        setSelectedLayer(newDrawingPath.id);
+      }
+      
+      setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
+      setCurrentPath([]);
+    } else if (drawingSettings.isDrawing) {
+      // Clear the drawing state even if path is too short
+      setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
+      setCurrentPath([]);
+    }
+  }, [isDragging, isResizing, drawingSettings.isDrawing, currentPath, drawingSettings.drawingMode, drawingSettings.brushSize, drawingSettings.brushColor, drawingSettings.opacity]);
 
   useEffect(() => {
-    if (isDragging || isResizing) {
+    if (isDragging || isResizing || drawingSettings.isDrawing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -296,7 +483,7 @@ const CanvaEditor = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
 
   const handleResizeMouseDown = (e, layer) => {
     e.stopPropagation();
@@ -384,14 +571,47 @@ const CanvaEditor = () => {
     }
   };
 
+  // Drawing functionality
+  const handleDrawingMouseDown = (e) => {
+    if (!['brush', 'pen', 'eraser'].includes(selectedTool)) return;
+    const { x, y } = getCanvasPoint(e.clientX, e.clientY);
+    
+    if (selectedTool === 'eraser') {
+      // Start eraser drawing mode and erase content under cursor
+      setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
+      handleEraserAction(x, y);
+      lastPointRef.current = { x, y, pressure: 1 };
+      lastTimeRef.current = performance.now();
+      return;
+    }
+    
+    setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
+    const firstPoint = { x, y, pressure: 1 };
+    lastPointRef.current = firstPoint;
+    lastTimeRef.current = performance.now();
+    setCurrentPath([firstPoint]);
+  };
+
+  const handleCanvasMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setMousePosition({ x, y });
+    setIsMouseOverCanvas(true);
+  };
+
+  const handleCanvasMouseLeave = () => {
+    setIsMouseOverCanvas(false);
+  };
+
   const handleCanvasClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    if (selectedTool !== 'select') {
+    if (selectedTool !== 'select' && !['brush', 'pen', 'eraser'].includes(selectedTool)) {
       handleAddElement(x, y);
-    } else {
+    } else if (selectedTool === 'select') {
       setSelectedLayer(null);
     }
   };
@@ -414,14 +634,15 @@ const CanvaEditor = () => {
       width: '280px',
       minWidth: '280px',
       flex: '0 0 280px',
-      backgroundColor: 'white',
-      borderRight: '1px solid #e1e5e9',
+      backgroundColor: '#1e293b',
+      borderRight: '1px solid #334155',
       padding: '20px',
       overflowY: 'auto',
       position: 'sticky',
       top: 0,
       height: '100vh',
       zIndex: 2,
+      color: '#ffffff',
     },
     mainArea: {
       flex: 1,
@@ -429,7 +650,8 @@ const CanvaEditor = () => {
       flexDirection: 'column',
       backgroundColor: '#f8f9fa',
       minWidth: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      transition: 'all 0.3s ease'
     },
     topToolbar: {
       height: '60px',
@@ -438,7 +660,32 @@ const CanvaEditor = () => {
       display: 'flex',
       alignItems: 'center',
       padding: '0 20px',
-      gap: '12px'
+      gap: '12px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 20
+    },
+    toolbarButton: {
+      padding: '8px 12px',
+      border: '1px solid #e1e5e9',
+      borderRadius: '6px',
+      backgroundColor: 'white',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '14px',
+      color: '#333',
+      transition: 'all 0.2s ease',
+      fontWeight: '500',
+      '&:hover': {
+        backgroundColor: '#f8f9fa',
+        borderColor: '#d1d5db'
+      },
+      '&:disabled': {
+        opacity: 0.5,
+        cursor: 'not-allowed'
+      }
     },
     canvasArea: {
       flex: 1,
@@ -457,7 +704,9 @@ const CanvaEditor = () => {
       border: '2px solid #e1e5e9',
       borderRadius: '8px',
       position: 'relative',
-      cursor: selectedTool === 'select' ? 'default' : 'crosshair',
+      cursor: selectedTool === 'select' ? 'default' : 
+              selectedTool === 'eraser' ? 'crosshair' :
+              ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
       overflow: 'hidden',
       transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
       transformOrigin: 'center center',
@@ -465,36 +714,44 @@ const CanvaEditor = () => {
       backgroundSize: '20px 20px'
     },
     rightSidebar: {
-      width: '280px',
-      minWidth: '280px',
-      flex: '0 0 280px',
+      width: isRightSidebarCollapsed ? '60px' : '280px',
+      minWidth: isRightSidebarCollapsed ? '60px' : '280px',
+      flex: isRightSidebarCollapsed ? '0 0 60px' : '0 0 280px',
       backgroundColor: 'white',
       borderLeft: '1px solid #e1e5e9',
-      padding: '20px',
+      // Add internal top padding equal to toolbar height (60px) to avoid external gap
+      padding: isRightSidebarCollapsed ? '80px 8px 20px' : '80px 20px 20px',
       overflowY: 'auto',
       position: 'sticky',
       top: 0,
       height: '100vh',
-      zIndex: 2
+      zIndex: 5,
+      transition: 'all 0.3s ease'
     },
     toolButton: {
-      padding: '10px 16px',
-      border: '1px solid #e1e5e9',
-      borderRadius: '6px',
-      backgroundColor: 'white',
+      padding: '12px 16px',
+      border: 'none',
+      borderRadius: '8px',
+      backgroundColor: 'transparent',
       cursor: 'pointer',
-      margin: '4px',
+      margin: '2px 0',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
+      gap: '12px',
       fontSize: '14px',
+      color: '#ffffff',
       width: '100%',
-      justifyContent: 'flex-start'
+      justifyContent: 'flex-start',
+      fontWeight: '500',
+      transition: 'all 0.2s ease',
+      '&:hover': {
+        backgroundColor: '#334155',
+      }
     },
     activeTool: {
-      backgroundColor: '#3182ce',
-      color: 'white',
-      borderColor: '#3182ce'
+      backgroundColor: '#334155',
+      color: '#ffffff',
+      borderColor: '#334155'
     },
     layerItem: {
       padding: '12px',
@@ -598,24 +855,33 @@ const CanvaEditor = () => {
 
   return (
     <div style={styles.container}>
-      {/* Debug Info */}
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        zIndex: 1000,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '8px 12px',
-        borderRadius: '4px',
-        fontSize: '12px'
-      }}>
-        Canva Editor Active
-      </div>
       
       {/* Left Sidebar */}
       <div style={styles.leftSidebar}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '16px' }}>Tools</h3>
+        {/* Header */}
+        <div style={{ 
+          padding: "0 0 20px 0", 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 10,
+          borderBottom: "1px solid #334155",
+          marginBottom: "20px"
+        }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "12px",
+              background: "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.35rem" }}>🎨</span>
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Design Tools</span>
+        </div>
         
         {/* Selection Tool */}
         <div>
@@ -636,9 +902,9 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
@@ -646,8 +912,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'select' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'select' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'select' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'select' ? '#334155' : 'transparent',
                     ...(selectedTool === 'select' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('select')}
@@ -681,9 +947,9 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
@@ -691,8 +957,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'heading' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'heading' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'heading' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'heading' ? '#334155' : 'transparent',
                     ...(selectedTool === 'heading' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('heading')}
@@ -708,8 +974,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'subheading' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'subheading' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'subheading' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'subheading' ? '#334155' : 'transparent',
                     ...(selectedTool === 'subheading' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('subheading')}
@@ -725,8 +991,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'textbox' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'textbox' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'textbox' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'textbox' ? '#334155' : 'transparent',
                     ...(selectedTool === 'textbox' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('textbox')}
@@ -763,18 +1029,18 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
               >
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'rectangle' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'rectangle' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'rectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rectangle')}
@@ -786,9 +1052,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'roundedRectangle' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'roundedRectangle' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'roundedRectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('roundedRectangle')}
@@ -800,9 +1066,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'circle' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'circle' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'circle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('circle')}
@@ -814,9 +1080,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'ellipse' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'ellipse' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
                   ...(selectedTool === 'ellipse' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('ellipse')}
@@ -828,9 +1094,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'triangle' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'triangle' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'triangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('triangle')}
@@ -842,9 +1108,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'rightTriangle' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'rightTriangle' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'rightTriangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rightTriangle')}
@@ -856,9 +1122,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'star' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'star' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
                   ...(selectedTool === 'star' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star')}
@@ -870,9 +1136,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'star6' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'star6' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
                   ...(selectedTool === 'star6' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star6')}
@@ -884,9 +1150,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'heart' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'heart' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
                   ...(selectedTool === 'heart' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('heart')}
@@ -898,9 +1164,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'diamond' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'diamond' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
                   ...(selectedTool === 'diamond' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('diamond')}
@@ -912,9 +1178,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'pentagon' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'pentagon' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
                   ...(selectedTool === 'pentagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('pentagon')}
@@ -926,9 +1192,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'hexagon' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'hexagon' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
                   ...(selectedTool === 'hexagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('hexagon')}
@@ -940,9 +1206,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'arrow' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'arrow' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrow' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrow')}
@@ -954,9 +1220,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'arrowLeft' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'arrowLeft' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowLeft' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowLeft')}
@@ -968,9 +1234,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'arrowUp' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'arrowUp' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowUp' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowUp')}
@@ -982,9 +1248,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'arrowDown' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'arrowDown' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowDown' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowDown')}
@@ -996,9 +1262,9 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
-                  ...styles.toolButton,
-                    border: hoveredOption === 'cloud' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'cloud' ? '#eaf2ff' : 'transparent',
+                  ...styles.toolbarButton,
+                    border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
                   ...(selectedTool === 'cloud' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('cloud')}
@@ -1032,9 +1298,9 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
@@ -1042,8 +1308,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'brush' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'brush' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'brush' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'brush' ? '#334155' : 'transparent',
                     ...(selectedTool === 'brush' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('brush')}
@@ -1056,8 +1322,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'pen' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'pen' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'pen' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'pen' ? '#334155' : 'transparent',
                     ...(selectedTool === 'pen' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('pen')}
@@ -1070,8 +1336,8 @@ const CanvaEditor = () => {
                 <button
                   style={{
                     ...styles.toolButton,
-                    border: hoveredOption === 'eraser' ? '1px solid #3182ce' : 'none',
-                    backgroundColor: hoveredOption === 'eraser' ? '#eaf2ff' : 'transparent',
+                    border: hoveredOption === 'eraser' ? '1px solid #ffffff' : 'none',
+                    backgroundColor: hoveredOption === 'eraser' ? '#334155' : 'transparent',
                     ...(selectedTool === 'eraser' ? styles.activeTool : {})
                   }}
                   onMouseEnter={() => setHoveredOption('eraser')}
@@ -1140,15 +1406,15 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
               >
                 <button 
-                  style={{ ...styles.toolButton, border: hoveredOption === 'upload' ? '1px solid #3182ce' : 'none', backgroundColor: hoveredOption === 'upload' ? '#eaf2ff' : 'transparent' }}
+                  style={{ ...styles.toolbarButton, border: hoveredOption === 'upload' ? '1px solid #ffffff' : 'none', backgroundColor: hoveredOption === 'upload' ? '#334155' : 'transparent' }}
                   onMouseEnter={() => setHoveredOption('upload')}
                   onMouseLeave={() => setHoveredOption(null)}
                   onClick={() => fileInputRef.current?.click()}
@@ -1218,9 +1484,9 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
@@ -1237,8 +1503,8 @@ const CanvaEditor = () => {
                         alignItems: 'center',
                         gap: '2px',
                         minHeight: '60px',
-                        border: hoveredOption === `tpl-${template.id}` ? '1px solid #3182ce' : '1px solid #e1e5e9',
-                        backgroundColor: hoveredOption === `tpl-${template.id}` ? '#eaf2ff' : 'white'
+                        border: hoveredOption === `tpl-${template.id}` ? '1px solid #ffffff' : '1px solid #e1e5e9',
+                        backgroundColor: hoveredOption === `tpl-${template.id}` ? '#334155' : 'white'
                       }}
                       onMouseEnter={() => setHoveredOption(`tpl-${template.id}`)}
                       onMouseLeave={() => setHoveredOption(null)}
@@ -1267,6 +1533,83 @@ const CanvaEditor = () => {
           )}
         </div>
 
+        {/* Drawing Settings */}
+        {['brush', 'pen', 'eraser'].includes(selectedTool) && (
+          <div style={{ marginTop: '12px' }}>
+            <div
+              style={{
+                border: '1px solid #e1e5e9',
+                borderRadius: '8px',
+                backgroundColor: '#f8f9fa',
+                padding: '12px',
+                marginTop: '6px'
+              }}
+            >
+              <h4 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#374151' }}>
+                {selectedTool === 'eraser' ? 'Eraser Settings' : 'Drawing Settings'}
+              </h4>
+              
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  {selectedTool === 'eraser' ? 'Eraser Size' : 'Brush Size'}: {drawingSettings.brushSize}px
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  value={drawingSettings.brushSize}
+                  onChange={(e) => handleDrawingSettingsChange('brushSize', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  {selectedTool === 'eraser' ? 'Eraser Color' : 'Color'}
+                </label>
+                <input
+                  type="color"
+                  value={drawingSettings.brushColor}
+                  onChange={(e) => handleDrawingSettingsChange('brushColor', e.target.value)}
+                  style={{ width: '100%', height: '32px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  Opacity: {drawingSettings.opacity}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={drawingSettings.opacity}
+                  onChange={(e) => handleDrawingSettingsChange('opacity', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  Tool Mode
+                </label>
+                <select
+                  value={drawingSettings.drawingMode}
+                  onChange={(e) => {
+                    handleDrawingSettingsChange('drawingMode', e.target.value);
+                    setSelectedTool(e.target.value);
+                  }}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                >
+                  <option value="brush">Brush</option>
+                  <option value="pen">Pen</option>
+                  <option value="eraser">Eraser</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Canvas Size Controls */}
         <div style={{ marginTop: '12px' }}>
           <button
@@ -1286,9 +1629,9 @@ const CanvaEditor = () => {
             <div style={{ paddingLeft: 8 }}>
               <div
                 style={{
-                  border: '1px solid #e1e5e9',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: '#334155',
                   padding: '8px',
                   marginTop: '6px'
                 }}
@@ -1320,11 +1663,11 @@ const CanvaEditor = () => {
         {/* Top Toolbar */}
         <div style={styles.topToolbar}>
           {/* History Controls */}
-          <button style={styles.toolButton} onClick={undo} disabled={historyIndex <= 0}>
+          <button style={styles.toolbarButton} onClick={undo} disabled={historyIndex <= 0}>
             <FiRotateCcw size={16} />
             Undo
           </button>
-          <button style={styles.toolButton} onClick={redo} disabled={historyIndex >= history.length - 1}>
+          <button style={styles.toolbarButton} onClick={redo} disabled={historyIndex >= history.length - 1}>
             <FiRotateCw size={16} />
             Redo
           </button>
@@ -1332,19 +1675,19 @@ const CanvaEditor = () => {
           <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
           
           {/* Zoom Controls */}
-          <button style={styles.toolButton} onClick={handleZoomOut}>
+          <button style={styles.toolbarButton} onClick={handleZoomOut}>
             <FiZoomOut size={16} />
           </button>
           <span style={{ fontSize: '14px', color: '#666', padding: '0 8px' }}>
             {zoom}%
           </span>
-          <button style={styles.toolButton} onClick={handleZoomIn}>
+          <button style={styles.toolbarButton} onClick={handleZoomIn}>
             <FiZoomIn size={16} />
           </button>
-          <button style={styles.toolButton} onClick={handleZoomReset}>
+          <button style={styles.toolbarButton} onClick={handleZoomReset}>
             <FiMaximize size={16} />
           </button>
-          <button style={styles.toolButton} onClick={handleFitToScreen} title="Fit to Screen">
+          <button style={styles.toolbarButton} onClick={handleFitToScreen} title="Fit to Screen">
             <FiMinimize size={16} />
           </button>
           
@@ -1353,7 +1696,7 @@ const CanvaEditor = () => {
           {/* View Controls */}
           <button 
             style={{
-              ...styles.toolButton,
+              ...styles.toolbarButton,
               backgroundColor: showGrid ? '#3182ce' : 'white',
               color: showGrid ? 'white' : '#666'
             }}
@@ -1366,15 +1709,15 @@ const CanvaEditor = () => {
           <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
           
           {/* File Operations */}
-          <button style={styles.toolButton}>
+          <button style={styles.toolbarButton}>
             <FiSave size={16} />
             Save
           </button>
-          <button style={styles.toolButton}>
+          <button style={styles.toolbarButton}>
             <FiDownload size={16} />
             Export
           </button>
-          <button style={styles.toolButton}>
+          <button style={styles.toolbarButton}>
             <FiCopy size={16} />
             Duplicate
           </button>
@@ -1392,7 +1735,13 @@ const CanvaEditor = () => {
 
         {/* Canvas Area */}
         <div style={styles.canvasArea} ref={canvasAreaRef}>
-          <div style={styles.canvas} onClick={handleCanvasClick} ref={canvasRef}>
+          <div 
+            style={styles.canvas} 
+            onClick={handleCanvasClick} 
+            onMouseMove={handleCanvasMouseMove}
+            onMouseLeave={handleCanvasMouseLeave}
+            ref={canvasRef}
+          >
             {layers.length === 0 ? (
               <div style={{ textAlign: 'center', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '10px' }}>🎨</div>
@@ -1480,6 +1829,34 @@ const CanvaEditor = () => {
                       draggable={false}
                     />
                   )}
+                  {layer.type === 'drawing' && (
+                    <svg
+                      width={layer.width}
+                      height={layer.height}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        pointerEvents: 'none'
+                      }}
+                      viewBox={`0 0 ${layer.width} ${layer.height}`}
+                    >
+                      <path
+                        d={layer.path.map((point, index) => 
+                          index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
+                        ).join(' ')}
+                        stroke={layer.mode === 'eraser' ? '#ffffff' : layer.color}
+                        strokeWidth={layer.brushSize}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity={layer.opacity / 100}
+                        style={{
+                          mixBlendMode: layer.mode === 'eraser' ? 'multiply' : 'normal'
+                        }}
+                      />
+                    </svg>
+                  )}
                   {selectedLayer === layer.id && (
                     <div
                       onMouseDown={(e) => handleResizeMouseDown(e, layer)}
@@ -1501,58 +1878,206 @@ const CanvaEditor = () => {
               </div>
               ))
             )}
+            
+            {/* Eraser preview - circular cursor */}
+            {selectedTool === 'eraser' && isMouseOverCanvas && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${mousePosition.x}px`,
+                  top: `${mousePosition.y}px`,
+                  width: `${drawingSettings.brushSize}px`,
+                  height: `${drawingSettings.brushSize}px`,
+                  borderRadius: '50%',
+                  border: `2px solid ${drawingSettings.brushColor}`,
+                  backgroundColor: `${drawingSettings.brushColor}20`,
+                  transform: 'translate(-50%, -50%)',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  boxShadow: '0 0 0 1px rgba(0,0,0,0.3)'
+                }}
+              />
+            )}
+
+            {/* Current drawing path preview */}
+            {drawingSettings.isDrawing && currentPath.length > 0 && selectedTool !== 'eraser' && (
+              <svg
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: canvasSize.width,
+                  height: canvasSize.height,
+                  pointerEvents: 'none',
+                  zIndex: 1000
+                }}
+                viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+              >
+                <path
+                  d={currentPath.map((point, index) => 
+                    index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
+                  ).join(' ')}
+                  stroke={drawingSettings.drawingMode === 'eraser' ? '#ffffff' : drawingSettings.brushColor}
+                  strokeWidth={drawingSettings.brushSize}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={drawingSettings.opacity / 100}
+                  style={{
+                    mixBlendMode: drawingSettings.drawingMode === 'eraser' ? 'multiply' : 'normal'
+                  }}
+                />
+              </svg>
+            )}
           </div>
         </div>
       </div>
 
       {/* Right Sidebar */}
       <div style={styles.rightSidebar}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '16px' }}>Layers</h3>
+        {/* Toggle Button */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '20px',
+          paddingBottom: '10px',
+          borderBottom: '1px solid #e1e5e9'
+        }}>
+          {!isRightSidebarCollapsed && (
+            <h3 style={{ margin: 0, fontSize: '16px' }}>Layers</h3>
+          )}
+          <button
+            onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+            style={{
+              padding: '8px',
+              border: '1px solid #e1e5e9',
+              borderRadius: '6px',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              minWidth: '32px',
+              height: '32px'
+            }}
+            title={isRightSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isRightSidebarCollapsed ? (
+              <FiArrowLeft size={16} color="#666" />
+            ) : (
+              <FiArrowRight size={16} color="#666" />
+            )}
+          </button>
+        </div>
         
-        {layers.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
-            No layers yet
-          </div>
-        ) : (
-          layers.map(layer => (
-            <div key={layer.id} style={{
-              ...styles.layerItem,
-              border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
-              backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
+        {!isRightSidebarCollapsed && (
+          <>
+            {layers.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
+                No layers yet
+              </div>
+            ) : (
+              layers.map(layer => (
+                <div key={layer.id} style={{
+                  ...styles.layerItem,
+                  border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
+                  backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
+                }}>
+                  <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '500' }}>{layer.name}</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>{layer.type}</div>
+                  </div>
+                  <div style={styles.layerControls}>
+                    <button
+                      style={styles.controlButton}
+                      onClick={() => handleLayerToggleVisibility(layer.id)}
+                      title={layer.visible ? 'Hide' : 'Show'}
+                    >
+                      {layer.visible ? <FiEye size={14} /> : <FiEyeOff size={14} />}
+                    </button>
+                    <button
+                      style={styles.controlButton}
+                      onClick={() => handleLayerDuplicate(layer.id)}
+                      title="Duplicate"
+                    >
+                      <FiCopy size={14} />
+                    </button>
+                    <button
+                      style={styles.controlButton}
+                      onClick={() => handleLayerDelete(layer.id)}
+                      title="Delete"
+                    >
+                      <FiTrash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+
+        {/* Collapsed state - show layer count and quick actions */}
+        {isRightSidebarCollapsed && (
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: '12px',
+            paddingTop: '10px'
+          }}>
+            <div style={{ 
+              textAlign: 'center', 
+              fontSize: '12px', 
+              color: '#666',
+              fontWeight: '500'
             }}>
-              <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1 }}>
-              <div style={{ fontWeight: '500' }}>{layer.name}</div>
-              <div style={{ fontSize: '12px', color: '#666' }}>{layer.type}</div>
-              </div>
-              <div style={styles.layerControls}>
-                <button
-                  style={styles.controlButton}
-                  onClick={() => handleLayerToggleVisibility(layer.id)}
-                  title={layer.visible ? 'Hide' : 'Show'}
-                >
-                  {layer.visible ? <FiEye size={14} /> : <FiEyeOff size={14} />}
-                </button>
-                <button
-                  style={styles.controlButton}
-                  onClick={() => handleLayerDuplicate(layer.id)}
-                  title="Duplicate"
-                >
-                  <FiCopy size={14} />
-                </button>
-                <button
-                  style={styles.controlButton}
-                  onClick={() => handleLayerDelete(layer.id)}
-                  title="Delete"
-                >
-                  <FiTrash2 size={14} />
-                </button>
-              </div>
+              {layers.length} layers
             </div>
-          ))
+            {layers.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                {layers.slice(0, 3).map(layer => (
+                  <button
+                    key={layer.id}
+                    onClick={() => handleLayerSelect(layer.id)}
+                    style={{
+                      padding: '8px',
+                      border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
+                      borderRadius: '6px',
+                      backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                      minHeight: '32px'
+                    }}
+                    title={`${layer.name} (${layer.type})`}
+                  >
+                    {layer.type === 'text' && <FiType size={16} color="#666" />}
+                    {layer.type === 'shape' && <FiSquare size={16} color="#666" />}
+                    {layer.type === 'image' && <FiImage size={16} color="#666" />}
+                    {layer.type === 'drawing' && <FiEdit3 size={16} color="#666" />}
+                  </button>
+                ))}
+                {layers.length > 3 && (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    fontSize: '10px', 
+                    color: '#999',
+                    padding: '4px'
+                  }}>
+                    +{layers.length - 3} more
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Properties Panel */}
-        {selectedLayer && (
+        {selectedLayer && !isRightSidebarCollapsed && (
           <div style={styles.propertyPanel}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>Properties</h4>
             
@@ -1791,6 +2316,63 @@ const CanvaEditor = () => {
                   <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
                     {imageSettings.opacity}%
                   </span>
+                </div>
+              </>
+            )}
+
+            {layers.find(l => l.id === selectedLayer)?.type === 'drawing' && (
+              <>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Brush Size</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="50"
+                    value={drawingSettings.brushSize}
+                    onChange={(e) => handleDrawingSettingsChange('brushSize', parseInt(e.target.value))}
+                    style={{ width: '100px' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
+                    {drawingSettings.brushSize}px
+                  </span>
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Color</span>
+                  <input
+                    type="color"
+                    value={drawingSettings.brushColor}
+                    onChange={(e) => handleDrawingSettingsChange('brushColor', e.target.value)}
+                    style={styles.colorInput}
+                  />
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Opacity</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={drawingSettings.opacity}
+                    onChange={(e) => handleDrawingSettingsChange('opacity', parseInt(e.target.value))}
+                    style={{ width: '100px' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
+                    {drawingSettings.opacity}%
+                  </span>
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Mode</span>
+                  <select
+                    value={drawingSettings.drawingMode}
+                    onChange={(e) => {
+                      handleDrawingSettingsChange('drawingMode', e.target.value);
+                      setSelectedTool(e.target.value);
+                    }}
+                    style={styles.propertyInput}
+                  >
+                    <option value="brush">Brush</option>
+                    <option value="pen">Pen</option>
+                    <option value="eraser">Eraser</option>
+                  </select>
                 </div>
               </>
             )}
