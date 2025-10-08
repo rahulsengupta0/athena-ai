@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import { useSidebar } from '../contexts/SidebarContext';
 
 const NAV_ITEMS = [
   {
@@ -50,6 +51,15 @@ const NAV_ITEMS = [
     path: "/image-editor"
   },
   {
+    label: "Canva Clone",
+    key: "canvaClone",
+    icon: <FiGrid size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/canva-clone"
+  },
+  {
     label: "Content Writer",
     key: "contentWriter",
     icon: <FiFileText size={18} />,
@@ -97,16 +107,16 @@ const NAV_ITEMS = [
 
 const SECTIONS = ["Navigation", "AI Tools", "Workspace"];
 
-const sidebarBg = "#f5f6fa";
-const activeBg = "#ece7fc";
-const iconColor = "#5f5aad";
-const textColor = "#292d34";
-const sectionColor = "#b1b6cc";
-const activeTextColor = "#5f5aad";
+const sidebarBg = "#5f5aad";
+const activeBg = "#4a4594";
+const iconColor = "#ffffff";
+const textColor = "#ffffff";
+const sectionColor = "#b8b5d6";
+const activeTextColor = "#ffffff";
 
 const sublabelStyles = {
   pro: {
-    background: "#ede7fe",
+    background: "#ffffff",
     color: "#5f5aad",
     fontWeight: 600,
     fontSize: "0.70rem",
@@ -115,8 +125,8 @@ const sublabelStyles = {
     marginLeft: "8px",
   },
   beta: {
-    background: "#f8dada",
-    color: "#d96464",
+    background: "#ff6b6b",
+    color: "#ffffff",
     fontWeight: 600,
     fontSize: "0.70rem",
     borderRadius: "8px",
@@ -124,8 +134,8 @@ const sublabelStyles = {
     marginLeft: "8px",
   },
   new: {
-    background: "#e9fae4",
-    color: "#6cb670",
+    background: "#51cf66",
+    color: "#ffffff",
     fontWeight: 600,
     fontSize: "0.70rem",
     borderRadius: "8px",
@@ -138,8 +148,8 @@ const SideBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const activePath = location.pathname;
+  const { isCollapsed, setIsCollapsed, isMobile, setIsMobile } = useSidebar();
 
-  const [isMobile, setIsMobile] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
 
   // Detect viewport size
@@ -153,6 +163,11 @@ const SideBar = () => {
   // Auto close drawer on route change for mobile
   React.useEffect(() => {
     if (isMobile) setIsOpen(false);
+  }, [activePath, isMobile]);
+
+  // Auto collapse sidebar on route change for desktop
+  React.useEffect(() => {
+    if (!isMobile) setIsCollapsed(true);
   }, [activePath, isMobile]);
 
   // Prevent background scroll when mobile drawer is open
@@ -169,7 +184,7 @@ const SideBar = () => {
     };
   }, [isOpen, isMobile]);
 
-  const drawerWidth = isMobile ? Math.min(window.innerWidth, 420) : 260;
+  const drawerWidth = isMobile ? Math.min(window.innerWidth, 420) : (isCollapsed ? 60 : 260);
   const sidebarStyle = {
     width: drawerWidth,
     background: sidebarBg,
@@ -181,9 +196,9 @@ const SideBar = () => {
     borderRight: "1px solid #e5e5e9",
     display: "flex",
     flexDirection: "column",
-    transition: "transform 0.25s ease",
+    transition: isMobile ? "transform 0.25s ease" : "width 0.25s ease",
     transform: isMobile ? (isOpen ? "translateX(0)" : "translateX(-100%)") : "none",
-    willChange: isMobile ? "transform" : undefined,
+    willChange: isMobile ? "transform" : "width",
     zIndex: 1000,
     boxShadow: isMobile && isOpen ? "0 10px 30px rgba(0,0,0,0.15)" : "none",
   };
@@ -216,6 +231,32 @@ const SideBar = () => {
         </button>
       )}
 
+      {/* Desktop toggle button - only show when collapsed */}
+      {!isMobile && isCollapsed && (
+        <button
+          aria-label="Expand sidebar"
+          onClick={() => setIsCollapsed(false)}
+          style={{
+            position: "fixed",
+            top: 80,
+            left: 14,
+            zIndex: 1100,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: "none",
+            background: "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "none",
+            cursor: "pointer",
+          }}
+        >
+          <FiMenu size={16} color={iconColor} />
+        </button>
+      )}
+
       {/* Overlay */}
       {isMobile && isOpen && (
         <div
@@ -229,41 +270,56 @@ const SideBar = () => {
         />
       )}
 
-      <div style={sidebarStyle}>
+      <div style={sidebarStyle} className="custom-scrollbar">
       {/* Header */}
-      <div style={{ padding: "28px 20px 12px 20px", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ 
+        padding: isCollapsed && !isMobile ? "28px 12px 12px 12px" : "28px 20px 12px 20px", 
+        display: "flex", 
+        alignItems: "center", 
+        gap: 10,
+        justifyContent: isCollapsed && !isMobile ? "center" : "flex-start"
+      }}>
         <div
           style={{
             width: 36,
             height: 36,
             borderRadius: "12px",
-            background: "#ede7fe",
+            background: "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <span style={{ color: iconColor, fontWeight: 700, fontSize: "1.35rem" }}>🧭</span>
+          <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.35rem" }}>🧭</span>
         </div>
-        <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#434678" }}>Athena AI</span>
+        {(!isCollapsed || isMobile) && (
+          <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Athena AI</span>
+        )}
       </div>
 
       {/* Sections */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      <div style={{ 
+        flex: 1, 
+        minHeight: 0, 
+        overflowY: "auto",
+        marginTop: isCollapsed && !isMobile ? "60px" : "0"
+      }} className="custom-scrollbar">
         {SECTIONS.map((section) => (
           <div key={section}>
-            <div
-              style={{
-                fontSize: "0.78rem",
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                fontWeight: 600,
-                margin: "20px 0 6px 20px",
-                color: sectionColor,
-              }}
-            >
-              {section}
-            </div>
+            {(!isCollapsed || isMobile) && (
+              <div
+                style={{
+                  fontSize: "0.78rem",
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                  margin: "20px 0 6px 20px",
+                  color: sectionColor,
+                }}
+              >
+                {section}
+              </div>
+            )}
             <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
               {NAV_ITEMS.filter((item) => item.section === section).map((item) => {
                 const isActive = activePath === item.path;
@@ -280,28 +336,34 @@ const SideBar = () => {
                         width: "100%",
                         border: "none",
                         outline: "none",
-                        padding: "11px 20px",
+                        padding: isCollapsed && !isMobile ? "11px 12px" : "11px 20px",
                         cursor: "pointer",
                         backgroundColor: isActive ? activeBg : "transparent",
                         color: isActive ? activeTextColor : textColor,
                         fontWeight: isActive ? 600 : 500,
                         fontSize: "1rem",
                         transition: "background 0.15s",
+                        justifyContent: isCollapsed && !isMobile ? "center" : "flex-start",
                       }}
+                      title={isCollapsed && !isMobile ? item.label : undefined}
                     >
                       <span
                         style={{
                           color: iconColor,
                           display: "flex",
                           alignItems: "center",
-                          marginRight: "14px",
+                          marginRight: isCollapsed && !isMobile ? "0" : "14px",
                         }}
                       >
                         {item.icon}
                       </span>
-                      <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
-                      {item.sublabel && (
-                        <span style={sublabelStyles[item.sublabelClass || "new"]}>{item.sublabel}</span>
+                      {(!isCollapsed || isMobile) && (
+                        <>
+                          <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
+                          {item.sublabel && (
+                            <span style={sublabelStyles[item.sublabelClass || "new"]}>{item.sublabel}</span>
+                          )}
+                        </>
                       )}
                     </button>
                   </li>
@@ -315,19 +377,24 @@ const SideBar = () => {
       {/* Footer */}
       <div
         style={{
-          padding: "16px 20px",
-          borderTop: "1px solid #ece7fc",
-          background: "#faf9fe",
+          padding: isCollapsed && !isMobile ? "16px 12px" : "16px 20px",
+          borderTop: "1px solid #4a4594",
+          background: "#4a4594",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 10,
+          justifyContent: isCollapsed && !isMobile ? "center" : "flex-start"
+        }}>
           <div
             style={{
               width: 38,
               height: 38,
               borderRadius: "50%",
-              background: "#ede7fe",
-              color: iconColor,
+              background: "#ffffff",
+              color: "#5f5aad",
               fontWeight: 700,
               display: "flex",
               alignItems: "center",
@@ -337,10 +404,12 @@ const SideBar = () => {
           >
             AT
           </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#434678" }}>Alex Thompson</div>
-            <div style={{ fontSize: "0.8rem", color: "#aba6c1" }}>Pro Plan</div>
-          </div>
+          {(!isCollapsed || isMobile) && (
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#ffffff" }}>Alex Thompson</div>
+              <div style={{ fontSize: "0.8rem", color: "#b8b5d6" }}>Pro Plan</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -349,3 +418,4 @@ const SideBar = () => {
 };
 
 export default SideBar;
+

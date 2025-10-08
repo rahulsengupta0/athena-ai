@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SideBar from './components/SideBar';
+import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { Home } from './pages/Home';
 import { Create } from './pages/Create';
 import AIDesign from './components/createpage/CardsPages/AIDesign';
@@ -21,41 +22,61 @@ import { Team } from './pages/Team';
 import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenerator';
 import BackgroundRemover from './components/imageeditor/BackgroundRemover';
 import ImageEditor from './components/imageeditor/ImageEditor';
+import CanvaClone from './pages/CanvaClone';
+
+const AppContent = () => {
+  const { isCollapsed, isMobile } = useSidebar();
+
+  const getContentMargin = () => {
+    if (isMobile) return '0';
+    return isCollapsed ? '60px' : '260px';
+  };
+
+  return (
+    <div>
+      <SideBar />
+      <div
+        className="app-content"
+        style={{
+          marginLeft: getContentMargin(),
+          transition: 'margin-left 0.25s ease',
+        }}
+      >
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<Create />} />
+          <Route path="/create/ai-design" element={<AIDesign />} />
+          <Route path="/create/image-creator" element={<ImageCreator />} />
+          <Route path="/create/content-writer" element={<ContentWriter />} />
+          <Route path="/create/code-generator" element={<CodeGenerator />} />
+          <Route path="/create/video-producer" element={<VideoProducer />} />
+          <Route path="/create/brand-builder" element={<BrandBuilder />} />
+          <Route path="/projects" element={<Project />} />
+          <Route path="/favorites" element={<Favourites />} />
+          <Route path="/ai-generator" element={<AiGenerator />} />
+          <Route path="/image-editor" element={<ImageEdit />} />
+          <Route path="/video-maker" element={<VideoMaker />} />
+          <Route path="/analytics" element={<Analatics />} />
+          <Route path="/settings" element={<Setting />} />
+          <Route path="/help-support" element={<Help />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/artisticiamge" element={<ArtisticImageGenerator />} />
+          <Route path="/bgremove" element={<BackgroundRemover />} />
+          <Route path="/imageeditor" element={<ImageEditor />} />
+          <Route path="/canva-clone" element={<CanvaClone />} />
+        </Routes>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <Router>
-      <div>
-        <SideBar />
-        <div className="app-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create" element={<Create />} />
-<Route path="/create/ai-design" element={<AIDesign />} />
-<Route path="/create/image-creator" element={<ImageCreator />} />
-<Route path="/create/content-writer" element={<ContentWriter />} />
-<Route path="/create/code-generator" element={<CodeGenerator />} />
-<Route path="/create/video-producer" element={<VideoProducer />} />
-<Route path="/create/brand-builder" element={<BrandBuilder />} />
-
-            
-            <Route path="/projects" element={<Project/>} />
-            <Route path="/favorites" element={<Favourites/>} />
-            <Route path="/ai-generator" element={<AiGenerator/>} />
-            <Route path="/image-editor" element={<ImageEdit/>} />
-            <Route path="/video-maker" element={<VideoMaker/>} />
-            <Route path="/analytics" element={<Analatics/>} />
-            <Route path="/settings" element={<Setting/>} />
-            <Route path="/help-support" element={<Help/>} />
-            <Route path="/team" element={<Team/>} />
-            <Route path="/artisticiamge" element={<ArtisticImageGenerator/>} />
-            <Route path="/bgremove" element={<BackgroundRemover/>} />
-            <Route path="/imageeditor" element={<ImageEditor/>} />
-            {/* Add more routes here if needed */}
-          </Routes>
-        </div>
-      </div>
-    </Router>
+    <SidebarProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </SidebarProvider>
   );
 }
 
