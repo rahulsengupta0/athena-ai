@@ -24,30 +24,111 @@ const LeftSidebar = ({
   showGrid,
   setShowGrid
 }) => {
+  // New custom styles for the redesigned sidebar
+  const customStyles = {
+    sidebar: {
+      ...styles.leftSidebar,
+      background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+      borderRight: '2px solid #374151',
+    },
+    sectionHeader: {
+      color: '#f1f5f9',
+      fontSize: '16px',
+      fontWeight: '700',
+      marginBottom: '16px',
+      padding: '8px 0',
+      borderBottom: '2px solid #374151',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    },
+    buttonContainer: {
+      backgroundColor: '#1e293b',
+      border: '1px solid #374151',
+      borderRadius: '12px',
+      padding: '12px',
+      marginBottom: '12px',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    },
+    shapeButton: {
+      padding: '12px 16px',
+      border: '1px solid #475569',
+      borderRadius: '10px',
+      backgroundColor: '#334155',
+      cursor: 'pointer',
+      margin: '6px 0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      fontSize: '14px',
+      fontWeight: '500',
+      width: '100%',
+      justifyContent: 'flex-start',
+      transition: 'all 0.2s ease',
+      color: '#f8fafc',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      '&:hover': {
+        backgroundColor: '#475569',
+        borderColor: '#60a5fa',
+        color: '#ffffff',
+        transform: 'translateY(-1px)',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)'
+      }
+    },
+    uploadButton: {
+      padding: '20px 16px',
+      border: '2px dashed #8b5cf6',
+      borderRadius: '12px',
+      background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+      cursor: 'pointer',
+      margin: '8px 0',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '14px',
+      fontWeight: '600',
+      width: '100%',
+      justifyContent: 'center',
+      transition: 'all 0.3s ease',
+      color: '#ffffff',
+      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+      minHeight: '80px',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)',
+        borderColor: '#a855f7',
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 16px rgba(139, 92, 246, 0.4)'
+      }
+    } 
+  };
+
+  // Function to get button style based on hover state
+  const getButtonStyle = (buttonName) => ({
+    ...customStyles.shapeButton,
+    backgroundColor: hoveredOption === buttonName ? '#475569' : '#334155',
+    borderColor: hoveredOption === buttonName ? '#60a5fa' : '#475569',
+    color: '#f8fafc'
+  });
+
   return (
-    <div style={styles.leftSidebar} className="custom-scrollbar">
-      <div style={{ 
-        padding: "0 0 20px 0", 
-        display: "flex", 
-        alignItems: "center", 
-        gap: 10,
-        borderBottom: "1px solid #334155",
-        marginBottom: "20px"
-      }}>
+    <div style={customStyles.sidebar} className="custom-scrollbar">
+      <div style={customStyles.sectionHeader}>
         <div
           style={{
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: "12px",
-            background: "transparent",
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)"
           }}
         >
-          <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.35rem" }}>🎨</span>
+          <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.5rem" }}>🎨</span>
         </div>
-        <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Design Tools</span>
+        <span style={{ fontWeight: 700, fontSize: "1.2rem", color: "#f1f5f9" }}>Design Tools</span>
       </div>
 
       <div>
@@ -182,18 +263,10 @@ const LeftSidebar = ({
         </button>
         {openSections.shapes && (
           <div style={{ paddingLeft: 8 }}>
-            <div
-              style={{
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                backgroundColor: '#334155',
-                padding: '8px',
-                marginTop: '6px'
-              }}
-            >
+            <div style={customStyles.buttonContainer}>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'rectangle' ? styles.activeTool : {})
@@ -207,7 +280,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'roundedRectangle' ? styles.activeTool : {})
@@ -221,7 +294,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'circle' ? styles.activeTool : {})
@@ -235,7 +308,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
                   ...(selectedTool === 'ellipse' ? styles.activeTool : {})
@@ -249,7 +322,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'triangle' ? styles.activeTool : {})
@@ -263,7 +336,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
                   ...(selectedTool === 'rightTriangle' ? styles.activeTool : {})
@@ -277,7 +350,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
                   ...(selectedTool === 'star' ? styles.activeTool : {})
@@ -291,7 +364,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
                   ...(selectedTool === 'star6' ? styles.activeTool : {})
@@ -305,7 +378,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
                   ...(selectedTool === 'heart' ? styles.activeTool : {})
@@ -319,7 +392,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
                   ...(selectedTool === 'diamond' ? styles.activeTool : {})
@@ -333,7 +406,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
                   ...(selectedTool === 'pentagon' ? styles.activeTool : {})
@@ -347,7 +420,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
                   ...(selectedTool === 'hexagon' ? styles.activeTool : {})
@@ -361,7 +434,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrow' ? styles.activeTool : {})
@@ -375,7 +448,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowLeft' ? styles.activeTool : {})
@@ -389,7 +462,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowUp' ? styles.activeTool : {})
@@ -403,7 +476,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
                   ...(selectedTool === 'arrowDown' ? styles.activeTool : {})
@@ -417,7 +490,7 @@ const LeftSidebar = ({
               </button>
               <button
                 style={{
-                  ...styles.toolbarButton,
+                  ...styles.toolButton,
                   border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
                   ...(selectedTool === 'cloud' ? styles.activeTool : {})
@@ -556,23 +629,47 @@ const LeftSidebar = ({
         </button>
         {openSections.media && (
           <div style={{ paddingLeft: 8 }}>
-            <div
-              style={{
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                backgroundColor: '#334155',
-                padding: '8px',
-                marginTop: '6px'
-              }}
-            >
+            <div style={customStyles.buttonContainer}>
               <button 
-                style={{ ...styles.toolbarButton, border: hoveredOption === 'upload' ? '1px solid #ffffff' : 'none', backgroundColor: hoveredOption === 'upload' ? '#334155' : 'transparent' }}
+                style={{
+                  // Rectangle shape with dashed border
+                  padding: '24px 20px',
+                  border: '1px dashed #ffffff',
+                  borderRadius: '12px',
+                  background: hoveredOption === 'upload' 
+                    ? 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' 
+                    : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                  cursor: 'pointer',
+                  margin: '8px 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  width: '100%',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  color: '#ffffff',
+                  boxShadow: hoveredOption === 'upload' 
+                    ? '0 6px 16px rgba(139, 92, 246, 0.4)' 
+                    : '0 4px 12px rgba(139, 92, 246, 0.3)',
+                  minHeight: '100px',
+                  borderColor: hoveredOption === 'upload' ? '#a855f7' : '#8b5cf6',
+                  transform: 'translateY(0)'
+                }}
                 onMouseEnter={() => setHoveredOption('upload')}
                 onMouseLeave={() => setHoveredOption(null)}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <FiUpload size={16} />
-                Upload Image
+                <FiUpload size={24} color="#ffffff" />
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600', 
+                  color: '#ffffff',
+                  textAlign: 'center',
+                  lineHeight: '1.2'
+                }}>Upload Media</span>
               </button>
               <input
                 ref={fileInputRef}

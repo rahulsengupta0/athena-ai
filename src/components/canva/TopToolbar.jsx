@@ -15,7 +15,10 @@ const TopToolbar = ({
   showGrid,
   setShowGrid,
   canvasSize,
-  selectedTool
+  selectedTool,
+  onSave,
+  onDuplicate,
+  hasSelection
 }) => {
   return (
     <div style={styles.topToolbar}>
@@ -62,7 +65,7 @@ const TopToolbar = ({
 
       <div style={{ width: '1px', height: '24px', backgroundColor: '#e1e5e9', margin: '0 8px' }} />
 
-      <button style={styles.toolbarButton}>
+      <button style={styles.toolbarButton} onClick={onSave} title="Save design">
         <FiSave size={16} />
         Save
       </button>
@@ -70,7 +73,7 @@ const TopToolbar = ({
         <FiDownload size={16} />
         Export
       </button>
-      <button style={styles.toolbarButton}>
+      <button style={styles.toolbarButton} onClick={onDuplicate} disabled={!hasSelection} title={hasSelection ? 'Duplicate selected layer' : 'Select a layer to duplicate'}>
         <FiCopy size={16} />
         Duplicate
       </button>
