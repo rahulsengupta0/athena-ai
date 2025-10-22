@@ -71,11 +71,13 @@ const styles = {
     marginBottom: 18,
     position: 'relative',
     overflow: 'hidden',
+    transition: 'transform 0.3s ease',
   },
   playIcon: {
     color: '#906BFF',
     fontSize: 61,
     opacity: 0.52,
+    transition: 'transform 0.3s ease',
   },
   timeBadge: {
     position: 'absolute',
@@ -107,6 +109,7 @@ const styles = {
   cardActionHover: {
     background: '#7442cc',
     filter: 'brightness(1.08)',
+    boxShadow: '0 0 12px rgba(116, 66, 204, 0.4)',
   },
 };
 
@@ -117,18 +120,21 @@ const templates = [
     title: 'Social Media Story',
     desc: 'Vertical video template for Instagram and TikTok',
     seconds: '15s',
+    gradient: 'linear-gradient(135deg, #F6F0FF 0%, #ECE5FF 100%)',
   },
   {
     badge: 'Pro',
     title: 'Product Showcase',
     desc: 'Professional product demonstration template',
     seconds: '30s',
+    gradient: '#f4f2fc',
   },
   {
     badge: 'New',
     title: 'YouTube Intro',
     desc: 'Engaging intro template for YouTube videos',
     seconds: '5s',
+    gradient: '#f4f2fc',
   },
 ];
 
@@ -162,10 +168,59 @@ export default function TemplatesSection() {
             onMouseLeave={() => setHovered(null)}
           >
             {tpl.badge && <span style={styles.badge}>{tpl.badge}</span>}
-            <div style={styles.playArea}>
-              <MdPlayCircleOutline style={styles.playIcon} />
-              <span style={styles.timeBadge}>{tpl.seconds}</span>
+            <div 
+              style={{
+                ...styles.playArea,
+                background: tpl.gradient,
+                transform: hovered === i ? 'scale(1.02)' : 'scale(1)',
+                position: 'relative',
+              }}
+            >
+              
+              {tpl.title === 'Social Media Story' && (
+                <img 
+                  src="/assets/social-story-thumb.png" 
+                  alt="Social Media Story Preview"
+                  style={{ 
+                    position: 'absolute', 
+                    top: 15, 
+                    left: 20, 
+                    width: '105px', 
+                    borderRadius: '10px', 
+                    zIndex: 1 
+                  }} 
+                />
+              )}
+
+              {/* Original play icon */}
+              <MdPlayCircleOutline
+                style={{
+                  ...styles.playIcon,
+                  transform: hovered === i ? 'scale(1.15)' : 'scale(1)',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              />
+
+              <span style={{
+                ...styles.timeBadge,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg,#8A4DFF, #C29CFF)',
+                padding: '7px 0',
+                width: 32,
+                height: 32,
+                textAlign: 'center',
+                fontWeight: 700,
+                boxShadow: '0 0 8px #906bff44',
+                position: 'absolute',
+                left: 13,
+                bottom: 7,
+                opacity: 0.9
+              }}>
+                {tpl.seconds}
+              </span>
             </div>
+
             <div style={styles.cardTitle}>{tpl.title}</div>
             <div style={styles.cardDesc}>{tpl.desc}</div>
             <button
