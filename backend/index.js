@@ -7,6 +7,10 @@ const app = express();
 
 app.use(cors());             // Enable CORS
 app.use(express.json());     // JSON parsing
+
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
 const imageRoutes = require('./routes/imageRoutes');
 app.use('/api/image', imageRoutes);
 

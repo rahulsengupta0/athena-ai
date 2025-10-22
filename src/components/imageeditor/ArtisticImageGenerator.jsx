@@ -100,7 +100,7 @@ export default function ArtisticImageGenerator() {
               </div>
               <div style={styles.uploadHint}>
                 {imageFile ? 'Click to change file' : 'PNG, JPG, JPEG up to 10MB'}
-              </div>
+              </div> 
             </div>
           </div>
         </label>

@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import SideBar from './components/SideBar';
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
+
 import { Home } from './pages/Home';
 import { Create } from './pages/Create';
 import AIDesign from './components/createpage/CardsPages/AIDesign';
@@ -23,6 +25,10 @@ import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenera
 import BackgroundRemover from './components/imageeditor/BackgroundRemover';
 import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
+
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import AuthPage from './pages/AuthPage';
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -72,11 +78,24 @@ const AppContent = () => {
 
 function App() {
   return (
-    <SidebarProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </SidebarProvider>
+    <AuthProvider>
+      <SidebarProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/signup" element={<AuthPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </SidebarProvider>
+    </AuthProvider>
   );
 }
 
