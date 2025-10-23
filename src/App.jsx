@@ -57,7 +57,7 @@ const AppContent = () => {
           <Route path="/create/code-generator" element={<CodeGenerator />} />
           <Route path="/create/video-producer" element={<VideoProducer />} />
           <Route path="/create/brand-builder" element={<BrandBuilder />} />
-          <Route path="/projects" element={<Project />} />
+          <Route path="/projects/:folder?" element={<Project />} />
           <Route path="/favorites" element={<Favourites />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
           <Route path="/image-editor" element={<ImageEdit />} />
