@@ -8,6 +8,10 @@ const app = express();
 app.use(cors());             // Enable CORS
 app.use(express.json());     // JSON parsing
 
+// aws test
+const uploadRoutes = require('./routes/upload');
+app.use('/', uploadRoutes); // or app.use('/api', uploadRoutes);
+
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
