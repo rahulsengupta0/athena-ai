@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './styles';
+import styles from './Styles';
 import { MdFlashOn } from 'react-icons/md';
 
 const ToolCard = ({ tool, idx, hoveredTool, setHoveredTool, navigate }) => {

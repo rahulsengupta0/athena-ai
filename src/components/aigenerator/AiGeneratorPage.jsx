@@ -5,7 +5,6 @@ import Tabs from './Tabs';
 import ToolCard from './ToolCard';
 import QuickActions from './QuickActions';
 import { tools } from './ToolsData';
-import { quickActions } from './QuickActionsData';
 import styles from './Styles';
 import Recent  from './Recent';
 import Analytics from './Analytics';
@@ -33,7 +32,7 @@ const AiGeneratorPage = () => {
               />
             ))}
           </div>
-          <QuickActions actions={quickActions} />
+          <QuickActions actions={QuickActions} />
         </>
       )}
       {activeTab === 'Recent' && <Recent />

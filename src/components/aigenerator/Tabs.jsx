@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './styles';
+import styles from './Styles';
 
 const tabList = ['AI Tools', 'Recent', 'Analytics'];
 

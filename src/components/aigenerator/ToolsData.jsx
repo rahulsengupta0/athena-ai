@@ -28,7 +28,7 @@ export const tools = [
     icon: <MdViewQuilt size={34} color="#9760ff" />,
     desc: 'Smart layout generation for web and mobile interfaces',
     accuracy: 92,
-    to: '/create/ai-layout',
+    to: '/create/brand-builder',
   },
   {
     title: 'Image Enhancer',
