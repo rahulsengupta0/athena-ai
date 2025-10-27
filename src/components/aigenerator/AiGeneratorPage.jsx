@@ -6,7 +6,7 @@ import ToolCard from './ToolCard';
 import QuickActions from './QuickActions';
 import { tools } from './ToolsData';
 import { quickActions } from './QuickActionsData';
-import styles from './styles';
+import styles from './Styles';
 import Recent  from './Recent';
 import Analytics from './Analytics';
 

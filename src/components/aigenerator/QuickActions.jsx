@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './styles';
+import styles from './Styles';
 
 const QuickActions = ({ actions }) => (
   <div style={styles.quickActionsContainer}>
@@ -17,7 +17,7 @@ const QuickActions = ({ actions }) => (
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.backgroundColor = '#fafafd';
-            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05)';
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
