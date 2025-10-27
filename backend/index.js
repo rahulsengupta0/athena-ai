@@ -41,6 +41,12 @@ app.use('/api', logoRoutes); // add this line
 const inferenceRoutes = require('./routes/inferenceRoutes');
 app.use('/api/inference', inferenceRoutes);
 
+const userDataRoutes = require('./routes/userDataRoutes');
+app.use('/api/user-data', userDataRoutes);
+
+const profileRoutes = require('./routes/profileRoutes');
+app.use('/api/profile', profileRoutes);
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))

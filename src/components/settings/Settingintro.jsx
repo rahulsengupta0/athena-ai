@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Settingintro.css';
+import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Settingintro = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Profile');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState('AT');
+  const [loading, setLoading] = useState(true);
   
   const [profileData, setProfileData] = useState({
-    firstName: 'Alex',
-    lastName: 'Thompson',
-    email: 'alex@example.com',
-    bio: 'Creative designer passionate about AI-powered design tools.',
-    website: 'https://alexthompson.design'
+    firstName: '',
+    lastName: '',
+    email: '',
+    bio: '',
+    website: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -39,9 +45,47 @@ const Settingintro = () => {
     }));
   };
 
-  const handleSaveProfile = () => {
-    console.log('Saving profile:', profileData);
-    // Add save logic here
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await api.getProfile();
+        console.log('Profile data received:', data);
+        setProfileData({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          bio: data.bio || '',
+          website: data.website || ''
+        });
+        setSelectedAvatar(data.avatar || 'AT');
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // Show user-friendly error message
+        alert('Failed to load profile. Please refresh the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updated = await api.updateProfile(profileData);
+      setProfileData({
+        firstName: updated.firstName || '',
+        lastName: updated.lastName || '',
+        email: updated.email || '',
+        bio: updated.bio || '',
+        website: updated.website || ''
+      });
+      console.log('Profile updated successfully:', updated);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    }
   };
 
   const handleUpdatePassword = () => {
@@ -60,10 +104,24 @@ const Settingintro = () => {
 
   const openAvatarModal = () => setIsAvatarModalOpen(true);
   const closeAvatarModal = () => setIsAvatarModalOpen(false);
-  const saveAvatar = () => {
-    // Here you could persist avatar selection to backend
+  const saveAvatar = async () => {
+    try {
+      await api.updateProfile({ ...profileData, avatar: selectedAvatar });
+      alert('Avatar updated successfully!');
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      alert('Failed to update avatar. Please try again.');
+    }
     closeAvatarModal();
   };
+
+  if (loading) {
+    return (
+      <div className="settings-container" style={{ textAlign: 'center', padding: '40px' }}>
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   const renderProfileTab = () => (
     <div className="profile-tab">
@@ -118,8 +176,10 @@ const Settingintro = () => {
             type="email"
             id="email"
             value={profileData.email}
-            onChange={(e) => handleProfileChange('email', e.target.value)}
+            readOnly
             className="form-input"
+            style={{ background: '#f5f5f5', cursor: 'not-allowed' }}
+            title="Email cannot be changed"
           />
         </div>
 
@@ -147,14 +207,43 @@ const Settingintro = () => {
           />
         </div>
 
-        <button className="save-btn" onClick={handleSaveProfile}>
-          Save Changes
-        </button>
+        <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+          <button className="save-btn" onClick={handleSaveProfile}>
+            Save Changes
+          </button>
+          <button 
+            onClick={() => {
+              logout();
+              navigate('/auth');
+            }}
+            style={{
+              padding: '12px 24px',
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = '#c82333';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = '#dc3545';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
 
-  const renderPasswordTab = () => (
+  const _renderPasswordTab = () => (
     <div className="password-tab">
       <div className="password-header">
         <h2>Change Password</h2>
