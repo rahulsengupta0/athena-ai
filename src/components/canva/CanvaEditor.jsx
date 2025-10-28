@@ -17,6 +17,11 @@ const CanvaEditor = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
+  
+  // Drag and drop for layers panel
+  const [draggedLayer, setDraggedLayer] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(-1);
+  const [isLayerDragging, setIsLayerDragging] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [hoveredOption, setHoveredOption] = useState(null);
@@ -467,6 +472,85 @@ const CanvaEditor = () => {
       setSelectedLayer(newLayer.id);
       saveToHistory(newLayers);
     }
+  };
+
+  const handleLayerMoveUp = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex < layers.length - 1) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex + 1]] = [newLayers[currentIndex + 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  const handleLayerMoveDown = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex > 0) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex - 1]] = [newLayers[currentIndex - 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  // Drag and drop handlers for layers panel
+  const handleLayerDragStart = (e, layerId) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    setDraggedLayer(layerId);
+    setIsLayerDragging(true);
+  };
+
+  const handleLayerDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleLayerDragLeave = (e) => {
+    // Only reset if we're actually leaving the layer item
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverIndex(-1);
+    }
+  };
+
+  const handleLayerDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    if (draggedLayer === null) return;
+    
+    const draggedIndex = layers.findIndex(l => l.id === draggedLayer);
+    if (draggedIndex === -1 || draggedIndex === dropIndex) {
+      setDraggedLayer(null);
+      setDragOverIndex(-1);
+      setIsLayerDragging(false);
+      return;
+    }
+
+    const newLayers = [...layers];
+    const draggedLayerData = newLayers[draggedIndex];
+    
+    // Remove the dragged layer
+    newLayers.splice(draggedIndex, 1);
+    
+    // Insert at new position
+    const newIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newLayers.splice(newIndex, 0, draggedLayerData);
+    
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+    
+    // Reset drag state
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
+  };
+
+  const handleLayerDragEnd = () => {
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
   };
 
   // Save: open modal with export options
@@ -1327,7 +1411,30 @@ const CanvaEditor = () => {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      transition: 'all 0.2s ease',
+      userSelect: 'none'
+    },
+    layerItemDragging: {
+      opacity: 0.5,
+      transform: 'rotate(5deg)',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
+    },
+    layerItemDragOver: {
+      borderTop: '3px solid #3182ce',
+      backgroundColor: '#f0f4ff'
+    },
+    dragHandle: {
+      cursor: 'grab',
+      padding: '4px',
+      marginRight: '8px',
+      color: '#666',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    dragHandleActive: {
+      cursor: 'grabbing'
     },
     layerControls: {
       display: 'flex',
@@ -1342,7 +1449,9 @@ const CanvaEditor = () => {
       borderRadius: '4px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      opacity: 1,
+      transition: 'opacity 0.2s ease'
     },
     propertyPanel: {
       marginTop: '20px',
@@ -2715,17 +2824,69 @@ const CanvaEditor = () => {
                 No layers yet
               </div>
             ) : (
-              layers.map(layer => (
-                <div key={layer.id} style={{
-                  ...styles.layerItem,
-                  border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
-                  backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
-                }}>
-                  <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.name}</div>
-                  <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
+              layers.map((layer, index) => (
+                <div 
+                  key={layer.id} 
+                  draggable
+                  onDragStart={(e) => handleLayerDragStart(e, layer.id)}
+                  onDragOver={(e) => handleLayerDragOver(e, index)}
+                  onDragLeave={handleLayerDragLeave}
+                  onDrop={(e) => handleLayerDrop(e, index)}
+                  onDragEnd={handleLayerDragEnd}
+                  style={{
+                    ...styles.layerItem,
+                    ...(draggedLayer === layer.id ? styles.layerItemDragging : {}),
+                    ...(dragOverIndex === index ? styles.layerItemDragOver : {}),
+                    border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
+                    backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    <div 
+                      style={{
+                        ...styles.dragHandle,
+                        ...(isLayerDragging ? styles.dragHandleActive : {})
+                      }}
+                      title="Drag to reorder"
+                    >
+                      <FiMove size={16} />
+                    </div>
+                    <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.name}</div>
+                      <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
+                    </div>
                   </div>
                   <div style={styles.layerControls}>
+                    <button
+                      style={{
+                        ...styles.controlButton,
+                        opacity: layers.findIndex(l => l.id === layer.id) === layers.length - 1 ? 0.3 : 1,
+                        cursor: layers.findIndex(l => l.id === layer.id) === layers.length - 1 ? 'not-allowed' : 'pointer'
+                      }}
+                      onClick={() => {
+                        if (layers.findIndex(l => l.id === layer.id) !== layers.length - 1) {
+                          handleLayerMoveUp(layer.id);
+                        }
+                      }}
+                      title="Move Up"
+                    >
+                      <FiArrowUp size={14} />
+                    </button>
+                    <button
+                      style={{
+                        ...styles.controlButton,
+                        opacity: layers.findIndex(l => l.id === layer.id) === 0 ? 0.3 : 1,
+                        cursor: layers.findIndex(l => l.id === layer.id) === 0 ? 'not-allowed' : 'pointer'
+                      }}
+                      onClick={() => {
+                        if (layers.findIndex(l => l.id === layer.id) !== 0) {
+                          handleLayerMoveDown(layer.id);
+                        }
+                      }}
+                      title="Move Down"
+                    >
+                      <FiArrowDown size={14} />
+                    </button>
                     <button
                       style={styles.controlButton}
                       onClick={() => handleLayerToggleVisibility(layer.id)}
