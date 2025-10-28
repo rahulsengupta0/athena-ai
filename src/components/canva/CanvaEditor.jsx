@@ -6,8 +6,12 @@ import LeftSidebar from './LeftSidebar';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
+
+
+
   const [layers, setLayers] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState(null);
+  
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
