@@ -13,7 +13,7 @@ const uploadRoutes = require('./routes/upload');
 app.use('/', uploadRoutes); // or app.use('/api', uploadRoutes);
 
 const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes );
 
 const imageRoutes = require('./routes/imageRoutes');
 app.use('/api/image', imageRoutes);
