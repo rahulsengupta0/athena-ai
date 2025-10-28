@@ -1,10 +1,13 @@
 import React from 'react';
-import styles from './Styles';
+import getStyles, { useResponsive } from "./Styles";
 import modernuithumbnail from '../../assets/aigenerator/modern-ui-landing.jpg';
 import blogcontentthumbnail from '../../assets/aigenerator/ai-blog-outline.jpg';
 import dashboardthumbnail from '../../assets/aigenerator/dashboard-layout.jpg';
 
 const Recent = () => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+
   const [hoveredIdx, setHoveredIdx] = React.useState(null);
   const [activeBtn, setActiveBtn] = React.useState(null);
 
@@ -59,7 +62,7 @@ const Recent = () => {
                 src={item.thumbnail}
                 alt={item.title}
                 style={{
-                  ...styles.thumbnail,
+                  ...styles.imageThumbnail,
                   transform: hoveredIdx === idx ? 'scale(1.08)' : 'scale(1)',
                 }}
               />

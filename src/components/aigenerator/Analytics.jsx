@@ -9,9 +9,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import styles from "./Styles";
+import getStyles, { useResponsive } from "./Styles";
 
 const Analytics = () => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+  
   const analyticsData = [
     { label: "Total Creations", value: 128, color: "#6c5ce7" },
     { label: "Active Tools Used", value: 4, color: "#0984e3" },

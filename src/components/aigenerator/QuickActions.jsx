@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdFlashOn, MdTextFields, MdWidgets, MdAutoAwesome } from 'react-icons/md';
-import styles from './Styles';
+import getStyles, { useResponsive } from "./Styles";
 
 const actions = [
   {
@@ -38,6 +38,9 @@ const CARD_SIZE = {
 };
 
 const QuickActions = () => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+  
   const navigate = useNavigate();
   const [hovered, setHovered] = React.useState(null);
 

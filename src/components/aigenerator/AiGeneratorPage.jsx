@@ -5,11 +5,14 @@ import Tabs from './Tabs';
 import ToolCard from './ToolCard';
 import QuickActions from './QuickActions';
 import { tools } from './ToolsData';
-import styles from './Styles';
-import Recent  from './Recent';
+import getStyles, { useResponsive } from "./Styles";
+import Recent from './Recent';
 import Analytics from './Analytics';
 
 const AiGeneratorPage = () => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+  
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState('AI Tools');
   const [hoveredTool, setHoveredTool] = React.useState(null);
@@ -32,11 +35,10 @@ const AiGeneratorPage = () => {
               />
             ))}
           </div>
-          <QuickActions actions={QuickActions} />
+          <QuickActions />
         </>
       )}
-      {activeTab === 'Recent' && <Recent />
-      }
+      {activeTab === 'Recent' && <Recent />}
       {activeTab === 'Analytics' && <Analytics />}
     </div>
   );

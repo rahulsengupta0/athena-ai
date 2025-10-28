@@ -1,9 +1,14 @@
 import React from 'react';
-import styles from './Styles';
+import getStyles, { useResponsive } from "./Styles";
+
 
 const tabList = ['AI Tools', 'Recent', 'Analytics'];
 
-const Tabs = ({ activeTab, setActiveTab }) => (
+const Tabs = ({ activeTab, setActiveTab }) => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+  
+  return (
   <div style={styles.tabsRow}>
     {tabList.map((tab) => (
       <button
@@ -21,5 +26,6 @@ const Tabs = ({ activeTab, setActiveTab }) => (
     ))}
   </div>
 );
+};
 
 export default Tabs;

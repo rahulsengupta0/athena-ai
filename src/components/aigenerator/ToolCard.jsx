@@ -1,9 +1,13 @@
 import React from 'react';
-import styles from './Styles';
+import getStyles, { useResponsive } from "./Styles";
+
+
 import { MdFlashOn } from 'react-icons/md';
 
 const ToolCard = ({ tool, idx, hoveredTool, setHoveredTool, navigate }) => {
   const [isActive, setIsActive] = React.useState(false);
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
 
   return (
     <div

@@ -1,8 +1,11 @@
 import React from 'react';
 import { MdOutlineDesignServices } from 'react-icons/md';
-import styles from './Styles';
+import getStyles, { useResponsive } from "./Styles";
 
-const Header = () => (
+const Header = () => {
+  const isMobile = useResponsive();
+  const styles = getStyles(isMobile);
+  return (
   <div style={{
     background: '#fbf9ff',
     borderRadius: '1.5rem',
@@ -75,6 +78,7 @@ const Header = () => (
       opacity: 0.12
     }} />
   </div>
-);
+  );
+};
 
 export default Header;
