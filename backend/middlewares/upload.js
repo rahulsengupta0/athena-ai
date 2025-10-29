@@ -6,11 +6,10 @@ const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: process.env.AWS_S3_BUCKET,
-    acl: undefined,
-
     key: function (req, file, cb) {
-      const filename = `${Date.now()}_${file.originalname}`;
-      cb(null, filename);
+      const userId = req.user.id; // matches auth middleware
+      const fileName = `${Date.now()}-${file.originalname}`;
+      cb(null, `${userId}/${fileName}`); // Folder per user
     }
   })
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiMoreHorizontal,
   FiStar,
@@ -11,91 +11,21 @@ import {
   FiChevronDown
 } from "react-icons/fi";
 import { FaPalette, FaCamera, FaGlobe, FaRegFileAlt, FaRegStar, FaRegStar as FaStarSolid, FaThLarge } from "react-icons/fa";
+import api from "../../services/api";
 
-const projects = [
-  {
-    icon: <FaPalette size={32} style={{ color: "#f79ebb" }} />,
-    title: "Brand Identity - TechStart",
-    desc: "Complete brand package including logo, colors, and guidelines",
-    category: "Brand",
-    status: "Completed",
-    statusColor: "#6cc996",
-    hashtags: ["#branding", "#logo", "#startup"],
-    date: "2 days ago",
-    size: "12.4 MB",
-    favorite: true
-  },
-  {
-    icon: (
-      <FaThLarge size={32} style={{ color: "#fbba46" }} />
-    ),
-    title: "Social Media Campaign",
-    desc: "Instagram posts and stories for wellness brand",
-    category: "Social Media",
-    status: "In Progress",
-    statusColor: "#6b91f6",
-    hashtags: ["#social", "#wellness", "#instagram"],
-    date: "1 hour ago",
-    size: "8.7 MB",
-    favorite: false
-  },
-  {
-    icon: (
-      <FaGlobe size={32} style={{ color: "#36c0ef" }} />
-    ),
-    title: "Website Landing Page",
-    desc: "Modern landing page design for SaaS",
-    category: "Web Design",
-    status: "Draft",
-    statusColor: "#ffd452",
-    hashtags: ["#web", "#saas", "#landing"],
-    date: "3 days ago",
-    size: "15.2 MB",
-    favorite: true
-  },
-  {
-    icon: (
-      <FaCamera size={32} style={{ color: "#b6aeea" }} />
-    ),
-    title: "Product Photography",
-    desc: "AI-enhanced product photos for e-commerce",
-    category: "Photography",
-    status: "Completed",
-    statusColor: "#6cc996",
-    hashtags: ["#product", "#ecommerce", "#photo"],
-    date: "1 week ago",
-    size: "45.8 MB",
-    favorite: false
-  },
-  {
-    icon: (
-      <FaThLarge size={32} style={{ color: "#fbba46" }} />
-    ),
-    title: "Mobile App UI Kit",
-    desc: "Comprehensive UI components for mobile app",
-    category: "UI Design",
-    status: "In Progress",
-    statusColor: "#6b91f6",
-    hashtags: ["#mobile", "#ui", "#components"],
-    date: "5 hours ago",
-    size: "28.3 MB",
-    favorite: true
-  },
-  {
-    icon: (
-      <FaRegFileAlt size={32} style={{ color: "#d7c3ee" }} />
-    ),
-    title: "Marketing Brochure",
-    desc: "Print-ready brochure design for medical practice",
-    category: "Print Design",
-    status: "Review",
-    statusColor: "#c98df7",
-    hashtags: ["#print", "#medical", "#brochure"],
-    date: "2 days ago",
-    size: "6.1 MB",
-    favorite: false
+// Helper function to render icon based on icon type string
+const renderIcon = (iconType, color) => {
+  const size = 32;
+  const style = { color };
+  switch(iconType) {
+    case "palette": return <FaPalette size={size} style={style} />;
+    case "thlarge": return <FaThLarge size={size} style={style} />;
+    case "globe": return <FaGlobe size={size} style={style} />;
+    case "camera": return <FaCamera size={size} style={style} />;
+    case "file": return <FaRegFileAlt size={size} style={style} />;
+    default: return <FaPalette size={size} style={style} />;
   }
-];
+};
 
 const statusBg = {
   "Completed": "#eafbf3",
@@ -125,6 +55,40 @@ export const ProjectCards = () => {
   const [selectedFilter, setSelectedFilter] = useState(projectFilters[0]);
   const [hovered, setHovered] = useState(null);
   const [menuOpen, setMenuOpen] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch projects from backend
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await api.getProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{
+        width: "100%",
+        maxWidth: 1320,
+        margin: "0 auto", 
+        padding: "28px 24px 20px 24px",
+        textAlign: "center",
+        fontSize: "1.2rem",
+        color: "#888"
+      }}>
+        Loading projects...
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -199,7 +163,7 @@ export const ProjectCards = () => {
               padding: "7px 0",
               border: "1.5px solid #edecfa"
             }}>
-              {projectFilters.map((v, idx) =>
+              {projectFilters.map((v) =>
                 <div
                   key={v}
                   onClick={() => {
@@ -330,7 +294,9 @@ export const ProjectCards = () => {
                 : <FaRegStar size={22} color="#e4e4e6" title="Not Favorite" />}
             </div>
             {/* Project icon */}
-            <div style={{ marginBottom: 16 }}>{card.icon}</div>
+            <div style={{ marginBottom: 16 }}>
+              {renderIcon(card.iconType || "palette", card.iconColor || card.statusColor || "#f79ebb")}
+            </div>
             <div style={{ fontWeight: 700, fontSize: "1.16rem", color: "#181d3a", marginBottom: 5 }}>
               {card.title}
             </div>
@@ -365,7 +331,7 @@ export const ProjectCards = () => {
               flexWrap: "wrap",
               marginBottom: 16
             }}>
-              {card.hashtags.map((tag, idx) => (
+              {card.hashtags.map((tag) => (
                 <span
                   key={tag}
                   style={{
