@@ -1,21 +1,32 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+};
 
 class ApiService {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
       headers: {
-        'Content-Type': 'application/json',
         ...options.headers,
       },
       ...options,
     };
 
     try {
+      console.log(`Making request to: ${url}`);
+      console.log('Request headers:', config.headers);
       const response = await fetch(url, config);
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Response error:', data);
         throw new Error(data.message || 'Something went wrong');
       }
 
@@ -28,29 +39,39 @@ class ApiService {
 
   // Profile API methods
   async getProfile() {
-    return this.request('/api/profile');
+    return this.request('/api/profile', {
+      headers: getAuthHeaders(),
+    });
   }
 
   async updateProfile(profileData) {
-    const formData = new FormData();
+    const { avatar, ...textData } = profileData;
     
-    // Add text fields
-    Object.keys(profileData).forEach(key => {
-      if (key !== 'avatar' && profileData[key] !== null) {
-        formData.append(key, profileData[key]);
-      }
-    });
+    // If there's an avatar file, use FormData, otherwise use JSON
+    if (avatar instanceof File) {
+      const formData = new FormData();
+      
+      Object.keys(textData).forEach(key => {
+        if (textData[key] !== null) {
+          formData.append(key, textData[key]);
+        }
+      });
+      formData.append('avatar', avatar);
 
-    // Add avatar file if present
-    if (profileData.avatar instanceof File) {
-      formData.append('avatar', profileData.avatar);
+      return this.request('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': getAuthHeaders().Authorization
+        },
+        body: formData,
+      });
+    } else {
+      return this.request('/api/profile', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(profileData),
+      });
     }
-
-    return this.request('/api/profile', {
-      method: 'PUT',
-      headers: {}, // Remove Content-Type header to let browser set it for FormData
-      body: formData,
-    });
   }
 
   // Password API methods
@@ -65,6 +86,60 @@ class ApiService {
   async initUser() {
     return this.request('/api/init-user', {
       method: 'POST',
+    });
+  }
+
+  // ============= USER DATA API METHODS =============
+  
+  // Projects
+  async getProjects() {
+    return this.request('/api/user-data/projects', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async createProject(projectData) {
+    return this.request('/api/user-data/projects', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(projectData),
+    });
+  }
+
+  async updateProject(id, projectData) {
+    return this.request(`/api/user-data/projects/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(projectData),
+    });
+  }
+
+  async deleteProject(id) {
+    return this.request(`/api/user-data/projects/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // Favorites
+  async getFavorites() {
+    return this.request('/api/user-data/favorites', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async createFavorite(favoriteData) {
+    return this.request('/api/user-data/favorites', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(favoriteData),
+    });
+  }
+
+  async deleteFavorite(id) {
+    return this.request(`/api/user-data/favorites/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
     });
   }
 }

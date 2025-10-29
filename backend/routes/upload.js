@@ -1,14 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middlewares/auth');
 const uploadMiddleware = require('../middlewares/upload');
+const UserFile = require('../model/UserFile');
 
-// Upload endpoint
-router.post('/api/upload', uploadMiddleware.single('file'), (req, res) => {
+router.post('/', authMiddleware, uploadMiddleware.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  // Send back the file URL
-  res.json({ fileUrl: req.file.location });
+  
+  // Save metadata in MongoDB
+  const fileDoc = new UserFile({
+    user: req.user.id,
+    url: req.file.location,
+    key: req.file.key
+  });
+  await fileDoc.save();
+
+  res.json({ fileUrl: req.file.location, fileId: fileDoc._id });
 });
 
 module.exports = router;

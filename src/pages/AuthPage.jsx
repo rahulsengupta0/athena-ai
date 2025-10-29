@@ -7,12 +7,17 @@ const AuthPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ 
+    firstName: '', 
+    lastName: '', 
+    email: '', 
+    password: '' 
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const toggleForm = () => {
     setIsSignup(!isSignup);
-    setFormData({ email: '', password: '' });
+    setFormData({ firstName: '', lastName: '', email: '', password: '' });
   };
 
   const handleChange = e => {
@@ -78,6 +83,83 @@ const AuthPage = () => {
           flexDirection: 'column',
           gap: '24px'
         }}>
+          {isSignup && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#4a5568'
+                }}>
+                  First Name
+                </label>
+                <input
+                  name="firstName"
+                  type="text"
+                  placeholder="Enter your first name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required={isSignup}
+                  style={{
+                    padding: '12px 16px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#f7fafc'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.outline = 'none';
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.backgroundColor = '#f7fafc';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#4a5568'
+                }}>
+                  Last Name
+                </label>
+                <input
+                  name="lastName"
+                  type="text"
+                  placeholder="Enter your last name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required={isSignup}
+                  style={{
+                    padding: '12px 16px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#f7fafc'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.outline = 'none';
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.backgroundColor = '#f7fafc';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+            </>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{
               fontSize: '14px',

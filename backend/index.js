@@ -10,10 +10,11 @@ app.use(express.json());     // JSON parsing
 
 // aws test
 const uploadRoutes = require('./routes/upload');
-app.use('/', uploadRoutes); // or app.use('/api', uploadRoutes);
+app.use('/api/upload', uploadRoutes);
+
 
 const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes );
 
 const imageRoutes = require('./routes/imageRoutes');
 app.use('/api/image', imageRoutes);
@@ -40,6 +41,12 @@ app.use('/api', logoRoutes); // add this line
 // Import your inference routes
 const inferenceRoutes = require('./routes/inferenceRoutes');
 app.use('/api/inference', inferenceRoutes);
+
+const userDataRoutes = require('./routes/userDataRoutes');
+app.use('/api/user-data', userDataRoutes);
+
+const profileRoutes = require('./routes/profileRoutes');
+app.use('/api/profile', profileRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
