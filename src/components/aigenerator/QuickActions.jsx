@@ -40,7 +40,7 @@ const CARD_SIZE = {
 const QuickActions = () => {
   const isMobile = useResponsive();
   const styles = getStyles(isMobile);
-  
+
   const navigate = useNavigate();
   const [hovered, setHovered] = React.useState(null);
 
@@ -57,30 +57,16 @@ const QuickActions = () => {
       >
         {actions.map((action, idx) => (
           <motion.div
-            key={action.label}
             style={{
+              ...styles.quickActionCard,
               background: hovered === idx ? '#f4f0ff' : '#fafafd',
-              border: '1px solid #ebe9f5',
-              borderRadius: '0.9rem',
-              width: CARD_SIZE.width,
-              minWidth: CARD_SIZE.width,
-              height: CARD_SIZE.height,
-              minHeight: CARD_SIZE.height,
-              padding: CARD_SIZE.padding,
               boxShadow:
                 hovered === idx
                   ? '0 4px 16px rgba(151,96,255,0.13)'
                   : '0 1px 5px rgba(151,96,255,0.05)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              position: 'relative',
               zIndex: hovered === idx ? 2 : 1,
-              fontFamily: "'Inter', 'Poppins', Arial, sans-serif",
-              transition: 'all 0.2s cubic-bezier(.24,1,.32,1)',
             }}
+
             whileHover={{
               scale: 1.035,
               boxShadow: '0 10px 28px rgba(151,96,255,0.16)',

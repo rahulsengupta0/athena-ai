@@ -280,6 +280,26 @@ export default function getStyles(isMobile = typeof window !== "undefined" && wi
       gap: isMobile ? "0.8rem" : "1.1rem",
       justifyContent: isMobile ? "center" : "flex-start",
     },
+    quickActionCard: {
+      flex: isMobile ? "1 1 calc(48% - 0.8rem)" : "1 1 calc(22% - 1.1rem)",
+      maxWidth: isMobile ? "calc(50% - 0.8rem)" : "calc(25% - 1.1rem)",
+      boxSizing: "border-box",
+      background: "#fafafd",
+      border: "1px solid #ebe9f5",
+      borderRadius: "0.9rem",
+      height: 165,
+      padding: isMobile ? "1rem" : "1.2rem",
+      boxShadow: "0 1px 5px rgba(151,96,255,0.05)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "space-between",
+      cursor: "pointer",
+      position: "relative",
+      fontFamily: "'Inter', 'Poppins', Arial, sans-serif",
+      transition: "all 0.2s cubic-bezier(.24,1,.32,1)",
+    },
+
 
     // ===== ANALYTICS & TABLE =====
     analyticsOverview: { marginTop: "2rem" },
