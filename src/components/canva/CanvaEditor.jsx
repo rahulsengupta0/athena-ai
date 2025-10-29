@@ -26,6 +26,9 @@ const CanvaEditor = () => {
   const [draggedLayer, setDraggedLayer] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(-1);
   const [isLayerDragging, setIsLayerDragging] = useState(false);
+  // Rename layer (right sidebar)
+  const [renamingLayerId, setRenamingLayerId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [hoveredOption, setHoveredOption] = useState(null);
@@ -478,6 +481,22 @@ const CanvaEditor = () => {
     }
   };
 
+  // Inline rename helpers
+  const startRenameLayer = (layer) => {
+    setRenamingLayerId(layer.id);
+    setRenameValue(layer.name || '');
+  };
+
+  const commitRenameLayer = () => {
+    if (!renamingLayerId) return;
+    const trimmed = renameValue.trim();
+    const newLayers = layers.map(l => l.id === renamingLayerId ? { ...l, name: trimmed || l.name } : l);
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
   const handleLayerMoveUp = (layerId) => {
     const currentIndex = layers.findIndex(l => l.id === layerId);
     if (currentIndex < layers.length - 1) {
@@ -496,6 +515,30 @@ const CanvaEditor = () => {
       setLayers(newLayers);
       saveToHistory(newLayers);
     }
+  };
+
+  // Floating toolbar color helpers
+  const getLayerPrimaryColor = (layer) => {
+    if (!layer) return '#000000';
+    if (layer.type === 'text') return layer.color || '#000000';
+    if (layer.type === 'shape') return layer.fillColor || '#3182ce';
+    if (layer.type === 'drawing') return layer.color || '#000000';
+    if (layer.type === 'image') return layer.strokeColor || '#000000';
+    return '#000000';
+  };
+
+  const handleQuickColorChange = (colorValue) => {
+    if (!selectedLayer) return;
+    const newLayers = layers.map(l => {
+      if (l.id !== selectedLayer) return l;
+      if (l.type === 'text') return { ...l, color: colorValue };
+      if (l.type === 'shape') return { ...l, fillColor: colorValue };
+      if (l.type === 'drawing') return { ...l, color: colorValue };
+      if (l.type === 'image') return { ...l, strokeColor: colorValue };
+      return l;
+    });
+    setLayers(newLayers);
+    saveToHistory(newLayers);
   };
 
   // Drag and drop handlers for layers panel
@@ -1456,6 +1499,44 @@ const CanvaEditor = () => {
       justifyContent: 'center',
       opacity: 1,
       transition: 'opacity 0.2s ease'
+    },
+    // Floating action bar (color, duplicate, delete)
+    floatingBar: {
+      position: 'absolute',
+      top: -44,
+      left: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      border: '1px solid #e5e7eb',
+      borderRadius: 18,
+      padding: '6px 10px',
+      boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+      backdropFilter: 'saturate(180%) blur(6px)',
+      zIndex: 20
+    },
+    floatingBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      border: '1px solid #e5e7eb',
+      backgroundColor: '#ffffff',
+      cursor: 'pointer'
+    },
+    floatingColor: {
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      width: 28,
+      height: 28,
+      padding: 0,
+      border: '1px solid #e5e7eb',
+      borderRadius: 8,
+      background: 'none',
+      cursor: 'pointer'
     },
     propertyPanel: {
       marginTop: '20px',
@@ -2627,6 +2708,32 @@ const CanvaEditor = () => {
                       />
                     </svg>
                   )}
+                  {/* Floating actions for selected element */}
+                  {selectedLayer === layer.id && (
+                    <div style={styles.floatingBar} onMouseDown={(e) => e.stopPropagation()}>
+                      <input
+                        type="color"
+                        aria-label="Change color"
+                        value={getLayerPrimaryColor(layer)}
+                        onChange={(e) => handleQuickColorChange(e.target.value)}
+                        style={styles.floatingColor}
+                      />
+                      <button
+                        title="Duplicate"
+                        style={styles.floatingBtn}
+                        onClick={(e) => { e.stopPropagation(); handleLayerDuplicate(layer.id); }}
+                      >
+                        <FiCopy size={16} color="#111827" />
+                      </button>
+                      <button
+                        title="Delete"
+                        style={styles.floatingBtn}
+                        onClick={(e) => { e.stopPropagation(); handleLayerDelete(layer.id); }}
+                      >
+                        <FiTrash2 size={16} color="#dc2626" />
+                      </button>
+                    </div>
+                  )}
                   {selectedLayer === layer.id && (
                     <div
                       onMouseDown={(e) => handleResizeMouseDown(e, layer)}
@@ -2856,41 +2963,28 @@ const CanvaEditor = () => {
                       <FiMove size={16} />
                     </div>
                     <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.name}</div>
+                      {renamingLayerId === layer.id ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={commitRenameLayer}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commitRenameLayer(); if (e.key === 'Escape') { setRenamingLayerId(null); setRenameValue(''); } }}
+                          style={{ width: '100%', padding: 6, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13 }}
+                        />
+                      ) : (
+                        <div
+                          title="Double-click to rename"
+                          onDoubleClick={() => startRenameLayer(layer)}
+                          style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {layer.name}
+                        </div>
+                      )}
                       <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
                     </div>
                   </div>
                   <div style={styles.layerControls}>
-                    <button
-                      style={{
-                        ...styles.controlButton,
-                        opacity: layers.findIndex(l => l.id === layer.id) === layers.length - 1 ? 0.3 : 1,
-                        cursor: layers.findIndex(l => l.id === layer.id) === layers.length - 1 ? 'not-allowed' : 'pointer'
-                      }}
-                      onClick={() => {
-                        if (layers.findIndex(l => l.id === layer.id) !== layers.length - 1) {
-                          handleLayerMoveUp(layer.id);
-                        }
-                      }}
-                      title="Move Up"
-                    >
-                      <FiArrowUp size={14} />
-                    </button>
-                    <button
-                      style={{
-                        ...styles.controlButton,
-                        opacity: layers.findIndex(l => l.id === layer.id) === 0 ? 0.3 : 1,
-                        cursor: layers.findIndex(l => l.id === layer.id) === 0 ? 'not-allowed' : 'pointer'
-                      }}
-                      onClick={() => {
-                        if (layers.findIndex(l => l.id === layer.id) !== 0) {
-                          handleLayerMoveDown(layer.id);
-                        }
-                      }}
-                      title="Move Down"
-                    >
-                      <FiArrowDown size={14} />
-                    </button>
                     <button
                       style={styles.controlButton}
                       onClick={() => handleLayerToggleVisibility(layer.id)}
