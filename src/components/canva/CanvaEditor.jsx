@@ -6,12 +6,8 @@ import LeftSidebar from './LeftSidebar';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
-
-
-
   const [layers, setLayers] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState(null);
-  
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -56,7 +52,10 @@ const CanvaEditor = () => {
   const [shapeSettings, setShapeSettings] = useState({
     fillColor: '#3182ce',
     strokeColor: '#000000',
-    strokeWidth: 1
+    strokeWidth: 1,
+    fillType: 'color', // 'color' | 'image'
+    fillImageSrc: null,
+    fillImageFit: 'cover' // 'cover' | 'contain'
   });
   const [imageSettings, setImageSettings] = useState({
     brightness: 100,
@@ -692,58 +691,147 @@ const CanvaEditor = () => {
       ctx.strokeStyle = stroke;
       ctx.lineWidth = strokeWidth;
       const s = layer.shape;
+      const path = new Path2D();
       if (s === 'rectangle') {
-        ctx.fillRect(x, y, w, h);
-        if (strokeWidth > 0) ctx.strokeRect(x, y, w, h);
+        path.rect(x, y, w, h);
       } else if (s === 'roundedRectangle') {
         drawRoundedRect(x, y, w, h, 16);
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
       } else if (s === 'circle') {
-        ctx.beginPath();
-        const r = Math.min(w, h) / 2;
-        ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
       } else if (s === 'ellipse') {
+        // Path2D does not support ellipse via constructor in all browsers, draw directly on ctx
         ctx.beginPath();
         ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
         ctx.closePath();
-        ctx.fill();
+        if (layer.fillType !== 'image') ctx.fill();
         if (strokeWidth > 0) ctx.stroke();
+        ctx.restore();
+        return;
       } else if (s === 'triangle') {
-        ctx.beginPath();
-        ctx.moveTo(x + w / 2, y);
-        ctx.lineTo(x, y + h);
-        ctx.lineTo(x + w, y + h);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x + w / 2, y);
+        path.lineTo(x, y + h);
+        path.lineTo(x + w, y + h);
+        path.closePath();
       } else if (s === 'rightTriangle') {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + w, y);
-        ctx.lineTo(x, y + h);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x, y);
+        path.lineTo(x + w, y);
+        path.lineTo(x, y + h);
+        path.closePath();
       } else if (s === 'diamond') {
-        ctx.beginPath();
-        ctx.moveTo(x + w / 2, y);
-        ctx.lineTo(x + w, y + h / 2);
-        ctx.lineTo(x + w / 2, y + h);
-        ctx.lineTo(x, y + h / 2);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x + w / 2, y);
+        path.lineTo(x + w, y + h / 2);
+        path.lineTo(x + w / 2, y + h);
+        path.lineTo(x, y + h / 2);
+        path.closePath();
       } else {
         // Fallback for complex shapes: draw as rounded rectangle
         drawRoundedRect(x, y, w, h, 8);
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
       }
+
+      if (layer.fillType === 'image' && layer.fillImageSrc) {
+        // The actual image drawing is handled by async draw routine in export; for live preview this function isn't used.
+        ctx.clip(path);
+        // Fill with solid as placeholder to avoid empty shape in any sync contexts
+        ctx.fillStyle = '#ddd';
+        ctx.fill(path);
+      } else {
+        ctx.fill(path);
+      }
+      if (strokeWidth > 0) ctx.stroke(path);
       ctx.restore();
+    };
+
+    const drawShapeLayerWithImage = async (layer) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const x = layer.x;
+          const y = layer.y;
+          const w = layer.width || img.width;
+          const h = layer.height || img.height;
+
+          ctx.save();
+          // Build shape path
+          const path = new Path2D();
+          const s = layer.shape;
+          if (s === 'rectangle') {
+            path.rect(x, y, w, h);
+          } else if (s === 'roundedRectangle') {
+            drawRoundedRect(x, y, w, h, 16);
+          } else if (s === 'circle') {
+            path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+          } else if (s === 'ellipse') {
+            ctx.beginPath();
+            ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            // compute object-fit cover rect for image into w,h
+            const ir = img.width / img.height;
+            const r = w / h;
+            let dw = w, dh = h, dx = x, dy = y;
+            if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
+              dh = w / ir; dy = y + (h - dh) / 2;
+            } else {
+              dw = h * ir; dx = x + (w - dw) / 2;
+            }
+            ctx.drawImage(img, dx, dy, dw, dh);
+            // Stroke
+            const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+            if (sw > 0) {
+              ctx.lineWidth = sw;
+              ctx.strokeStyle = layer.strokeColor || '#000000';
+              ctx.stroke();
+            }
+            ctx.restore();
+            resolve();
+            return;
+          } else if (s === 'triangle') {
+            path.moveTo(x + w / 2, y);
+            path.lineTo(x, y + h);
+            path.lineTo(x + w, y + h);
+            path.closePath();
+          } else if (s === 'rightTriangle') {
+            path.moveTo(x, y);
+            path.lineTo(x + w, y);
+            path.lineTo(x, y + h);
+            path.closePath();
+          } else if (s === 'diamond') {
+            path.moveTo(x + w / 2, y);
+            path.lineTo(x + w, y + h / 2);
+            path.lineTo(x + w / 2, y + h);
+            path.lineTo(x, y + h / 2);
+            path.closePath();
+          } else {
+            drawRoundedRect(x, y, w, h, 8);
+          }
+
+          ctx.clip(path);
+          // object-fit cover/contain into rect x,y,w,h
+          const ir = img.width / img.height;
+          const r = w / h;
+          let dw = w, dh = h, dx = x, dy = y;
+          if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
+            dh = w / ir; dy = y + (h - dh) / 2;
+          } else {
+            dw = h * ir; dx = x + (w - dw) / 2;
+          }
+          ctx.drawImage(img, dx, dy, dw, dh);
+
+          // Stroke
+          const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+          if (sw > 0) {
+            ctx.lineWidth = sw;
+            ctx.strokeStyle = layer.strokeColor || '#000000';
+            ctx.stroke(path);
+          }
+
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = layer.fillImageSrc;
+      });
     };
 
     const drawImageLayer = async (layer) => {
@@ -836,7 +924,11 @@ const CanvaEditor = () => {
     for (const layer of layers) {
       if (!layer || layer.visible === false) continue;
       if (layer.type === 'shape') {
-        drawShape(layer);
+        if (layer.fillType === 'image' && layer.fillImageSrc) {
+          imageDrawPromises.push(drawShapeLayerWithImage(layer));
+        } else {
+          drawShape(layer);
+        }
       } else if (layer.type === 'text') {
         drawText(layer);
       } else if (layer.type === 'image') {
@@ -2635,6 +2727,25 @@ const CanvaEditor = () => {
                   )}
                   {layer.type === 'shape' && (() => {
                     const display = getShapeDisplayProps(layer.shape);
+                    if (layer.fillType === 'image' && layer.fillImageSrc) {
+                      return (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'relative',
+                            border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
+                            borderRadius: display.borderRadius,
+                            clipPath: display.clipPath,
+                            overflow: 'hidden',
+                            backgroundImage: `url(${layer.fillImageSrc})`,
+                            backgroundSize: layer.fillImageFit === 'contain' ? 'contain' : 'cover',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center'
+                          }}
+                        />
+                      );
+                    }
                     return (
                       <div
                         style={{
@@ -3225,6 +3336,55 @@ const CanvaEditor = () => {
 
             {layers.find(l => l.id === selectedLayer)?.type === 'shape' && (
               <>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Fill Type</span>
+                  <select
+                    value={shapeSettings.fillType}
+                    onChange={(e) => handleShapeSettingsChange('fillType', e.target.value)}
+                    style={styles.propertyInput}
+                  >
+                    <option value="color">Color</option>
+                    <option value="image">Image</option>
+                  </select>
+                </div>
+                {shapeSettings.fillType === 'image' && (
+                  <>
+                    <div style={styles.propertyRow}>
+                      <span style={styles.propertyLabel}>Image Fit</span>
+                      <select
+                        value={shapeSettings.fillImageFit}
+                        onChange={(e) => handleShapeSettingsChange('fillImageFit', e.target.value)}
+                        style={styles.propertyInput}
+                      >
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          style={styles.smallButton}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="Upload image to use as fill"
+                        >
+                          Upload image
+                        </button>
+                        {shapeSettings.fillImageSrc && (
+                          <img src={shapeSettings.fillImageSrc} alt="fill" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid #e5e7eb' }} />
+                        )}
+                      </div>
+                      {uploadedImages.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
+                          {uploadedImages.map(ui => (
+                            <button key={ui.id} onClick={() => handleShapeSettingsChange('fillImageSrc', ui.src)} title={ui.name} style={{ padding: 0, border: shapeSettings.fillImageSrc === ui.src ? '2px solid #3182ce' : '1px solid #e5e7eb', borderRadius: 4, overflow: 'hidden', background: '#fff' }}>
+                              <img src={ui.src} alt={ui.name} style={{ width: '100%', height: 40, objectFit: 'cover', display: 'block' }} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Fill Color</span>
                   <input
