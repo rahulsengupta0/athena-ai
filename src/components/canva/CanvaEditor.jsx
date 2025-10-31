@@ -17,6 +17,8 @@ const CanvaEditor = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
+  const [isRotating, setIsRotating] = useState(false);
+  const [rotateStart, setRotateStart] = useState({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
   
   // Drag and drop for layers panel
   const [draggedLayer, setDraggedLayer] = useState(null);
@@ -402,7 +404,8 @@ const CanvaEditor = () => {
         fontSize: presetFontSize,
         fontWeight: presetFontWeight,
         visible: true,
-        locked: false
+        locked: false,
+        rotation: 0
       };
     } else if (
       ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle','diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft','arrowUp','arrowDown','cloud'].includes(tool)
@@ -418,7 +421,8 @@ const CanvaEditor = () => {
         height: tool === 'ellipse' || tool === 'roundedRectangle' ? 100 : 100,
         ...shapeSettings,
         visible: true,
-        locked: false
+        locked: false,
+        rotation: 0
       };
     }
 
@@ -1073,6 +1077,25 @@ const CanvaEditor = () => {
   };
 
   const handleMouseMove = useCallback((e) => {
+    if (isRotating && rotateStart.layerId) {
+      const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+      const dx = mouseX - rotateStart.cx;
+      const dy = mouseY - rotateStart.cy;
+      const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+      let newRotation = rotateStart.startRotation + (angleDeg - rotateStart.startAngleDeg);
+      if (e.shiftKey) {
+        newRotation = Math.round(newRotation / 15) * 15;
+      }
+      // Normalize to [-180, 180)
+      if (newRotation >= 180) newRotation -= 360;
+      if (newRotation < -180) newRotation += 360;
+      setLayers(prevLayers => prevLayers.map(layer =>
+        layer.id === rotateStart.layerId
+          ? { ...layer, rotation: newRotation }
+          : layer
+      ));
+      return;
+    }
     if (isResizing && resizeStart.layerId) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
@@ -1122,6 +1145,14 @@ const CanvaEditor = () => {
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
+      setLayers(currentLayers => {
+        saveToHistory(currentLayers);
+        return currentLayers;
+      });
+    }
+    if (isRotating) {
+      setIsRotating(false);
+      setRotateStart({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
       setLayers(currentLayers => {
         saveToHistory(currentLayers);
         return currentLayers;
@@ -1197,7 +1228,7 @@ const CanvaEditor = () => {
   }, [isDragging, isResizing, drawingSettings.isDrawing, currentPath, drawingSettings.drawingMode, drawingSettings.brushSize, drawingSettings.brushColor, drawingSettings.opacity]);
 
   useEffect(() => {
-    if (isDragging || isResizing || drawingSettings.isDrawing) {
+    if (isDragging || isResizing || isRotating || drawingSettings.isDrawing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -1205,13 +1236,25 @@ const CanvaEditor = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, isRotating, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
 
   const handleResizeMouseDown = (e, layer) => {
     e.stopPropagation();
     if (selectedTool !== 'select') return;
     setIsResizing(true);
     setResizeStart({ x: e.clientX, y: e.clientY, width: layer.width, height: layer.height, layerId: layer.id });
+    setSelectedLayer(layer.id);
+  };
+
+  const handleRotateMouseDown = (e, layer) => {
+    e.stopPropagation();
+    if (selectedTool !== 'select') return;
+    const centerX = layer.x + layer.width / 2;
+    const centerY = layer.y + layer.height / 2;
+    const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+    const startAngleDeg = Math.atan2(mouseY - centerY, mouseX - centerX) * (180 / Math.PI);
+    setIsRotating(true);
+    setRotateStart({ cx: centerX, cy: centerY, startAngleDeg, startRotation: layer.rotation || 0, layerId: layer.id });
     setSelectedLayer(layer.id);
   };
 
@@ -1232,6 +1275,7 @@ const CanvaEditor = () => {
           height: 200,
           visible: true,
           locked: false,
+          rotation: 0,
           ...imageSettings
         };
         const newLayers = [...layers, newImage];
@@ -2687,7 +2731,9 @@ const CanvaEditor = () => {
                     border: selectedLayer === layer.id ? '2px dashed #3182ce' : 'none',
                     cursor: selectedTool === 'select' ? 'move' : 'default',
                     display: layer.visible ? 'block' : 'none',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    transform: `rotate(${layer.rotation || 0}deg)`,
+                    transformOrigin: 'center center'
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -2862,6 +2908,45 @@ const CanvaEditor = () => {
                       }}
                       title="Resize"
                     />
+                  )}
+                  {selectedLayer === layer.id && (
+                    <>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -40,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 1,
+                          height: 32,
+                          backgroundColor: '#3182ce',
+                          zIndex: 99
+                        }}
+                      />
+                      <div
+                        onMouseDown={(e) => handleRotateMouseDown(e, layer)}
+                        style={{
+                          position: 'absolute',
+                          top: -56,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: '#ffffff',
+                          border: '2px solid #3182ce',
+                          boxShadow: '0 0 0 1px #3182ce',
+                          cursor: 'grab',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 100
+                        }}
+                        title="Rotate (hold Shift to snap)"
+                      >
+                        <FiRotateCw size={12} color="#3182ce" />
+                      </div>
+                    </>
                   )}
               </div>
               ))
