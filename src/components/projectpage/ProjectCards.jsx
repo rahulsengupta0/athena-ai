@@ -388,5 +388,4 @@ const MenuItem = ({ icon, text, danger }) => (
     {text}
   </div>
 );
-
 export default ProjectCards;
