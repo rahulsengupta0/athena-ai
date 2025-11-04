@@ -17,6 +17,29 @@ const navTabs = [
   { label: "Athena AI", key: "athena-ai", highlight: true },
 ];
 
+const uploadToS3 = async (base64Image) => {
+  const token = localStorage.getItem('token'); // Or get from context/auth provider
+  // Convert base64 to Blob (for FormData upload)
+  const blob = await (await fetch(base64Image)).blob();
+  const formData = new FormData();
+  formData.append('file', blob, 'generated-logo.png');
+
+  const response = await fetch('http://localhost:5000/api/upload', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    alert('Failed to upload to S3');
+    return;
+  }
+  const data = await response.json();
+  alert('Image stored in S3!');
+  // Optionally use data.fileUrl (S3 location) returned by backend
+};
+
+
 const downloadButtonStyle = {
   display: "inline-block",
   marginTop: "14px",
@@ -354,9 +377,19 @@ const Dashboard = () => {
               alt="Generated"
               style={{ maxWidth: "600px", marginTop: "20px", borderRadius: "12px" }}
             />
-            <a href={generatedImage} download="generated-logo.png" style={downloadButtonStyle}>
-              ⬇️ Download Logo
-            </a>
+            <a
+  href={generatedImage}
+  download="generated-logo.png"
+  style={downloadButtonStyle}
+  onClick={async (e) => {
+    // Let the browser download the image
+    // Then upload it to S3 for current user
+    await uploadToS3(generatedImage);
+  }}
+>
+  ⬇️ Download Logo
+</a>
+
           </>
         ) : (
           outputText && <div style={{ color: "#b00", fontWeight: "bold", marginTop: "16px" }}>{outputText}</div>
