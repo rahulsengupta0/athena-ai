@@ -497,15 +497,21 @@
   gap: 1.5rem;
 }
 
+/* ===============================
+   Quick Action Cards (Enhanced)
+=============================== */
+
 .quick-action-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 16px; /* smoother corners */
+  padding: 2rem 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02); /* subtle elevation */
+  cursor: pointer;
 }
 
 .quick-action-card::before {
@@ -517,6 +523,7 @@
   height: 3px;
   background: linear-gradient(90deg, #7c3aed, #a855f7);
   transform: scaleX(0);
+  transform-origin: left;
   transition: transform 0.3s ease;
 }
 
@@ -526,27 +533,84 @@
 
 .quick-action-card:hover {
   border-color: #7c3aed;
-  box-shadow: 0 8px 16px -4px rgba(124, 58, 237, 0.1);
-  transform: translateY(-4px);
+  box-shadow: 0 10px 20px -4px rgba(124, 58, 237, 0.15);
+  transform: translateY(-6px);
 }
 
+/* --- Icon Section --- */
 .action-icon {
-  font-size: 3rem;
+  font-size: 2.8rem;
   margin-bottom: 1rem;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
+.quick-action-card:hover .action-icon {
+  background: rgba(124, 58, 237, 0.15);
+  transform: scale(1.05);
+}
+
+/* --- Title & Description --- */
 .quick-action-card h3 {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 0.5rem 0;
+  margin: 1rem 0 0.5rem;
 }
 
 .quick-action-card p {
   color: #6b7280;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+}
+
+/* --- Button inside cards --- */
+.quick-action-card button,
+.quick-action-card .action-btn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
+}
+
+.quick-action-card button:hover,
+.quick-action-card .action-btn:hover {
+  background: #6d28d9;
+  transform: scale(1.03);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .quick-action-card {
+    padding: 1.5rem;
+  }
+
+  .quick-action-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .quick-action-card p {
+    font-size: 0.9rem;
+  }
+
+  .action-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 2.2rem;
+  }
 }
 
 .action-btn {
@@ -961,38 +1025,74 @@ html {
 
 .chat-input-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
   margin-top: 1rem;
-  background: #fff;
-  border-radius: 1rem;
-  padding: 0.6rem 1rem;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  gap: 10px;
 }
 
 .chat-input {
   flex: 1;
-  border: none;
+  border-radius: 20px;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
   outline: none;
-  font-size: 1rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 1rem;
-  background-color: #f8f8fb;
 }
 
 .chat-send {
-  background: #7a5cff;
-  color: #fff;
+  background: #9760ff;
+  color: white;
   border: none;
-  border-radius: 1rem;
-  padding: 0.7rem 1.4rem;
+  border-radius: 50px;
+  padding: 10px 18px;
   cursor: pointer;
-  font-weight: 500;
   transition: 0.2s ease;
 }
 
 .chat-send:hover {
-  background: #6a4ff7;
-  transform: translateY(-1px);
+  background: #7d4dff;
+}
+/* ===============================
+   Fix Button Width Consistency
+=============================== */
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* Make all buttons consistent */
+.quick-action-card .action-btn,
+.quick-action-card .primary-btn,
+.quick-action-card .secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;                  /* Full width inside the card */
+  max-width: 160px;             /* Consistent max width */
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-align: center;
+  color: #fff;
+  background-color: #7c3aed;
+  transition: all 0.25s ease;
+  margin-top: 1rem;
+}
+
+.quick-action-card .action-btn:hover,
+.quick-action-card .primary-btn:hover,
+.quick-action-card .secondary-btn:hover {
+  background-color: #5b21b6;
+  transform: translateY(-1px);
+}

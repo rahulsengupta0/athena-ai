@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Help.css';
+import ChatModal from './ChatModal'
 
 
 const Help = () => {
@@ -20,21 +21,8 @@ const Help = () => {
     if (!modalType) return null;
 
     if (modalType === 'chat') {
-      return (
-        <div className="modal-body">
-          <h3>Live Chat</h3>
-          <p>Start a conversation with our support team. Typical reply time: under 2 minutes.</p>
-          <div className="chat-window">
-            <div className="chat-message bot">Hi! How can we help you today?</div>
-            <div className="chat-message user">I have a question about billing.</div>
-          </div>
-          <div className="chat-input-row">
-            <input className="chat-input" placeholder="Type your message..." />
-            <button className="chat-send">Send</button>
-          </div>
-        </div>
-      );
-    }
+          return <ChatModal />;
+        }
 
     if (modalType === 'email') {
       return (

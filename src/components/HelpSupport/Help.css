@@ -90,27 +90,128 @@
 /* ===============================
    Contact Button (final)
 =============================== */
-.contact-support-btn {
-  background: #7f56da;
-  color: white;
-  border: none;
-  padding: 0.875rem 1.5rem;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
+/* ===============================
+   Contact Support Section (Enhanced)
+=============================== */
+.contact-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.75rem;
+  margin-top: 1.5rem;
 }
 
-.contact-support-btn:hover {
-  background: #6a42c1;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px -2px rgba(127, 86, 218, 0.3);
+.contact-card {
+  background: #ffffff;
+  border: 1.5px solid #ede9fe;
+  border-radius: 16px;
+  padding: 2.25rem 1.75rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);
 }
+
+/* gradient highlight on hover */
+.contact-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a855f7);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.contact-card:hover::before {
+  transform: scaleX(1);
+}
+
+.contact-card:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 8px 20px -4px rgba(124, 58, 237, 0.12);
+  transform: translateY(-5px);
+}
+
+/* icon styling */
+.contact-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-inline: auto;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.contact-card:hover .contact-icon {
+  background: rgba(124, 58, 237, 0.15);
+  transform: scale(1.1);
+}
+
+/* heading and text */
+.contact-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 1rem 0 0.5rem;
+}
+
+.contact-card p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* button */
+.contact-btn {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.contact-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(124, 58, 237, 0.2);
+}
+
+/* responsive tweaks */
+@media (max-width: 768px) {
+  .contact-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .contact-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2.4rem;
+  }
+
+  .contact-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .contact-card p {
+    font-size: 0.9rem;
+  }
+}
+
 
 /* ===============================
    Search Section
@@ -788,3 +889,102 @@
     transform: none;
     box-shadow: none;
   }
+
+/* ===============================
+   Contact Section Layout Fix
+=============================== */
+.contact-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.75rem;
+  align-items: stretch; /* ensures equal card height */
+}
+
+/* Each card consistent height and layout */
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 300px; /* consistent height */
+  width: 100%;
+  max-width: 260px;
+  box-sizing: border-box;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+/* Fix icon background & alignment */
+.quick-action-card .action-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  background: #f5ebff;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  font-size: 2rem;
+}
+
+/* Text consistency */
+.quick-action-card h3 {
+  margin: 0.5rem 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.quick-action-card p {
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  flex-grow: 1;
+  margin-bottom: 1.25rem;
+}
+
+/* Button alignment fix */
+.quick-action-card button,
+.quick-action-card .action-btn {
+  margin-top: auto;
+  width: 150px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.quick-action-card button:hover,
+.quick-action-card .action-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-2px);
+}
+
+/* Hover border and glow */
+.quick-action-card:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 8px 16px -4px rgba(124, 58, 237, 0.12);
+  transform: translateY(-4px);
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+  .contact-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  .quick-action-card {
+    max-width: 100%;
+    width: 90%;
+  }
+}
+
+  
