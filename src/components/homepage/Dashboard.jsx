@@ -96,43 +96,36 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [videoLoading, setVideoLoading] = useState(false);
 
-  const handleGenerateLogo = async () => {
-    setLoading(true);
-    setOutputText("");
-    setGeneratedImage(null);
-    try {
-      const response = await fetch("http://localhost:5000/api/generate-logo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: inputText }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        setOutputText("Error: " + (errorData.error || "Unknown error"));
-        setLoading(false);
-        return;
-      }
-      const data = await response.json();
-
-      // Decode base64 JSON string to text
-      const decodedJsonStr = atob(data.imageBase64);
-
-      // Parse JSON to extract actual image URL
-      const parsedJson = JSON.parse(decodedJsonStr);
-
-      const imageUrl = parsedJson.images?.[0]?.url;
-
-      if (imageUrl) {
-        setGeneratedImage(imageUrl);
-      } else {
-        setOutputText("No image URL found in response.");
-      }
-    } catch (error) {
-      setOutputText("Error: " + error.message);
-    } finally {
+const handleGenerateLogo = async () => {
+  setLoading(true);
+  setOutputText("");
+  setGeneratedImage(null);
+  try {
+    const response = await fetch("http://localhost:5000/api/generate-logo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: inputText }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      setOutputText("Error: " + (errorData.error || "Unknown error"));
       setLoading(false);
+      return;
     }
-  };
+    const data = await response.json();
+
+    if (data.imageBase64) {
+      setGeneratedImage(`data:image/png;base64,${data.imageBase64}`);
+    } else {
+      setOutputText("No image found in response.");
+    }
+  } catch (error) {
+    setOutputText("Error: " + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleCreateClick = async () => {
     if (!inputText.trim() || !selectedButton) return;
@@ -160,21 +153,26 @@ const Dashboard = () => {
         }
         setLoading(false);
       } else if (selectedButton === "create-video") {
-        setVideoLoading(true);
-        const response = await fetch("http://localhost:5000/api/video/generate-video", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: inputText }),
-        });
-        const data = await response.json();
-        if (data.videoBase64) {
-          const videoUrl = `data:${data.mimeType};base64,${data.videoBase64}`;
-          setGeneratedVideo(videoUrl);
-        } else {
-          setOutputText("No video generated");
-        }
-        setVideoLoading(false);
-      } else {
+  setVideoLoading(true);
+  const response = await fetch("http://localhost:5000/api/video/generate-video", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: inputText }),
+  });
+  const data = await response.json();
+  if (data.videoBase64) {
+  const videoUrl = `data:${data.mimeType || "video/mp4"};base64,${data.videoBase64}`;
+  setGeneratedVideo(videoUrl);
+} else if (data.videoUrl) {
+  // For future: if backend sends a direct video URL
+  setGeneratedVideo(data.videoUrl);
+} else {
+  setOutputText("No video generated");
+}
+
+  setVideoLoading(false);
+}
+ else {
         setLoading(true);
         const response = await fetch("http://localhost:5000/api/inference/generate", {
           method: "POST",
