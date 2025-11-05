@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { FiImage, FiFileText, FiVideo, FiPenTool } from "react-icons/fi";
 
 const Recents = () => {
   const navigate = useNavigate();
@@ -21,21 +22,46 @@ const Recents = () => {
   }, []);
 
   useEffect(() => {
-    const fetchRecentProjects = async () => {
+    const fetchRecent = async () => {
       setLoadingProjects(true);
       try {
-        const projects = await api.getProjects();
-        // Sort by createdAt (most recent first) and take first 6
-        const sorted = projects.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-        setRecentProjects(sorted.slice(0, 6));
+        const [projects, files] = await Promise.all([
+          api.getProjects().catch(() => []),
+          api.getUserFiles().catch(() => []),
+        ]);
+
+        const normalizedProjects = (projects || []).map((p) => ({
+          type: 'project',
+          id: p._id,
+          title: p.title,
+          desc: p.desc,
+          date: p.createdAt || p.date,
+          iconKey: p.icon || p.category,
+        }));
+
+        const normalizedFiles = (files || []).map((f) => ({
+          type: 'file',
+          id: f._id,
+          title: f.key?.split('/').pop() || 'Uploaded Asset',
+          desc: f.url,
+          date: f.uploadedAt,
+          url: f.url,
+          iconKey: 'image',
+        }));
+
+        const combined = [...normalizedProjects, ...normalizedFiles]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 6);
+
+        setRecentProjects(combined);
       } catch (error) {
-        console.error('Error fetching recent projects:', error);
+        console.error('Error fetching recents:', error);
         setRecentProjects([]);
       } finally {
         setLoadingProjects(false);
       }
     };
-    fetchRecentProjects();
+    fetchRecent();
   }, []);
 
   return (
@@ -87,7 +113,13 @@ const Recents = () => {
             {recentProjects.map((project, index) => (
               <div
                 key={project._id || index}
-                onClick={() => navigate(`/projects`)}
+                onClick={() => {
+                  if (project.type === 'file' && project.url) {
+                    window.open(project.url, '_blank');
+                  } else {
+                    navigate(`/projects`);
+                  }
+                }}
                 style={{
                   background: "#fff",
                   borderRadius: isSmallMobile ? "16px" : "20px",
@@ -110,14 +142,44 @@ const Recents = () => {
                   }
                 }}
               >
-                <div
-                  style={{
-                    fontSize: isSmallMobile ? "1.8rem" : "2rem",
-                    marginBottom: isSmallMobile ? 8 : 12,
-                  }}
-                >
-                  {project.icon || "🎨"}
-                </div>
+                {project.type === 'file' && project.url && /\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(project.url) ? (
+                  <div
+                    style={{
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      marginBottom: isSmallMobile ? 8 : 12,
+                      background: '#f1f5f9',
+                      border: '1px solid #eef2f7',
+                    }}
+                  >
+                    <img
+                      src={project.url}
+                      alt={project.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      fontSize: isSmallMobile ? "1.8rem" : "2rem",
+                      marginBottom: isSmallMobile ? 8 : 12,
+                      color: "#0f172a",
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {(() => {
+                      const key = (project.iconKey || '').toLowerCase();
+                      if (key.includes('image')) return <FiImage />;
+                      if (key.includes('video')) return <FiVideo />;
+                      if (key.includes('text') || key.includes('document') || key.includes('content')) return <FiFileText />;
+                      return <FiPenTool />;
+                    })()}
+                  </div>
+                )}
                 <div
                   style={{
                     fontWeight: 600,
@@ -144,7 +206,7 @@ const Recents = () => {
                     marginBottom: 8,
                   }}
                 >
-                  {project.desc}
+                  {project.type === 'file' ? 'Stored in your workspace' : project.desc}
                 </div>
                 <div
                   style={{
@@ -152,7 +214,7 @@ const Recents = () => {
                     color: "#adb2c0",
                   }}
                 >
-                  {project.date || new Date(project.createdAt).toLocaleDateString()}
+                  {project.date ? new Date(project.date).toLocaleDateString() : ''}
                 </div>
               </div>
             ))}

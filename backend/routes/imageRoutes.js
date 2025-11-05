@@ -19,14 +19,22 @@ async function query(data, apiKey) {
 
 router.post('/generate-image', async (req, res) => {
   const prompt = req.body.prompt;
+  const apiKey = process.env.HUGGINGFACE_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'HUGGINGFACE_API_KEY is not configured on the server' });
+  }
   try {
     const imageResponse = await query({
       response_format: "b64_json",
-      prompt: prompt,
+      prompt,
       model: "stabilityai/stable-diffusion-xl-base-1.0",
-    }, process.env.HUGGINGFACE_API_KEY);
+    }, apiKey);
 
-    console.log('Image API Response:', imageResponse);  // <-- logs backend response
+    if (imageResponse?.error) {
+      return res.status(401).json({ error: imageResponse.error });
+    }
+
+    console.log('Image API Response:', imageResponse);
     res.json(imageResponse);
   } catch (error) {
     res.status(500).json({ error: error.message });
