@@ -5,7 +5,12 @@ const cors = require('cors');
 
 const app = express();
 
-app.use(cors());             // Enable CORS
+// app.use(cors());             // Enable CORS
+app.use(cors({
+  origin: "http://localhost:5173",  // Frontend origin
+  credentials: true,                // Allow credentials (cookies, auth headers)
+}));
+
 app.use(express.json());     // JSON parsing
 
 // aws test
