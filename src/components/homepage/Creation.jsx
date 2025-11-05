@@ -122,10 +122,8 @@ export const Creation = () => {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: "linear-gradient(120deg,#f8f0ff 0%, #f5f8ff 100%)",
-        padding: isMobile ? "16px 0" : "36px 0",
         width: "100%",
+        padding: isMobile ? "16px 0" : "36px 0",
         overflowX: "hidden",
       }}
     >
@@ -158,7 +156,7 @@ export const Creation = () => {
               lineHeight: 1.2,
             }}
           >
-            Your Creations
+            Explore Templates
           </h1>
           <div
             style={{

@@ -1,0 +1,243 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import { FiImage, FiFileText, FiVideo, FiPenTool } from "react-icons/fi";
+
+const Recents = () => {
+  const navigate = useNavigate();
+  const [recentProjects, setRecentProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [isPhone, setIsPhone] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+
+  useEffect(() => {
+    const handle = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width <= 360);
+      setIsPhone(width <= 768);
+    };
+    handle();
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  useEffect(() => {
+    const fetchRecent = async () => {
+      setLoadingProjects(true);
+      try {
+        const [projects, files] = await Promise.all([
+          api.getProjects().catch(() => []),
+          api.getUserFiles().catch(() => []),
+        ]);
+
+        const normalizedProjects = (projects || []).map((p) => ({
+          type: 'project',
+          id: p._id,
+          title: p.title,
+          desc: p.desc,
+          date: p.createdAt || p.date,
+          iconKey: p.icon || p.category,
+        }));
+
+        const normalizedFiles = (files || []).map((f) => ({
+          type: 'file',
+          id: f._id,
+          title: f.key?.split('/').pop() || 'Uploaded Asset',
+          desc: f.url,
+          date: f.uploadedAt,
+          url: f.url,
+          iconKey: 'image',
+        }));
+
+        const combined = [...normalizedProjects, ...normalizedFiles]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 6);
+
+        setRecentProjects(combined);
+      } catch (error) {
+        console.error('Error fetching recents:', error);
+        setRecentProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchRecent();
+  }, []);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        padding: isSmallMobile ? "16px 0" : isPhone ? "24px 0" : "32px 0",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: isSmallMobile ? "0 14px" : isPhone ? "0 22px" : "0 24px",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: isSmallMobile ? "1.3rem" : isPhone ? "1.5rem" : "1.8rem",
+            fontWeight: 700,
+            color: "#24243b",
+            margin: 0,
+            marginBottom: isSmallMobile ? 16 : isPhone ? 18 : 20,
+          }}
+        >
+          Recents
+        </h2>
+        {loadingProjects ? (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: isSmallMobile ? "20px" : "24px",
+              padding: isSmallMobile ? "40px 20px" : isPhone ? "50px 24px" : "60px 28px",
+              textAlign: "center",
+              color: "#757891",
+              fontSize: "1.1rem",
+            }}
+          >
+            Loading...
+          </div>
+        ) : recentProjects.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isSmallMobile ? "1fr" : isPhone ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+              gap: isSmallMobile ? 12 : isPhone ? 16 : 20,
+            }}
+          >
+            {recentProjects.map((project, index) => (
+              <div
+                key={project._id || index}
+                onClick={() => {
+                  if (project.type === 'file' && project.url) {
+                    window.open(project.url, '_blank');
+                  } else {
+                    navigate(`/projects`);
+                  }
+                }}
+                style={{
+                  background: "#fff",
+                  borderRadius: isSmallMobile ? "16px" : "20px",
+                  padding: isSmallMobile ? "16px" : isPhone ? "20px" : "24px",
+                  border: "1.5px solid #f1eeff",
+                  cursor: "pointer",
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                  boxShadow: "0 2px 12px #c9c6f211",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSmallMobile && !isPhone) {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = "0 4px 20px #c9c6f233";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSmallMobile && !isPhone) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 12px #c9c6f211";
+                  }
+                }}
+              >
+                {project.type === 'file' && project.url && /\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(project.url) ? (
+                  <div
+                    style={{
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      marginBottom: isSmallMobile ? 8 : 12,
+                      background: '#f1f5f9',
+                      border: '1px solid #eef2f7',
+                    }}
+                  >
+                    <img
+                      src={project.url}
+                      alt={project.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      fontSize: isSmallMobile ? "1.8rem" : "2rem",
+                      marginBottom: isSmallMobile ? 8 : 12,
+                      color: "#0f172a",
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {(() => {
+                      const key = (project.iconKey || '').toLowerCase();
+                      if (key.includes('image')) return <FiImage />;
+                      if (key.includes('video')) return <FiVideo />;
+                      if (key.includes('text') || key.includes('document') || key.includes('content')) return <FiFileText />;
+                      return <FiPenTool />;
+                    })()}
+                  </div>
+                )}
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? "0.95rem" : "1.05rem",
+                    color: "#181d3a",
+                    marginBottom: 6,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {project.title}
+                </div>
+                <div
+                  style={{
+                    color: "#757891",
+                    fontSize: isSmallMobile ? "0.85rem" : "0.95rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    lineHeight: 1.4,
+                    marginBottom: 8,
+                  }}
+                >
+                  {project.type === 'file' ? 'Stored in your workspace' : project.desc}
+                </div>
+                <div
+                  style={{
+                    fontSize: isSmallMobile ? "0.8rem" : "0.9rem",
+                    color: "#adb2c0",
+                  }}
+                >
+                  {project.date ? new Date(project.date).toLocaleDateString() : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: isSmallMobile ? "20px" : "24px",
+              padding: isSmallMobile ? "40px 20px" : isPhone ? "50px 24px" : "60px 28px",
+              textAlign: "center",
+              color: "#757891",
+              fontSize: "1.1rem",
+              border: "1.5px solid #f1eeff",
+            }}
+          >
+            No recent designs yet. Start creating to see them here!
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Recents;
+

@@ -1,14 +1,29 @@
 import React, { useState } from "react";
+import {
+  FiPenTool,
+  FiImage,
+  FiFileText,
+  FiCode,
+  FiVideo,
+  FiScissors,
+  FiCpu,
+  FiPlus,
+  FiZap,
+  FiLayers,
+} from "react-icons/fi";
+import Creation from "./Creation";
+import AISuggestTemp from "./AISuggestTemp";
+import Recents from "./Recents";
 
 const BUTTONS = [
-  { key: "design", label: "Design for me", tag: "Popular", tagColor: "#ef4444", icon: "🎨" },
-  { key: "create-image", label: "Create an image", tag: "New", tagColor: "#22c55e", icon: "🖼️" },
-  { key: "draft-document", label: "Draft a document", icon: "📄" },
-  { key: "generate-code", label: "Generate code", icon: "💻" },
-  { key: "create-video", label: "Create video", tag: "Pro", tagColor: "#f59e42", icon: "🎬" },
-  { key: "brand-kit", label: "Brand kit", icon: "🎨" },
-  { key: "smart-edit", label: "Smart edit", icon: "✂️" },
-  { key: "ai-assistant", label: "AI assistant", icon: "🤖" },
+  { key: "design", label: "Design for me", tag: "Popular", tagColor: "#8b5cf6", icon: <FiPenTool /> },
+  { key: "create-image", label: "Create an image", tag: "New", tagColor: "#22c55e", icon: <FiImage /> },
+  { key: "draft-document", label: "Draft a document", icon: <FiFileText /> },
+  { key: "generate-code", label: "Generate code", icon: <FiCode /> },
+  { key: "create-video", label: "Create video", tag: "Pro", tagColor: "#f59e0b", icon: <FiVideo /> },
+  { key: "brand-kit", label: "Brand kit", icon: <FiLayers /> },
+  { key: "smart-edit", label: "Smart edit", icon: <FiScissors /> },
+  { key: "ai-assistant", label: "AI assistant", icon: <FiCpu /> },
 ];
 
 const navTabs = [
@@ -56,11 +71,10 @@ const downloadButtonStyle = {
 
 const Dashboard = () => {
   const [selectedButton, setSelectedButton] = useState(null);
-  const [activeTab, setActiveTab] = useState("athena-ai");
+  const [activeTab, setActiveTab] = useState("your-designs");
   const [hoveredButton, setHoveredButton] = useState(null);
   const [clickedButton, setClickedButton] = useState(null);
   const [isPhone, setIsPhone] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
   const [isSmallMobile, setIsSmallMobile] = useState(false);
 
   React.useEffect(() => {
@@ -68,12 +82,12 @@ const Dashboard = () => {
       const width = window.innerWidth;
       setIsSmallMobile(width <= 360);
       setIsPhone(width <= 768);
-      setIsTablet(width > 768 && width <= 1024);
     };
     handle();
     window.addEventListener("resize", handle);
     return () => window.removeEventListener("resize", handle);
   }, []);
+
 
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
@@ -182,11 +196,11 @@ const Dashboard = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(120deg,#eaefff 0%,#ffefff 100%)",
+        background: "linear-gradient(135deg, #f7f7fb 0%, #f3f4f8 40%, #eef2ff 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: isSmallMobile ? "16px 12px 12px 12px" : isPhone ? "24px 16px 12px 16px" : "44px 8px 12px 8px",
+        padding: isSmallMobile ? "16px 12px 12px 12px" : isPhone ? "24px 16px 12px 16px" : "48px 8px 16px 8px",
         width: "100%",
         overflowX: "hidden",
         boxSizing: "border-box",
@@ -194,10 +208,10 @@ const Dashboard = () => {
     >
       <h1
         style={{
-          fontSize: isSmallMobile ? "1.6rem" : isPhone ? "clamp(1.8rem,6vw,2.8rem)" : "clamp(1.8rem,6vw,3.5rem)",
+          fontSize: isSmallMobile ? "1.55rem" : isPhone ? "clamp(1.8rem,6vw,2.6rem)" : "clamp(2rem,5vw,3rem)",
           fontWeight: 800,
-          margin: isSmallMobile ? "0 0 12px 0" : isPhone ? "0 0 16px 0" : "0 0 20px 0",
-          background: "linear-gradient(90deg,#a08afc 0%,#3dcaff 60%,#d32f93 100%)",
+          margin: isSmallMobile ? "0 0 10px 0" : isPhone ? "0 0 14px 0" : "0 0 18px 0",
+          background: "linear-gradient(90deg,#6b8cff 0%,#9b8bfd 50%,#f472b6 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           textAlign: "center",
@@ -226,14 +240,14 @@ const Dashboard = () => {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-              padding: "8px 28px",
-              borderRadius: "22px",
-              background: activeTab === tab.key ? "linear-gradient(90deg,#b692f6,#80c7fb)" : "#fff",
-              color: activeTab === tab.key ? "#fff" : "#52576d",
+              padding: "8px 24px",
+              borderRadius: "20px",
+              background: activeTab === tab.key ? "#0f172a" : "rgba(255,255,255,0.7)",
+              color: activeTab === tab.key ? "#ffffff" : "#475569",
               fontWeight: 600,
-              fontSize: isSmallMobile ? "0.85rem" : isPhone ? "0.95rem" : "clamp(0.95rem,2.5vw,1.13rem)",
-              border: activeTab === tab.key ? "none" : "1.5px solid #eee",
-              boxShadow: activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
+              fontSize: isSmallMobile ? "0.84rem" : isPhone ? "0.95rem" : "clamp(0.95rem,2.5vw,1.05rem)",
+              border: activeTab === tab.key ? "1px solid #0f172a" : "1px solid #e5e7eb",
+              boxShadow: activeTab === tab.key ? "0 8px 24px rgba(15,23,42,0.18)" : "0 2px 10px rgba(2,6,23,0.06)",
               transition: "all 0.18s",
               cursor: "pointer",
               minHeight: isSmallMobile ? "36px" : isPhone ? "40px" : "auto",
@@ -247,17 +261,18 @@ const Dashboard = () => {
 
       <div
         style={{
-          background: "#fff",
-          borderRadius: isSmallMobile ? "20px" : "24px",
-          boxShadow: "0 2px 32px #c9c6f211",
-          padding: isSmallMobile ? "12px 12px" : isPhone ? "16px 14px" : "26px 28px 22px 28px",
+          background: "rgba(255,255,255,0.7)",
+          backdropFilter: "saturate(180%) blur(10px)",
+          borderRadius: isSmallMobile ? "18px" : "22px",
+          boxShadow: "0 10px 40px rgba(2,6,23,0.06)",
+          padding: isSmallMobile ? "12px 12px" : isPhone ? "18px 16px" : "28px 28px 24px 28px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           width: isSmallMobile ? "100%" : isPhone ? "92vw" : "100%",
           maxWidth: isSmallMobile ? "100%" : isPhone ? 420 : 740,
           marginBottom: isSmallMobile ? 16 : isPhone ? 20 : 26,
-          border: "1.5px solid #f1eeff",
+          border: "1px solid rgba(2,6,23,0.06)",
           boxSizing: "border-box",
         }}
       >
@@ -274,13 +289,13 @@ const Dashboard = () => {
         >
           <button
             style={{
-              border: "2px dashed #eae4ff",
-              background: "transparent",
-              borderRadius: "50%",
-              width: isSmallMobile ? 36 : isPhone ? 38 : 44,
-              height: isSmallMobile ? 36 : isPhone ? 38 : 44,
-              fontSize: isSmallMobile ? "1.1rem" : isPhone ? "1.2rem" : "1.4rem",
-              color: "#d1c4ff",
+              border: "1px dashed #cbd5e1",
+              background: "#ffffff",
+              borderRadius: "12px",
+              width: isSmallMobile ? 40 : isPhone ? 42 : 46,
+              height: isSmallMobile ? 40 : isPhone ? 42 : 46,
+              fontSize: isSmallMobile ? "1.1rem" : isPhone ? "1.2rem" : "1.3rem",
+              color: "#64748b",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -289,22 +304,23 @@ const Dashboard = () => {
             }}
             onClick={() => setSelectedButton(null)}
           >
-            +
+            <FiPlus />
           </button>
           <input
             type="text"
-            placeholder={isSmallMobile ? "Describe your idea..." : "Describe your idea, and I'll bring it to life..."}
+            placeholder={isSmallMobile ? "Describe your idea..." : "Describe your idea — and we’ll bring it to life"}
             style={{
               flex: 1,
-              padding: isSmallMobile ? "8px 10px" : isPhone ? "10px 12px" : "12px 22px",
-              fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.21rem",
+              padding: isSmallMobile ? "10px 12px" : isPhone ? "12px 14px" : "13px 18px",
+              fontSize: isSmallMobile ? "0.92rem" : isPhone ? "1rem" : "1.08rem",
               borderRadius: isSmallMobile ? "12px" : "14px",
-              border: "1.5px solid #f2edfc",
-              background: "#f7f3ff",
+              border: "1px solid #e5e7eb",
+              background: "#ffffff",
               outline: "none",
               marginRight: isSmallMobile ? 0 : isPhone ? 0 : 10,
-              color: "#52576d",
+              color: "#0f172a",
               minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
+              boxShadow: "0 1px 2px rgba(2,6,23,0.04)",
             }}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -313,19 +329,19 @@ const Dashboard = () => {
             onClick={handleCreateClick}
             disabled={loading || videoLoading || !selectedButton}
             style={{
-              background: "linear-gradient(90deg,#8ee0fb,#a892fd)",
-              color: "#fff",
+              background: selectedButton ? "linear-gradient(90deg,#111827,#0f172a)" : "#e5e7eb",
+              color: selectedButton ? "#ffffff" : "#9ca3af",
               fontWeight: 700,
-              fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.11rem",
-              padding: isSmallMobile ? "8px 14px" : isPhone ? "10px 16px" : "11px 32px",
+              fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.05rem",
+              padding: isSmallMobile ? "10px 14px" : isPhone ? "10px 16px" : "12px 24px",
               borderRadius: isSmallMobile ? "10px" : "12px",
-              border: "none",
-              boxShadow: "0 2px 10px #c7f7fd66",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: selectedButton ? "0 10px 24px rgba(2,6,23,0.15)" : "none",
               display: "flex",
               alignItems: "center",
               gap: isSmallMobile ? 6 : 8,
               cursor: "pointer",
-              transition: "background 0.14s, transform 0.14s",
+              transition: "background 0.14s, transform 0.14s, box-shadow 0.14s",
               width: isSmallMobile ? "100%" : isPhone ? "100%" : undefined,
               minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
               justifyContent: "center",
@@ -341,14 +357,8 @@ const Dashboard = () => {
               }
             }}
           >
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.2rem",
-              }}
-            >
-              ✨
+            <span style={{ display: "flex", alignItems: "center", fontSize: isSmallMobile ? "1rem" : isPhone ? "1.05rem" : "1.15rem" }}>
+              <FiZap />
             </span>
             {loading || videoLoading ? "Generating..." : "Create"}
           </button>
@@ -358,12 +368,12 @@ const Dashboard = () => {
             style={{
               width: "100%",
               minHeight: 60,
-              border: "1.5px solid #f2edfc",
-              borderRadius: 14,
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
               padding: 16,
-              background: "#faf7ff",
-              color: "#5c4a80",
-              fontSize: "1.15rem",
+              background: "#f8fafc",
+              color: "#0f172a",
+              fontSize: "1.02rem",
               fontWeight: 600,
             }}
           >
@@ -441,23 +451,22 @@ const Dashboard = () => {
               onMouseDown={() => setClickedButton(btn.key)}
               onMouseUp={() => setClickedButton(null)}
               style={{
-                border: "1.2px solid #ededf5",
-                background:
-                  selectedButton === btn.key ? "linear-gradient(90deg,#cfdffe,#fdebfd 80%)" : "#f8f9ff",
+                border: selectedButton === btn.key ? "1px solid #0f172a" : "1px solid #e5e7eb",
+                background: selectedButton === btn.key ? "#0f172a" : "#ffffff",
                 boxShadow:
                   selectedButton === btn.key
-                    ? "0 2px 8px #b2a5ed55"
+                    ? "0 10px 22px rgba(15,23,42,0.18)"
                     : hoveredButton === btn.key
-                    ? "0 4px 12px #a1a1d9aa"
-                    : undefined,
+                    ? "0 8px 16px rgba(2,6,23,0.08)"
+                    : "0 2px 8px rgba(2,6,23,0.04)",
                 borderRadius: isSmallMobile ? 10 : 12,
-                padding: isSmallMobile ? "6px 10px" : isPhone ? "8px 12px" : "9px 20px 9px 15px",
+                padding: isSmallMobile ? "8px 12px" : isPhone ? "10px 14px" : "11px 16px",
                 display: "flex",
                 alignItems: "center",
-                fontWeight: selectedButton === btn.key ? 600 : 500,
-                fontSize: isSmallMobile ? "0.85rem" : isPhone ? "0.98rem" : "1.07rem",
-                color: selectedButton === btn.key ? "#9e36c1" : "#3e4062",
-                gap: isSmallMobile ? 5 : 7,
+                fontWeight: 600,
+                fontSize: isSmallMobile ? "0.88rem" : isPhone ? "0.97rem" : "1rem",
+                color: selectedButton === btn.key ? "#ffffff" : "#0f172a",
+                gap: isSmallMobile ? 8 : 10,
                 cursor: "pointer",
                 position: "relative",
                 minWidth: "100px",
@@ -472,18 +481,20 @@ const Dashboard = () => {
                 outline: "none",
               }}
             >
-              <span>{btn.icon}</span>
-              {btn.label}
+              <span style={{ display: "inline-flex", alignItems: "center", fontSize: isSmallMobile ? 16 : isPhone ? 18 : 18 }}>
+                {btn.icon}
+              </span>
+              <span style={{ marginLeft: 6 }}>{btn.label}</span>
               {btn.tag && (
                 <span
                   style={{
-                    background: btn.tagColor,
-                    color: "#fff",
+                    background: selectedButton === btn.key ? "#ffffff22" : btn.tagColor,
+                    color: selectedButton === btn.key ? "#ffffff" : "#ffffff",
                     fontWeight: 600,
-                    fontSize: isSmallMobile ? "0.65rem" : "0.73rem",
+                    fontSize: isSmallMobile ? "0.62rem" : "0.72rem",
                     borderRadius: isSmallMobile ? "6px" : "7px",
-                    padding: isSmallMobile ? "2px 8px" : "2.5px 10px",
-                    marginLeft: isSmallMobile ? 4 : 8,
+                    padding: isSmallMobile ? "2px 8px" : "3px 10px",
+                    marginLeft: isSmallMobile ? 6 : 10,
                     userSelect: "none",
                     whiteSpace: "nowrap",
                   }}
@@ -495,11 +506,44 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      {/* Conditional sections based on active tab */}
+      {activeTab === "your-designs" && (
+        <>
+          <div
+            style={{
+              width: "100%",
+              marginTop: isSmallMobile ? 24 : isPhone ? 28 : 32,
+            }}
+          >
+            <AISuggestTemp />
+          </div>
+          <div
+            style={{
+              width: "100%",
+            }}
+          >
+            <Recents />
+          </div>
+        </>
+      )}
+
+      {activeTab === "templates" && (
+        <div
+          style={{
+            width: "100%",
+            marginTop: isSmallMobile ? 24 : isPhone ? 28 : 32,
+          }}
+        >
+          <Creation />
+        </div>
+      )}
+
       <div
         style={{
           marginTop: isSmallMobile ? 20 : isPhone ? 24 : 30,
-          color: "#b6afd4",
-          fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.1rem",
+          color: "#94a3b8",
+          fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.05rem",
           textAlign: "center",
           padding: isSmallMobile ? "0 16px" : "0",
           lineHeight: 1.4,
