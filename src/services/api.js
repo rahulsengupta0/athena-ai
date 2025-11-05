@@ -142,6 +142,13 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
+
+  // ============= USER FILES (S3 uploads) =============
+  async getUserFiles() {
+    return this.request('/api/upload', {
+      headers: getAuthHeaders(),
+    });
+  }
 }
 
 export default new ApiService();
