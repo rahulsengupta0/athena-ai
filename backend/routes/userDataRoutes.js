@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middlewares/auth');
 const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
+const BrandKit = require('../model/BrandKit');
 
 // ============= PROJECT ROUTES =============
 
@@ -82,6 +83,64 @@ router.delete('/favorites/:id', auth, async (req, res) => {
     const favorite = await Favorite.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
     if (!favorite) return res.status(404).json({ msg: 'Favorite not found' });
     res.json({ msg: 'Favorite deleted' });
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// ============= BRAND KIT ROUTES =============
+
+// Get user's brand kits
+router.get('/brandkits', auth, async (req, res) => {
+  try {
+    const brandKits = await BrandKit.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json(brandKits);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Create brand kit
+router.post('/brandkits', auth, async (req, res) => {
+  try {
+    const { name, tagline, primaryColor, secondaryColor, logoUrl } = req.body;
+    if (!name) return res.status(400).json({ msg: 'Name is required' });
+    const brandKit = new BrandKit({
+      userId: req.user.id,
+      name,
+      tagline: tagline || '',
+      primaryColor: primaryColor || '',
+      secondaryColor: secondaryColor || '',
+      logoUrl: logoUrl || '',
+    });
+    await brandKit.save();
+    res.json(brandKit);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Update brand kit
+router.put('/brandkits/:id', auth, async (req, res) => {
+  try {
+    const brandKit = await BrandKit.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      req.body,
+      { new: true }
+    );
+    if (!brandKit) return res.status(404).json({ msg: 'Brand kit not found' });
+    res.json(brandKit);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Delete brand kit
+router.delete('/brandkits/:id', auth, async (req, res) => {
+  try {
+    const brandKit = await BrandKit.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!brandKit) return res.status(404).json({ msg: 'Brand kit not found' });
+    res.json({ msg: 'Brand kit deleted' });
   } catch (err) {
     res.status(500).send('Server Error');
   }

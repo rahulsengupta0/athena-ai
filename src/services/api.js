@@ -169,6 +169,36 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
+
+  // ============= BRAND KITS =============
+  async getBrandKits() {
+    return this.request('/api/user-data/brandkits', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async createBrandKit(brandKitData) {
+    return this.request('/api/user-data/brandkits', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(brandKitData),
+    });
+  }
+
+  async updateBrandKit(id, brandKitData) {
+    return this.request(`/api/user-data/brandkits/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(brandKitData),
+    });
+  }
+
+  async deleteBrandKit(id) {
+    return this.request(`/api/user-data/brandkits/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
 }
 
 export default new ApiService();
