@@ -1,4 +1,9 @@
 import React from "react";
+import businessImg from "../../assets/bussiness.PNG";
+import socialImg from "../../assets/socialMedia.PNG";
+import youtubeImg from "../../assets/youtube.PNG";
+import instaImg from "../../assets/insta.PNG";
+import posterImg from "../../assets/poster.PNG";
 
 // Demo data for creations (unchanged)
 const creations = [
@@ -106,6 +111,46 @@ const ShareIcon = () => (
 export const Creation = () => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isTablet, setIsTablet] = React.useState(false);
+  const templates = React.useMemo(
+    () => [
+      {
+        id: "tpl-1",
+        title: "Business Proposal",
+        subtitle: "Clean corporate deck",
+        category: "Presentation",
+        image: businessImg,
+      },
+      {
+        id: "tpl-2",
+        title: "Social Media Post",
+        subtitle: "Instagram carousel",
+        category: "Social",
+        image: socialImg,
+      },
+      {
+        id: "tpl-3",
+        title: "YouTube Thumbnail",
+        subtitle: "High‑CTR layout",
+        category: "Thumbnail",
+        image: youtubeImg,
+      },
+      {
+        id: "tpl-4",
+        title: "Insta Story",
+        subtitle: "Bold vertical design",
+        category: "Story",
+        image: instaImg,
+      },
+      {
+        id: "tpl-5",
+        title: "Event Poster",
+        subtitle: "Modern gradient style",
+        category: "Poster",
+        image: posterImg,
+      },
+    ],
+    []
+  );
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -122,10 +167,8 @@ export const Creation = () => {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: "linear-gradient(120deg,#f8f0ff 0%, #f5f8ff 100%)",
-        padding: isMobile ? "16px 0" : "36px 0",
         width: "100%",
+        padding: isMobile ? "16px 0" : "36px 0",
         overflowX: "hidden",
       }}
     >
@@ -158,7 +201,7 @@ export const Creation = () => {
               lineHeight: 1.2,
             }}
           >
-            Your Creations
+            Explore Templates
           </h1>
           <div
             style={{
@@ -214,6 +257,137 @@ export const Creation = () => {
               <ShareIcon />
               Share
             </button>
+          </div>
+        </div>
+
+        {/* Featured Templates */}
+        <div
+          style={{
+            marginTop: isMobile ? 6 : 8,
+            marginBottom: isMobile ? 14 : 18,
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: isMobile ? 10 : 14,
+            }}
+          >
+            
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "1fr 1fr"
+                : isTablet
+                ? "repeat(3, minmax(0, 1fr))"
+                : "repeat(5, minmax(0, 1fr))",
+              gap: isMobile ? 10 : isTablet ? 14 : 16,
+            }}
+          >
+            {templates.map((tpl) => (
+              <div
+                key={tpl.id}
+                style={{
+                  background: "#fff",
+                  borderRadius: isMobile ? 14 : 16,
+                  boxShadow: "0 2px 16px #d8ccfb1c",
+                  overflow: "hidden",
+                  border: "1px solid #f0ecff",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "transform .2s, box-shadow .2s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 8px 18px #c5bdfa55";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 16px #d8ccfb1c";
+                  }
+                }}
+                title={tpl.title}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    paddingTop: "66%",
+                    background: "#f7f7fb",
+                  }}
+                >
+                  <img
+                    src={tpl.image}
+                    alt={tpl.title}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                    loading="lazy"
+                  />
+                </div>
+                <div style={{ padding: isMobile ? "8px 10px" : "10px 12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: "#f7f7fb",
+                        color: "#797b90",
+                        fontWeight: 600,
+                        fontSize: isMobile ? ".72rem" : ".78rem",
+                        borderRadius: 10,
+                        padding: "3px 10px",
+                      }}
+                    >
+                      {tpl.category}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: isMobile ? ".98rem" : "1.02rem",
+                      fontWeight: 700,
+                      color: "#30325a",
+                      lineHeight: 1.25,
+                      marginBottom: 2,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {tpl.title}
+                  </div>
+                  <div
+                    style={{
+                      color: "#9498a5",
+                      fontSize: isMobile ? ".8rem" : ".86rem",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {tpl.subtitle}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

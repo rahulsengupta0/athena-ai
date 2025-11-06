@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiMoreHorizontal,
   FiStar,
@@ -140,6 +140,51 @@ export const ProjectCards = ({ folderType = "recent" }) => {
   const [selectedFilter, setSelectedFilter] = useState(projectFilters[0]);
   const [hovered, setHovered] = useState(null);
   const [menuOpen, setMenuOpen] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [brandKits, setBrandKits] = useState([]);
+
+  // Fetch projects from backend
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await api.getProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    const fetchBrandKits = async () => {
+      try {
+        const kits = await api.getBrandKits();
+        setBrandKits(kits || []);
+      } catch (error) {
+        console.error('Error fetching brand kits:', error);
+        setBrandKits([]);
+      }
+    };
+    fetchProjects();
+    fetchBrandKits();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{
+        width: "100%",
+        maxWidth: 1320,
+        margin: "0 auto", 
+        padding: "28px 24px 20px 24px",
+        textAlign: "center",
+        fontSize: "1.2rem",
+        color: "#888"
+      }}>
+        Loading projects...
+      </div>
+    );
+  }
 
   // Filter projects based on folder mapping and selected filter
   let displayedProjects =
