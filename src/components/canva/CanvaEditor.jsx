@@ -17,6 +17,16 @@ const CanvaEditor = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
+  const [isRotating, setIsRotating] = useState(false);
+  const [rotateStart, setRotateStart] = useState({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
+  
+  // Drag and drop for layers panel
+  const [draggedLayer, setDraggedLayer] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(-1);
+  const [isLayerDragging, setIsLayerDragging] = useState(false);
+  // Rename layer (right sidebar)
+  const [renamingLayerId, setRenamingLayerId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
   const [showGrid, setShowGrid] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [hoveredOption, setHoveredOption] = useState(null);
@@ -44,7 +54,10 @@ const CanvaEditor = () => {
   const [shapeSettings, setShapeSettings] = useState({
     fillColor: '#3182ce',
     strokeColor: '#000000',
-    strokeWidth: 1
+    strokeWidth: 1,
+    fillType: 'color', // 'color' | 'image'
+    fillImageSrc: null,
+    fillImageFit: 'cover' // 'cover' | 'contain'
   });
   const [imageSettings, setImageSettings] = useState({
     brightness: 100,
@@ -391,7 +404,8 @@ const CanvaEditor = () => {
         fontSize: presetFontSize,
         fontWeight: presetFontWeight,
         visible: true,
-        locked: false
+        locked: false,
+        rotation: 0
       };
     } else if (
       ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle','diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft','arrowUp','arrowDown','cloud'].includes(tool)
@@ -407,7 +421,8 @@ const CanvaEditor = () => {
         height: tool === 'ellipse' || tool === 'roundedRectangle' ? 100 : 100,
         ...shapeSettings,
         visible: true,
-        locked: false
+        locked: false,
+        rotation: 0
       };
     }
 
@@ -467,6 +482,125 @@ const CanvaEditor = () => {
       setSelectedLayer(newLayer.id);
       saveToHistory(newLayers);
     }
+  };
+
+  // Inline rename helpers
+  const startRenameLayer = (layer) => {
+    setRenamingLayerId(layer.id);
+    setRenameValue(layer.name || '');
+  };
+
+  const commitRenameLayer = () => {
+    if (!renamingLayerId) return;
+    const trimmed = renameValue.trim();
+    const newLayers = layers.map(l => l.id === renamingLayerId ? { ...l, name: trimmed || l.name } : l);
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
+  const handleLayerMoveUp = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex < layers.length - 1) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex + 1]] = [newLayers[currentIndex + 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  const handleLayerMoveDown = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex > 0) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex - 1]] = [newLayers[currentIndex - 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  // Floating toolbar color helpers
+  const getLayerPrimaryColor = (layer) => {
+    if (!layer) return '#000000';
+    if (layer.type === 'text') return layer.color || '#000000';
+    if (layer.type === 'shape') return layer.fillColor || '#3182ce';
+    if (layer.type === 'drawing') return layer.color || '#000000';
+    if (layer.type === 'image') return layer.strokeColor || '#000000';
+    return '#000000';
+  };
+
+  const handleQuickColorChange = (colorValue) => {
+    if (!selectedLayer) return;
+    const newLayers = layers.map(l => {
+      if (l.id !== selectedLayer) return l;
+      if (l.type === 'text') return { ...l, color: colorValue };
+      if (l.type === 'shape') return { ...l, fillColor: colorValue };
+      if (l.type === 'drawing') return { ...l, color: colorValue };
+      if (l.type === 'image') return { ...l, strokeColor: colorValue };
+      return l;
+    });
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+  };
+
+  // Drag and drop handlers for layers panel
+  const handleLayerDragStart = (e, layerId) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    setDraggedLayer(layerId);
+    setIsLayerDragging(true);
+  };
+
+  const handleLayerDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleLayerDragLeave = (e) => {
+    // Only reset if we're actually leaving the layer item
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverIndex(-1);
+    }
+  };
+
+  const handleLayerDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    if (draggedLayer === null) return;
+    
+    const draggedIndex = layers.findIndex(l => l.id === draggedLayer);
+    if (draggedIndex === -1 || draggedIndex === dropIndex) {
+      setDraggedLayer(null);
+      setDragOverIndex(-1);
+      setIsLayerDragging(false);
+      return;
+    }
+
+    const newLayers = [...layers];
+    const draggedLayerData = newLayers[draggedIndex];
+    
+    // Remove the dragged layer
+    newLayers.splice(draggedIndex, 1);
+    
+    // Insert at new position
+    const newIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newLayers.splice(newIndex, 0, draggedLayerData);
+    
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+    
+    // Reset drag state
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
+  };
+
+  const handleLayerDragEnd = () => {
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
   };
 
   // Save: open modal with export options
@@ -561,58 +695,147 @@ const CanvaEditor = () => {
       ctx.strokeStyle = stroke;
       ctx.lineWidth = strokeWidth;
       const s = layer.shape;
+      const path = new Path2D();
       if (s === 'rectangle') {
-        ctx.fillRect(x, y, w, h);
-        if (strokeWidth > 0) ctx.strokeRect(x, y, w, h);
+        path.rect(x, y, w, h);
       } else if (s === 'roundedRectangle') {
         drawRoundedRect(x, y, w, h, 16);
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
       } else if (s === 'circle') {
-        ctx.beginPath();
-        const r = Math.min(w, h) / 2;
-        ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
       } else if (s === 'ellipse') {
+        // Path2D does not support ellipse via constructor in all browsers, draw directly on ctx
         ctx.beginPath();
         ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
         ctx.closePath();
-        ctx.fill();
+        if (layer.fillType !== 'image') ctx.fill();
         if (strokeWidth > 0) ctx.stroke();
+        ctx.restore();
+        return;
       } else if (s === 'triangle') {
-        ctx.beginPath();
-        ctx.moveTo(x + w / 2, y);
-        ctx.lineTo(x, y + h);
-        ctx.lineTo(x + w, y + h);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x + w / 2, y);
+        path.lineTo(x, y + h);
+        path.lineTo(x + w, y + h);
+        path.closePath();
       } else if (s === 'rightTriangle') {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + w, y);
-        ctx.lineTo(x, y + h);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x, y);
+        path.lineTo(x + w, y);
+        path.lineTo(x, y + h);
+        path.closePath();
       } else if (s === 'diamond') {
-        ctx.beginPath();
-        ctx.moveTo(x + w / 2, y);
-        ctx.lineTo(x + w, y + h / 2);
-        ctx.lineTo(x + w / 2, y + h);
-        ctx.lineTo(x, y + h / 2);
-        ctx.closePath();
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+        path.moveTo(x + w / 2, y);
+        path.lineTo(x + w, y + h / 2);
+        path.lineTo(x + w / 2, y + h);
+        path.lineTo(x, y + h / 2);
+        path.closePath();
       } else {
         // Fallback for complex shapes: draw as rounded rectangle
         drawRoundedRect(x, y, w, h, 8);
-        ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
       }
+
+      if (layer.fillType === 'image' && layer.fillImageSrc) {
+        // The actual image drawing is handled by async draw routine in export; for live preview this function isn't used.
+        ctx.clip(path);
+        // Fill with solid as placeholder to avoid empty shape in any sync contexts
+        ctx.fillStyle = '#ddd';
+        ctx.fill(path);
+      } else {
+        ctx.fill(path);
+      }
+      if (strokeWidth > 0) ctx.stroke(path);
       ctx.restore();
+    };
+
+    const drawShapeLayerWithImage = async (layer) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const x = layer.x;
+          const y = layer.y;
+          const w = layer.width || img.width;
+          const h = layer.height || img.height;
+
+          ctx.save();
+          // Build shape path
+          const path = new Path2D();
+          const s = layer.shape;
+          if (s === 'rectangle') {
+            path.rect(x, y, w, h);
+          } else if (s === 'roundedRectangle') {
+            drawRoundedRect(x, y, w, h, 16);
+          } else if (s === 'circle') {
+            path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+          } else if (s === 'ellipse') {
+            ctx.beginPath();
+            ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            // compute object-fit cover rect for image into w,h
+            const ir = img.width / img.height;
+            const r = w / h;
+            let dw = w, dh = h, dx = x, dy = y;
+            if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
+              dh = w / ir; dy = y + (h - dh) / 2;
+            } else {
+              dw = h * ir; dx = x + (w - dw) / 2;
+            }
+            ctx.drawImage(img, dx, dy, dw, dh);
+            // Stroke
+            const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+            if (sw > 0) {
+              ctx.lineWidth = sw;
+              ctx.strokeStyle = layer.strokeColor || '#000000';
+              ctx.stroke();
+            }
+            ctx.restore();
+            resolve();
+            return;
+          } else if (s === 'triangle') {
+            path.moveTo(x + w / 2, y);
+            path.lineTo(x, y + h);
+            path.lineTo(x + w, y + h);
+            path.closePath();
+          } else if (s === 'rightTriangle') {
+            path.moveTo(x, y);
+            path.lineTo(x + w, y);
+            path.lineTo(x, y + h);
+            path.closePath();
+          } else if (s === 'diamond') {
+            path.moveTo(x + w / 2, y);
+            path.lineTo(x + w, y + h / 2);
+            path.lineTo(x + w / 2, y + h);
+            path.lineTo(x, y + h / 2);
+            path.closePath();
+          } else {
+            drawRoundedRect(x, y, w, h, 8);
+          }
+
+          ctx.clip(path);
+          // object-fit cover/contain into rect x,y,w,h
+          const ir = img.width / img.height;
+          const r = w / h;
+          let dw = w, dh = h, dx = x, dy = y;
+          if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
+            dh = w / ir; dy = y + (h - dh) / 2;
+          } else {
+            dw = h * ir; dx = x + (w - dw) / 2;
+          }
+          ctx.drawImage(img, dx, dy, dw, dh);
+
+          // Stroke
+          const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+          if (sw > 0) {
+            ctx.lineWidth = sw;
+            ctx.strokeStyle = layer.strokeColor || '#000000';
+            ctx.stroke(path);
+          }
+
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = layer.fillImageSrc;
+      });
     };
 
     const drawImageLayer = async (layer) => {
@@ -705,7 +928,11 @@ const CanvaEditor = () => {
     for (const layer of layers) {
       if (!layer || layer.visible === false) continue;
       if (layer.type === 'shape') {
-        drawShape(layer);
+        if (layer.fillType === 'image' && layer.fillImageSrc) {
+          imageDrawPromises.push(drawShapeLayerWithImage(layer));
+        } else {
+          drawShape(layer);
+        }
       } else if (layer.type === 'text') {
         drawText(layer);
       } else if (layer.type === 'image') {
@@ -850,6 +1077,25 @@ const CanvaEditor = () => {
   };
 
   const handleMouseMove = useCallback((e) => {
+    if (isRotating && rotateStart.layerId) {
+      const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+      const dx = mouseX - rotateStart.cx;
+      const dy = mouseY - rotateStart.cy;
+      const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+      let newRotation = rotateStart.startRotation + (angleDeg - rotateStart.startAngleDeg);
+      if (e.shiftKey) {
+        newRotation = Math.round(newRotation / 15) * 15;
+      }
+      // Normalize to [-180, 180)
+      if (newRotation >= 180) newRotation -= 360;
+      if (newRotation < -180) newRotation += 360;
+      setLayers(prevLayers => prevLayers.map(layer =>
+        layer.id === rotateStart.layerId
+          ? { ...layer, rotation: newRotation }
+          : layer
+      ));
+      return;
+    }
     if (isResizing && resizeStart.layerId) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
@@ -899,6 +1145,14 @@ const CanvaEditor = () => {
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
+      setLayers(currentLayers => {
+        saveToHistory(currentLayers);
+        return currentLayers;
+      });
+    }
+    if (isRotating) {
+      setIsRotating(false);
+      setRotateStart({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
       setLayers(currentLayers => {
         saveToHistory(currentLayers);
         return currentLayers;
@@ -974,7 +1228,7 @@ const CanvaEditor = () => {
   }, [isDragging, isResizing, drawingSettings.isDrawing, currentPath, drawingSettings.drawingMode, drawingSettings.brushSize, drawingSettings.brushColor, drawingSettings.opacity]);
 
   useEffect(() => {
-    if (isDragging || isResizing || drawingSettings.isDrawing) {
+    if (isDragging || isResizing || isRotating || drawingSettings.isDrawing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -982,13 +1236,25 @@ const CanvaEditor = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, isRotating, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
 
   const handleResizeMouseDown = (e, layer) => {
     e.stopPropagation();
     if (selectedTool !== 'select') return;
     setIsResizing(true);
     setResizeStart({ x: e.clientX, y: e.clientY, width: layer.width, height: layer.height, layerId: layer.id });
+    setSelectedLayer(layer.id);
+  };
+
+  const handleRotateMouseDown = (e, layer) => {
+    e.stopPropagation();
+    if (selectedTool !== 'select') return;
+    const centerX = layer.x + layer.width / 2;
+    const centerY = layer.y + layer.height / 2;
+    const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+    const startAngleDeg = Math.atan2(mouseY - centerY, mouseX - centerX) * (180 / Math.PI);
+    setIsRotating(true);
+    setRotateStart({ cx: centerX, cy: centerY, startAngleDeg, startRotation: layer.rotation || 0, layerId: layer.id });
     setSelectedLayer(layer.id);
   };
 
@@ -1009,6 +1275,7 @@ const CanvaEditor = () => {
           height: 200,
           visible: true,
           locked: false,
+          rotation: 0,
           ...imageSettings
         };
         const newLayers = [...layers, newImage];
@@ -1327,7 +1594,30 @@ const CanvaEditor = () => {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      transition: 'all 0.2s ease',
+      userSelect: 'none'
+    },
+    layerItemDragging: {
+      opacity: 0.5,
+      transform: 'rotate(5deg)',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
+    },
+    layerItemDragOver: {
+      borderTop: '3px solid #3182ce',
+      backgroundColor: '#f0f4ff'
+    },
+    dragHandle: {
+      cursor: 'grab',
+      padding: '4px',
+      marginRight: '8px',
+      color: '#666',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    dragHandleActive: {
+      cursor: 'grabbing'
     },
     layerControls: {
       display: 'flex',
@@ -1342,7 +1632,47 @@ const CanvaEditor = () => {
       borderRadius: '4px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      opacity: 1,
+      transition: 'opacity 0.2s ease'
+    },
+    // Floating action bar (color, duplicate, delete)
+    floatingBar: {
+      position: 'absolute',
+      top: -44,
+      left: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      border: '1px solid #e5e7eb',
+      borderRadius: 18,
+      padding: '6px 10px',
+      boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+      backdropFilter: 'saturate(180%) blur(6px)',
+      zIndex: 20
+    },
+    floatingBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      border: '1px solid #e5e7eb',
+      backgroundColor: '#ffffff',
+      cursor: 'pointer'
+    },
+    floatingColor: {
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      width: 28,
+      height: 28,
+      padding: 0,
+      border: '1px solid #e5e7eb',
+      borderRadius: 8,
+      background: 'none',
+      cursor: 'pointer'
     },
     propertyPanel: {
       marginTop: '20px',
@@ -2401,7 +2731,9 @@ const CanvaEditor = () => {
                     border: selectedLayer === layer.id ? '2px dashed #3182ce' : 'none',
                     cursor: selectedTool === 'select' ? 'move' : 'default',
                     display: layer.visible ? 'block' : 'none',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    transform: `rotate(${layer.rotation || 0}deg)`,
+                    transformOrigin: 'center center'
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -2441,6 +2773,25 @@ const CanvaEditor = () => {
                   )}
                   {layer.type === 'shape' && (() => {
                     const display = getShapeDisplayProps(layer.shape);
+                    if (layer.fillType === 'image' && layer.fillImageSrc) {
+                      return (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'relative',
+                            border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
+                            borderRadius: display.borderRadius,
+                            clipPath: display.clipPath,
+                            overflow: 'hidden',
+                            backgroundImage: `url(${layer.fillImageSrc})`,
+                            backgroundSize: layer.fillImageFit === 'contain' ? 'contain' : 'cover',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center'
+                          }}
+                        />
+                      );
+                    }
                     return (
                       <div
                         style={{
@@ -2514,6 +2865,32 @@ const CanvaEditor = () => {
                       />
                     </svg>
                   )}
+                  {/* Floating actions for selected element */}
+                  {selectedLayer === layer.id && (
+                    <div style={styles.floatingBar} onMouseDown={(e) => e.stopPropagation()}>
+                      <input
+                        type="color"
+                        aria-label="Change color"
+                        value={getLayerPrimaryColor(layer)}
+                        onChange={(e) => handleQuickColorChange(e.target.value)}
+                        style={styles.floatingColor}
+                      />
+                      <button
+                        title="Duplicate"
+                        style={styles.floatingBtn}
+                        onClick={(e) => { e.stopPropagation(); handleLayerDuplicate(layer.id); }}
+                      >
+                        <FiCopy size={16} color="#111827" />
+                      </button>
+                      <button
+                        title="Delete"
+                        style={styles.floatingBtn}
+                        onClick={(e) => { e.stopPropagation(); handleLayerDelete(layer.id); }}
+                      >
+                        <FiTrash2 size={16} color="#dc2626" />
+                      </button>
+                    </div>
+                  )}
                   {selectedLayer === layer.id && (
                     <div
                       onMouseDown={(e) => handleResizeMouseDown(e, layer)}
@@ -2531,6 +2908,45 @@ const CanvaEditor = () => {
                       }}
                       title="Resize"
                     />
+                  )}
+                  {selectedLayer === layer.id && (
+                    <>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -40,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 1,
+                          height: 32,
+                          backgroundColor: '#3182ce',
+                          zIndex: 99
+                        }}
+                      />
+                      <div
+                        onMouseDown={(e) => handleRotateMouseDown(e, layer)}
+                        style={{
+                          position: 'absolute',
+                          top: -56,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: '#ffffff',
+                          border: '2px solid #3182ce',
+                          boxShadow: '0 0 0 1px #3182ce',
+                          cursor: 'grab',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 100
+                        }}
+                        title="Rotate (hold Shift to snap)"
+                      >
+                        <FiRotateCw size={12} color="#3182ce" />
+                      </div>
+                    </>
                   )}
               </div>
               ))
@@ -2715,15 +3131,54 @@ const CanvaEditor = () => {
                 No layers yet
               </div>
             ) : (
-              layers.map(layer => (
-                <div key={layer.id} style={{
-                  ...styles.layerItem,
-                  border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
-                  backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
-                }}>
-                  <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.name}</div>
-                  <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
+              layers.map((layer, index) => (
+                <div 
+                  key={layer.id} 
+                  draggable
+                  onDragStart={(e) => handleLayerDragStart(e, layer.id)}
+                  onDragOver={(e) => handleLayerDragOver(e, index)}
+                  onDragLeave={handleLayerDragLeave}
+                  onDrop={(e) => handleLayerDrop(e, index)}
+                  onDragEnd={handleLayerDragEnd}
+                  style={{
+                    ...styles.layerItem,
+                    ...(draggedLayer === layer.id ? styles.layerItemDragging : {}),
+                    ...(dragOverIndex === index ? styles.layerItemDragOver : {}),
+                    border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
+                    backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    <div 
+                      style={{
+                        ...styles.dragHandle,
+                        ...(isLayerDragging ? styles.dragHandleActive : {})
+                      }}
+                      title="Drag to reorder"
+                    >
+                      <FiMove size={16} />
+                    </div>
+                    <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
+                      {renamingLayerId === layer.id ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={commitRenameLayer}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commitRenameLayer(); if (e.key === 'Escape') { setRenamingLayerId(null); setRenameValue(''); } }}
+                          style={{ width: '100%', padding: 6, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13 }}
+                        />
+                      ) : (
+                        <div
+                          title="Double-click to rename"
+                          onDoubleClick={() => startRenameLayer(layer)}
+                          style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {layer.name}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
+                    </div>
                   </div>
                   <div style={styles.layerControls}>
                     <button
@@ -2966,6 +3421,55 @@ const CanvaEditor = () => {
 
             {layers.find(l => l.id === selectedLayer)?.type === 'shape' && (
               <>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Fill Type</span>
+                  <select
+                    value={shapeSettings.fillType}
+                    onChange={(e) => handleShapeSettingsChange('fillType', e.target.value)}
+                    style={styles.propertyInput}
+                  >
+                    <option value="color">Color</option>
+                    <option value="image">Image</option>
+                  </select>
+                </div>
+                {shapeSettings.fillType === 'image' && (
+                  <>
+                    <div style={styles.propertyRow}>
+                      <span style={styles.propertyLabel}>Image Fit</span>
+                      <select
+                        value={shapeSettings.fillImageFit}
+                        onChange={(e) => handleShapeSettingsChange('fillImageFit', e.target.value)}
+                        style={styles.propertyInput}
+                      >
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          style={styles.smallButton}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="Upload image to use as fill"
+                        >
+                          Upload image
+                        </button>
+                        {shapeSettings.fillImageSrc && (
+                          <img src={shapeSettings.fillImageSrc} alt="fill" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid #e5e7eb' }} />
+                        )}
+                      </div>
+                      {uploadedImages.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
+                          {uploadedImages.map(ui => (
+                            <button key={ui.id} onClick={() => handleShapeSettingsChange('fillImageSrc', ui.src)} title={ui.name} style={{ padding: 0, border: shapeSettings.fillImageSrc === ui.src ? '2px solid #3182ce' : '1px solid #e5e7eb', borderRadius: 4, overflow: 'hidden', background: '#fff' }}>
+                              <img src={ui.src} alt={ui.name} style={{ width: '100%', height: 40, objectFit: 'cover', display: 'block' }} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Fill Color</span>
                   <input

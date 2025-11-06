@@ -6,6 +6,7 @@ import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 
 import { Home } from './pages/Home';
 import { Create } from './pages/Create';
+import AISuggestTemp from './components/homepage/AISuggestTemp';
 import AIDesign from './components/createpage/CardsPages/AIDesign';
 import ImageCreator from './components/createpage/CardsPages/ImageCreator';
 import ContentWriter from './components/createpage/CardsPages/ContentWriter';
@@ -25,6 +26,7 @@ import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenera
 import BackgroundRemover from './components/imageeditor/BackgroundRemover';
 import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
+import Brandkit from './pages/Brandkit';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -50,6 +52,7 @@ const AppContent = () => {
       >
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/ai-suggest-templates" element={<AISuggestTemp />} />
           <Route path="/create" element={<Create />} />
           <Route path="/create/ai-design" element={<AIDesign />} />
           <Route path="/create/image-creator" element={<ImageCreator />} />
@@ -70,6 +73,7 @@ const AppContent = () => {
           <Route path="/bgremove" element={<BackgroundRemover />} />
           <Route path="/imageeditor" element={<ImageEditor />} />
           <Route path="/canva-clone" element={<CanvaClone />} />
+          <Route path="/brand-kit" element={<Brandkit />} />
         </Routes>
       </div>
     </div>

@@ -1,84 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPalette, FaCamera } from "react-icons/fa";
 import { FiHeart, FiDownload, FiEye } from "react-icons/fi";
 import { AiFillHeart } from "react-icons/ai";
 import { AiOutlineAppstore } from "react-icons/ai";
 import { AiFillAppstore } from "react-icons/ai";
 import { AiOutlineFontSize } from "react-icons/ai";
+import api from "../../services/api";
 
-// Sample data (icons/colors closely match your screenshot)
-const cards = [
-  {
-    icon: <FaPalette size={32} color="#f79ebb" />,
-    title: "Modern Logo Design",
-    desc: "Minimalist logo with geometric shapes",
-    categories: ["Design", "Logos"],
-    tags: ["#logo", "#minimalist", "#geometric"],
-    time: "2 weeks ago",
-    downloads: 147,
-    likes: 89,
-    loved: true,
-  },
-  {
-    icon: <FaCamera size={32} color="#beb7e6" />,
-    title: "Product Photography Template",
-    desc: "Professional e-commerce product photo setup",
-    categories: ["Template", "Photography"],
-    tags: ["#product", "#ecommerce", "#professional"],
-    time: "1 week ago",
-    downloads: 256,
-    likes: 142,
-    loved: true,
-  },
-  {
-    icon: <AiOutlineAppstore size={32} color="#7a7bfc" />,
-    title: "Social Media Kit - Wellness",
-    desc: "Complete social media template collection",
-    categories: ["Kit", "Social Media"],
-    tags: ["#social", "#wellness", "#templates"],
-    time: "3 days ago",
-    downloads: 89,
-    likes: 67,
-    loved: true,
-    hasActions: true
-  },
-  {
-    icon: <FaPalette size={32} color="#f79ebb" />,
-    title: "Website Color Palette",
-    desc: "Trending color combinations for web design",
-    categories: ["Resource", "Colors"],
-    tags: ["#colors", "#web", "#trending"],
-    time: "5 days ago",
-    downloads: 324,
-    likes: 198,
-    loved: true,
-  },
-  {
-    icon: <AiOutlineFontSize size={32} color="#4faefd" />,
-    title: "Typography Hierarchy Guide",
-    desc: "Professional font pairing and sizing guide",
-    categories: ["Guide", "Typography"],
-    tags: ["#typography", "#fonts", "#hierarchy"],
-    time: "1 week ago",
-    downloads: 178,
-    likes: 134,
-    loved: true,
-  },
-  {
-    icon: <AiOutlineAppstore size={32} color="#7a7bfc" />,
-    title: "Mobile UI Components",
-    desc: "Ready-to-use mobile interface elements",
-    categories: ["Components", "UI/UX"],
-    tags: ["#mobile", "#ui", "#components"],
-    time: "4 days ago",
-    downloads: 203,
-    likes: 156,
-    loved: true,
-  },
-];
+// Helper function to render icon based on icon type string
+const renderIcon = (iconType, color) => {
+  const size = 32;
+  const style = { color };
+  switch(iconType) {
+    case "palette": return <FaPalette size={size} style={style} />;
+    case "camera": return <FaCamera size={size} style={style} />;
+    case "appstore": return <AiOutlineAppstore size={size} style={style} />;
+    case "font": return <AiOutlineFontSize size={size} style={style} />;
+    default: return <FaPalette size={size} style={style} />;
+  }
+};
 
 export const FavoriteCards = () => {
   const [hovered, setHovered] = useState(null);
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const data = await api.getFavorites();
+        setCards(data);
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        setCards([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFavorites();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{
+        width: "100%",
+        maxWidth: 1240,
+        margin: "0 auto",
+        padding: "32px 0 16px 0",
+        textAlign: "center",
+        fontSize: "1.2rem",
+        color: "#888"
+      }}>
+        Loading favorites...
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -187,7 +163,9 @@ export const FavoriteCards = () => {
               <AiFillHeart size={25} color="#fa508f" />
             </div>
             {/* Card icon */}
-            <div style={{ marginBottom: 16 }}>{card.icon}</div>
+            <div style={{ marginBottom: 16 }}>
+              {renderIcon(card.iconType || "palette", card.iconColor || "#f79ebb")}
+            </div>
             {/* Title */}
             <div style={{ fontWeight: 700, fontSize: "1.16rem", color: "#181d3a", marginBottom: 5 }}>
               {card.title}
@@ -197,7 +175,7 @@ export const FavoriteCards = () => {
             </div>
             {/* Categories */}
             <div style={{ display: "flex", gap: 8, marginBottom: 7 }}>
-              {card.categories.map((cat, idx) =>
+              {card.categories.map((cat) =>
                 <span key={cat} style={{
                   background: "#f7f8fa",
                   color: "#626273",
@@ -215,7 +193,7 @@ export const FavoriteCards = () => {
               flexWrap: "wrap",
               marginBottom: 15
             }}>
-              {card.tags.map((tag, t) =>
+              {card.tags.map((tag) =>
                 <span
                   key={tag}
                   style={{

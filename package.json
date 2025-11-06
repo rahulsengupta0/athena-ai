@@ -26,6 +26,7 @@
     "konva": "^10.0.2",
     "mongoose": "^8.19.2",
     "node-fetch": "^3.3.2",
+    "openai": "^6.8.1",
     "react": "^19.1.1",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.1",
