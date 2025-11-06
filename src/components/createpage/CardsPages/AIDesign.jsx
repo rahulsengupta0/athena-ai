@@ -58,55 +58,80 @@ export const AIDesign = () => {
   const [error, setError] = useState(null);
 
   const selectedSize = useMemo(() => SIZES.find((s) => s.key === activeSize), [activeSize]);
+  const uploadGeneratedImage = async (base64Image) => {
+  try {
+    const token = localStorage.getItem('token'); // get token from storage
+    const response = await fetch(base64Image);
+    const blob = await response.blob();
+    const file = new File([blob], "generated-image.png", { type: blob.type });
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("featureFolder", "ai design generation");
+    const res = await fetch("http://localhost:5000/api/upload", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`, // send the token here!
+      },
+      body: formData,
+      // credentials: "include", // Remove this if not using cookies/session
+    });
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    return data.fileUrl;
+  } catch (error) {
+    console.error("Upload error:", error);
+    setError("Upload failed: " + error.message);
+  }
+};
 
-  const handleGenerateLogo = async () => {
-    if (!prompt.trim()) return;
-    setIsLoading(true);
-    setResult(null);
-    setGeneratedImage(null);
-    setError(null);
+const handleGenerateLogo = async () => {
+  if (!prompt.trim()) return;
+  setIsLoading(true);
+  setResult(null);
+  setGeneratedImage(null);
+  setError(null);
 
-    try {
-      const response = await fetch("http://localhost:5000/api/generate-logo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
+  try {
+    const response = await fetch("http://localhost:5000/api/generate-logo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        setError("Error: " + (errorData.error || "Unknown error"));
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      // Basic validation of base64 string
-      if (!data.imageBase64 || data.imageBase64.length < 1000) {
-        setError("Received invalid or too short base64 image data");
-        setIsLoading(false);
-        return;
-      }
-      // Remove any whitespace/newlines that may break base64 image
-      const cleanBase64 = data.imageBase64.replace(/\s/g, "");
-
-      const imgSrc = `data:${data.mimeType};base64,${cleanBase64}`;
-
-      console.log("Image src length:", imgSrc.length);
-
-      setGeneratedImage(imgSrc);
-      setResult({
-        tab: activeTab,
-        size: selectedSize?.label,
-        text: prompt.trim(),
-      });
-    } catch (error) {
-      setError("Error: " + error.message);
-    } finally {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      setError("Error: " + (errorData.error || "Unknown error"));
       setIsLoading(false);
+      return;
     }
-  };
+
+    const data = await response.json();
+
+    if (!data.imageBase64 || data.imageBase64.length < 1000) {
+      setError("Received invalid or too short base64 image data");
+      setIsLoading(false);
+      return;
+    }
+
+    const cleanBase64 = data.imageBase64.replace(/\s/g, "");
+    const imgSrc = `data:${data.mimeType};base64,${cleanBase64}`;
+
+    // Upload generated image to your backend /api/upload with folder info
+    await uploadGeneratedImage(imgSrc);
+
+    setGeneratedImage(imgSrc);
+    setResult({
+      tab: activeTab,
+      size: selectedSize?.label,
+      text: prompt.trim(),
+    });
+  } catch (error) {
+    setError("Error: " + error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const onGenerate = async () => {
     if (activeTab === "logo") {
