@@ -6,6 +6,7 @@ import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 
 import { Home } from './pages/Home';
 import { Create } from './pages/Create';
+import AISuggestTemp from './components/homepage/AISuggestTemp';
 import AIDesign from './components/createpage/CardsPages/AIDesign';
 import ImageCreator from './components/createpage/CardsPages/ImageCreator';
 import ContentWriter from './components/createpage/CardsPages/ContentWriter';
@@ -50,6 +51,7 @@ const AppContent = () => {
       >
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/ai-suggest-templates" element={<AISuggestTemp />} />
           <Route path="/create" element={<Create />} />
           <Route path="/create/ai-design" element={<AIDesign />} />
           <Route path="/create/image-creator" element={<ImageCreator />} />

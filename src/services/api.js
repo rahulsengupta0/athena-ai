@@ -23,11 +23,24 @@ class ApiService {
       console.log(`Making request to: ${url}`);
       console.log('Request headers:', config.headers);
       const response = await fetch(url, config);
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+      if (response.status === 204) {
+        data = null;
+      } else if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        if (!response.ok) {
+          console.error('Response error (text):', text);
+          throw new Error(text || 'Something went wrong');
+        }
+        return text;
+      }
 
       if (!response.ok) {
         console.error('Response error:', data);
-        throw new Error(data.message || 'Something went wrong');
+        throw new Error((data && data.message) || 'Something went wrong');
       }
 
       return data;
@@ -138,6 +151,20 @@ class ApiService {
 
   async deleteFavorite(id) {
     return this.request(`/api/user-data/favorites/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // ============= USER FILES (S3 uploads) =============
+  async getUserFiles() {
+    return this.request('/api/upload', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async deleteUserFile(id) {
+    return this.request(`/api/upload/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

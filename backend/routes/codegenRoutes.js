@@ -1,36 +1,55 @@
-const express = require('express');
-const { InferenceClient } = require('@huggingface/inference');
+const express = require("express");
 const router = express.Router();
+const fetch = require("node-fetch");
 
-const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
-
-router.post('/generate-code', async (req, res) => {
-  const { prompt, language, framework } = req.body;
-
-  if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
-
+// POST /api/codegen/generate-code
+router.post("/generate-code", async (req, res) => {
   try {
-    // Compose the prompt with language and framework info to steer generation
-    const fullPrompt = `Generate a ${language} code snippet for ${framework}:\n${prompt}\n`;
+    const { prompt, language, framework } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
-    const response = await client.textGeneration({
-      model: 'Salesforce/codegen-350M-mono',
-      inputs: fullPrompt,
-      parameters: {
-        max_new_tokens: 150,
-        temperature: 0.3,
-        do_sample: false,
-      }
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // ✅ Open-access model
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an expert software engineer. Respond only with complete, clean, and well-formatted code. Do not include explanations or notes.",
+          },
+          {
+            role: "user",
+            content: `Write ${language} code using ${framework} for this prompt: ${prompt}`,
+          },
+        ],
+        // ✅ Correct parameter names for newer models:
+        max_completion_tokens: 800, // replaces max_tokens
+        temperature: 1, // must be 1 (0.3 not allowed)
+      }),
     });
 
-    if (response && response.generated_text) {
-      return res.json({ code: response.generated_text });
+    const raw = await response.text();
+    if (!response.ok) {
+      console.error("OpenAI API error:", raw);
+      return res.status(500).json({ error: `OpenAI error: ${raw}` });
     }
 
-    return res.status(500).json({ error: 'Failed to generate code' });
-  } catch (error) {
-    console.error('Code generation error:', error);
-    return res.status(500).json({ error: error.message });
+    const data = JSON.parse(raw);
+    const code = data.choices?.[0]?.message?.content?.trim() || "";
+
+    if (!code) {
+      return res.status(500).json({ error: "No code generated from OpenAI" });
+    }
+
+    res.json({ code });
+  } catch (err) {
+    console.error("Code generation error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
