@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { BrightnessControl, ContrastControl, BlurControl, ShadowsControl, OpacityControl } from './controls';
+import { getFilterCSS, getShadowCSS, hexToRgba } from '../../utils/styleUtils';
 import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
 import TopToolbar from './TopToolbar';
 import SaveExportModal from './SaveExportModal';
-import LeftSidebar from './LeftSidebar';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
@@ -648,6 +649,25 @@ const CanvaEditor = () => {
 
     const drawText = (layer) => {
       ctx.save();
+      // Apply effects
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+      if (layer.shadows?.enabled) {
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+      } else {
+        // Explicitly reset shadow properties when disabled
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
       ctx.fillStyle = layer.color || '#000000';
       const fontWeight = layer.fontWeight || 'normal';
       const fontSize = layer.fontSize || 16;
@@ -681,6 +701,151 @@ const CanvaEditor = () => {
       ctx.restore();
     };
 
+    // Helper function to draw shape path
+    const drawShapePath = (ctx, s, x, y, w, h) => {
+      if (s === 'rectangle') {
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.closePath();
+      } else if (s === 'roundedRectangle') {
+        drawRoundedRect(x, y, w, h, 16);
+      } else if (s === 'circle') {
+        ctx.beginPath();
+        ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        ctx.closePath();
+      } else if (s === 'ellipse') {
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+        ctx.closePath();
+      } else if (s === 'triangle') {
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x, y + h);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+      } else if (s === 'rightTriangle') {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x, y + h);
+        ctx.closePath();
+      } else if (s === 'diamond') {
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x + w, y + h / 2);
+        ctx.lineTo(x + w / 2, y + h);
+        ctx.lineTo(x, y + h / 2);
+        ctx.closePath();
+      } else if (s === 'pentagon') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.95, y + h * 0.38);
+        ctx.lineTo(x + w * 0.77, y + h);
+        ctx.lineTo(x + w * 0.23, y + h);
+        ctx.lineTo(x + w * 0.05, y + h * 0.38);
+        ctx.closePath();
+      } else if (s === 'hexagon') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.25, y);
+        ctx.lineTo(x + w * 0.75, y);
+        ctx.lineTo(x + w, y + h * 0.5);
+        ctx.lineTo(x + w * 0.75, y + h);
+        ctx.lineTo(x + w * 0.25, y + h);
+        ctx.lineTo(x, y + h * 0.5);
+        ctx.closePath();
+      } else if (s === 'star') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.61, y + h * 0.35);
+        ctx.lineTo(x + w * 0.98, y + h * 0.35);
+        ctx.lineTo(x + w * 0.68, y + h * 0.57);
+        ctx.lineTo(x + w * 0.79, y + h * 0.91);
+        ctx.lineTo(x + w * 0.5, y + h * 0.70);
+        ctx.lineTo(x + w * 0.21, y + h * 0.91);
+        ctx.lineTo(x + w * 0.32, y + h * 0.57);
+        ctx.lineTo(x + w * 0.02, y + h * 0.35);
+        ctx.lineTo(x + w * 0.39, y + h * 0.35);
+        ctx.closePath();
+      } else if (s === 'star6') {
+        ctx.beginPath();
+        const centerX = x + w / 2;
+        const centerY = y + h / 2;
+        const outerRadius = Math.min(w, h) / 2;
+        const innerRadius = outerRadius * 0.5;
+        for (let i = 0; i < 12; i++) {
+          const angle = (i * Math.PI) / 6 - Math.PI / 2;
+          const radius = i % 2 === 0 ? outerRadius : innerRadius;
+          const px = centerX + radius * Math.cos(angle);
+          const py = centerY + radius * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else if (s === 'heart') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y + h * 0.85);
+        ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+        ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+        ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+        ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+        ctx.closePath();
+      } else if (s === 'arrow') {
+        ctx.beginPath();
+        ctx.moveTo(x, y + h * 0.3);
+        ctx.lineTo(x + w * 0.6, y + h * 0.3);
+        ctx.lineTo(x + w * 0.6, y + h * 0.1);
+        ctx.lineTo(x + w, y + h * 0.5);
+        ctx.lineTo(x + w * 0.6, y + h * 0.9);
+        ctx.lineTo(x + w * 0.6, y + h * 0.7);
+        ctx.lineTo(x, y + h * 0.7);
+        ctx.closePath();
+      } else if (s === 'arrowLeft') {
+        ctx.beginPath();
+        ctx.moveTo(x + w, y + h * 0.3);
+        ctx.lineTo(x + w * 0.4, y + h * 0.3);
+        ctx.lineTo(x + w * 0.4, y + h * 0.1);
+        ctx.lineTo(x, y + h * 0.5);
+        ctx.lineTo(x + w * 0.4, y + h * 0.9);
+        ctx.lineTo(x + w * 0.4, y + h * 0.7);
+        ctx.lineTo(x + w, y + h * 0.7);
+        ctx.closePath();
+      } else if (s === 'arrowUp') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.3, y + h);
+        ctx.lineTo(x + w * 0.3, y + h * 0.4);
+        ctx.lineTo(x + w * 0.1, y + h * 0.4);
+        ctx.lineTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.9, y + h * 0.4);
+        ctx.lineTo(x + w * 0.7, y + h * 0.4);
+        ctx.lineTo(x + w * 0.7, y + h);
+        ctx.closePath();
+      } else if (s === 'arrowDown') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.3, y);
+        ctx.lineTo(x + w * 0.3, y + h * 0.6);
+        ctx.lineTo(x + w * 0.1, y + h * 0.6);
+        ctx.lineTo(x + w * 0.5, y + h);
+        ctx.lineTo(x + w * 0.9, y + h * 0.6);
+        ctx.lineTo(x + w * 0.7, y + h * 0.6);
+        ctx.lineTo(x + w * 0.7, y);
+        ctx.closePath();
+      } else if (s === 'cloud') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.25, y + h * 0.5);
+        ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+        ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+        ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+        ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+        ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+        ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+        ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+        ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+        ctx.closePath();
+      } else {
+        drawRoundedRect(x, y, w, h, 8);
+      }
+    };
+
     const drawShape = (layer) => {
       const x = layer.x;
       const y = layer.y;
@@ -689,59 +854,90 @@ const CanvaEditor = () => {
       const fill = layer.fillColor || '#3182ce';
       const stroke = layer.strokeColor || '#000000';
       const strokeWidth = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 1;
+      const s = layer.shape;
 
       ctx.save();
-      ctx.fillStyle = fill;
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = strokeWidth;
-      const s = layer.shape;
-      const path = new Path2D();
-      if (s === 'rectangle') {
-        path.rect(x, y, w, h);
-      } else if (s === 'roundedRectangle') {
-        drawRoundedRect(x, y, w, h, 16);
-      } else if (s === 'circle') {
-        path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
-      } else if (s === 'ellipse') {
-        // Path2D does not support ellipse via constructor in all browsers, draw directly on ctx
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
-        ctx.closePath();
-        if (layer.fillType !== 'image') ctx.fill();
-        if (strokeWidth > 0) ctx.stroke();
+      // Apply effects
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+
+      // Step 1: Draw shadow first (if enabled)
+      if (layer.shadows?.enabled) {
+        ctx.save();
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+        ctx.fillStyle = fill;
+        drawShapePath(ctx, s, x, y, w, h);
+        // Use evenodd fill rule for star shapes
+        if (s === 'star' || s === 'star6') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
         ctx.restore();
-        return;
-      } else if (s === 'triangle') {
-        path.moveTo(x + w / 2, y);
-        path.lineTo(x, y + h);
-        path.lineTo(x + w, y + h);
-        path.closePath();
-      } else if (s === 'rightTriangle') {
-        path.moveTo(x, y);
-        path.lineTo(x + w, y);
-        path.lineTo(x, y + h);
-        path.closePath();
-      } else if (s === 'diamond') {
-        path.moveTo(x + w / 2, y);
-        path.lineTo(x + w, y + h / 2);
-        path.lineTo(x + w / 2, y + h);
-        path.lineTo(x, y + h / 2);
-        path.closePath();
-      } else {
-        // Fallback for complex shapes: draw as rounded rectangle
-        drawRoundedRect(x, y, w, h, 8);
       }
 
+      // Step 2: Draw the actual shape fill (without shadow)
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = fill;
+      
       if (layer.fillType === 'image' && layer.fillImageSrc) {
-        // The actual image drawing is handled by async draw routine in export; for live preview this function isn't used.
+        // Image fill is handled separately
+        const path = new Path2D();
+        if (s === 'rectangle') {
+          path.rect(x, y, w, h);
+        } else if (s === 'circle') {
+          path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        } else if (s === 'triangle') {
+          path.moveTo(x + w / 2, y);
+          path.lineTo(x, y + h);
+          path.lineTo(x + w, y + h);
+          path.closePath();
+        } else if (s === 'rightTriangle') {
+          path.moveTo(x, y);
+          path.lineTo(x + w, y);
+          path.lineTo(x, y + h);
+          path.closePath();
+        } else if (s === 'diamond') {
+          path.moveTo(x + w / 2, y);
+          path.lineTo(x + w, y + h / 2);
+          path.lineTo(x + w / 2, y + h);
+          path.lineTo(x, y + h / 2);
+          path.closePath();
+        }
         ctx.clip(path);
-        // Fill with solid as placeholder to avoid empty shape in any sync contexts
         ctx.fillStyle = '#ddd';
-        ctx.fill(path);
+        ctx.fill();
       } else {
-        ctx.fill(path);
+        drawShapePath(ctx, s, x, y, w, h);
+        // Use evenodd fill rule for star shapes
+        if (s === 'star' || s === 'star6') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
       }
-      if (strokeWidth > 0) ctx.stroke(path);
+
+      // Step 3: Draw stroke (if any)
+      if (strokeWidth > 0) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeWidth;
+        // For star shapes, we need to redraw the path for stroke since fill('evenodd') consumes the path
+        if (s === 'star' || s === 'star6') {
+          drawShapePath(ctx, s, x, y, w, h);
+        }
+        ctx.stroke();
+      }
+
       ctx.restore();
     };
 
@@ -756,62 +952,353 @@ const CanvaEditor = () => {
           const h = layer.height || img.height;
 
           ctx.save();
-          // Build shape path
-          const path = new Path2D();
+          // Apply effects
+          ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+          ctx.filter = getFilterCSS({
+            brightness: layer.brightness ?? 100,
+            contrast: layer.contrast ?? 100,
+            blur: layer.blur ?? 0
+          });
+          if (layer.shadows?.enabled) {
+            ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+            ctx.shadowBlur = layer.shadows.blur ?? 0;
+            ctx.shadowOffsetX = layer.shadows.x ?? 0;
+            ctx.shadowOffsetY = layer.shadows.y ?? 0;
+          } else {
+            // Explicitly reset shadow properties when disabled
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          }
+          // Draw shape directly on context (not Path2D) for proper shadow support
           const s = layer.shape;
+          
+          // First, draw the shape filled to create the shadow
+          ctx.fillStyle = layer.fillColor || '#3182ce';
           if (s === 'rectangle') {
-            path.rect(x, y, w, h);
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.closePath();
+            ctx.fill();
           } else if (s === 'roundedRectangle') {
             drawRoundedRect(x, y, w, h, 16);
+            ctx.fill();
           } else if (s === 'circle') {
-            path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+            ctx.beginPath();
+            ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'ellipse') {
+            ctx.beginPath();
+            ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'triangle') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'rightTriangle') {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'diamond') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h / 2);
+            ctx.lineTo(x + w / 2, y + h);
+            ctx.lineTo(x, y + h / 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'pentagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.95, y + h * 0.38);
+            ctx.lineTo(x + w * 0.77, y + h);
+            ctx.lineTo(x + w * 0.23, y + h);
+            ctx.lineTo(x + w * 0.05, y + h * 0.38);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'hexagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y);
+            ctx.lineTo(x + w * 0.75, y);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.75, y + h);
+            ctx.lineTo(x + w * 0.25, y + h);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'star') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.61, y + h * 0.35);
+            ctx.lineTo(x + w * 0.98, y + h * 0.35);
+            ctx.lineTo(x + w * 0.68, y + h * 0.57);
+            ctx.lineTo(x + w * 0.79, y + h * 0.91);
+            ctx.lineTo(x + w * 0.5, y + h * 0.70);
+            ctx.lineTo(x + w * 0.21, y + h * 0.91);
+            ctx.lineTo(x + w * 0.32, y + h * 0.57);
+            ctx.lineTo(x + w * 0.02, y + h * 0.35);
+            ctx.lineTo(x + w * 0.39, y + h * 0.35);
+            ctx.closePath();
+            ctx.fill('evenodd');
+          } else if (s === 'star6') {
+            ctx.beginPath();
+            const centerX = x + w / 2;
+            const centerY = y + h / 2;
+            const outerRadius = Math.min(w, h) / 2;
+            const innerRadius = outerRadius * 0.5;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i * Math.PI) / 6 - Math.PI / 2;
+              const radius = i % 2 === 0 ? outerRadius : innerRadius;
+              const px = centerX + radius * Math.cos(angle);
+              const py = centerY + radius * Math.sin(angle);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill('evenodd');
+          } else if (s === 'heart') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y + h * 0.85);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+            ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrow') {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.1);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.6, y + h * 0.9);
+            ctx.lineTo(x + w * 0.6, y + h * 0.7);
+            ctx.lineTo(x, y + h * 0.7);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowLeft') {
+            ctx.beginPath();
+            ctx.moveTo(x + w, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.1);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.lineTo(x + w * 0.4, y + h * 0.9);
+            ctx.lineTo(x + w * 0.4, y + h * 0.7);
+            ctx.lineTo(x + w, y + h * 0.7);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowUp') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y + h);
+            ctx.lineTo(x + w * 0.3, y + h * 0.4);
+            ctx.lineTo(x + w * 0.1, y + h * 0.4);
+            ctx.lineTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.9, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowDown') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y);
+            ctx.lineTo(x + w * 0.3, y + h * 0.6);
+            ctx.lineTo(x + w * 0.1, y + h * 0.6);
+            ctx.lineTo(x + w * 0.5, y + h);
+            ctx.lineTo(x + w * 0.9, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'cloud') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+            ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+            ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+            ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+            ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            drawRoundedRect(x, y, w, h, 8);
+            ctx.fill();
+          }
+          
+          // Now clip and draw the image on top (replacing the fill)
+          ctx.save();
+          if (s === 'rectangle') {
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'roundedRectangle') {
+            drawRoundedRect(x, y, w, h, 16);
+            ctx.clip();
+          } else if (s === 'circle') {
+            ctx.beginPath();
+            ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
           } else if (s === 'ellipse') {
             ctx.beginPath();
             ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
             ctx.closePath();
             ctx.clip();
-            // compute object-fit cover rect for image into w,h
-            const ir = img.width / img.height;
-            const r = w / h;
-            let dw = w, dh = h, dx = x, dy = y;
-            if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
-              dh = w / ir; dy = y + (h - dh) / 2;
-            } else {
-              dw = h * ir; dx = x + (w - dw) / 2;
-            }
-            ctx.drawImage(img, dx, dy, dw, dh);
-            // Stroke
-            const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
-            if (sw > 0) {
-              ctx.lineWidth = sw;
-              ctx.strokeStyle = layer.strokeColor || '#000000';
-              ctx.stroke();
-            }
-            ctx.restore();
-            resolve();
-            return;
           } else if (s === 'triangle') {
-            path.moveTo(x + w / 2, y);
-            path.lineTo(x, y + h);
-            path.lineTo(x + w, y + h);
-            path.closePath();
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.clip();
           } else if (s === 'rightTriangle') {
-            path.moveTo(x, y);
-            path.lineTo(x + w, y);
-            path.lineTo(x, y + h);
-            path.closePath();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            ctx.clip();
           } else if (s === 'diamond') {
-            path.moveTo(x + w / 2, y);
-            path.lineTo(x + w, y + h / 2);
-            path.lineTo(x + w / 2, y + h);
-            path.lineTo(x, y + h / 2);
-            path.closePath();
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h / 2);
+            ctx.lineTo(x + w / 2, y + h);
+            ctx.lineTo(x, y + h / 2);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'pentagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.95, y + h * 0.38);
+            ctx.lineTo(x + w * 0.77, y + h);
+            ctx.lineTo(x + w * 0.23, y + h);
+            ctx.lineTo(x + w * 0.05, y + h * 0.38);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'hexagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y);
+            ctx.lineTo(x + w * 0.75, y);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.75, y + h);
+            ctx.lineTo(x + w * 0.25, y + h);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'star') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.61, y + h * 0.35);
+            ctx.lineTo(x + w * 0.98, y + h * 0.35);
+            ctx.lineTo(x + w * 0.68, y + h * 0.57);
+            ctx.lineTo(x + w * 0.79, y + h * 0.91);
+            ctx.lineTo(x + w * 0.5, y + h * 0.70);
+            ctx.lineTo(x + w * 0.21, y + h * 0.91);
+            ctx.lineTo(x + w * 0.32, y + h * 0.57);
+            ctx.lineTo(x + w * 0.02, y + h * 0.35);
+            ctx.lineTo(x + w * 0.39, y + h * 0.35);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'star6') {
+            ctx.beginPath();
+            const centerX = x + w / 2;
+            const centerY = y + h / 2;
+            const outerRadius = Math.min(w, h) / 2;
+            const innerRadius = outerRadius * 0.5;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i * Math.PI) / 6 - Math.PI / 2;
+              const radius = i % 2 === 0 ? outerRadius : innerRadius;
+              const px = centerX + radius * Math.cos(angle);
+              const py = centerY + radius * Math.sin(angle);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'heart') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y + h * 0.85);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+            ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrow') {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.1);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.6, y + h * 0.9);
+            ctx.lineTo(x + w * 0.6, y + h * 0.7);
+            ctx.lineTo(x, y + h * 0.7);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowLeft') {
+            ctx.beginPath();
+            ctx.moveTo(x + w, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.1);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.lineTo(x + w * 0.4, y + h * 0.9);
+            ctx.lineTo(x + w * 0.4, y + h * 0.7);
+            ctx.lineTo(x + w, y + h * 0.7);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowUp') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y + h);
+            ctx.lineTo(x + w * 0.3, y + h * 0.4);
+            ctx.lineTo(x + w * 0.1, y + h * 0.4);
+            ctx.lineTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.9, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowDown') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y);
+            ctx.lineTo(x + w * 0.3, y + h * 0.6);
+            ctx.lineTo(x + w * 0.1, y + h * 0.6);
+            ctx.lineTo(x + w * 0.5, y + h);
+            ctx.lineTo(x + w * 0.9, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'cloud') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+            ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+            ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+            ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+            ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+            ctx.closePath();
+            ctx.clip();
           } else {
             drawRoundedRect(x, y, w, h, 8);
+            ctx.clip();
           }
-
-          ctx.clip(path);
-          // object-fit cover/contain into rect x,y,w,h
+          
+          // Compute object-fit cover/contain into rect x,y,w,h
           const ir = img.width / img.height;
           const r = w / h;
           let dw = w, dh = h, dx = x, dy = y;
@@ -821,13 +1308,156 @@ const CanvaEditor = () => {
             dw = h * ir; dx = x + (w - dw) / 2;
           }
           ctx.drawImage(img, dx, dy, dw, dh);
+          ctx.restore(); // Restore after clipping
 
           // Stroke
           const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
           if (sw > 0) {
             ctx.lineWidth = sw;
             ctx.strokeStyle = layer.strokeColor || '#000000';
-            ctx.stroke(path);
+            // Draw stroke using the same shape path
+            if (s === 'rectangle') {
+              ctx.beginPath();
+              ctx.rect(x, y, w, h);
+              ctx.closePath();
+            } else if (s === 'roundedRectangle') {
+              drawRoundedRect(x, y, w, h, 16);
+            } else if (s === 'circle') {
+              ctx.beginPath();
+              ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+              ctx.closePath();
+            } else if (s === 'ellipse') {
+              ctx.beginPath();
+              ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+              ctx.closePath();
+            } else if (s === 'triangle') {
+              ctx.beginPath();
+              ctx.moveTo(x + w / 2, y);
+              ctx.lineTo(x, y + h);
+              ctx.lineTo(x + w, y + h);
+              ctx.closePath();
+            } else if (s === 'rightTriangle') {
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + w, y);
+              ctx.lineTo(x, y + h);
+              ctx.closePath();
+            } else if (s === 'diamond') {
+              ctx.beginPath();
+              ctx.moveTo(x + w / 2, y);
+              ctx.lineTo(x + w, y + h / 2);
+              ctx.lineTo(x + w / 2, y + h);
+              ctx.lineTo(x, y + h / 2);
+              ctx.closePath();
+            } else if (s === 'pentagon') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.95, y + h * 0.38);
+              ctx.lineTo(x + w * 0.77, y + h);
+              ctx.lineTo(x + w * 0.23, y + h);
+              ctx.lineTo(x + w * 0.05, y + h * 0.38);
+              ctx.closePath();
+            } else if (s === 'hexagon') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.25, y);
+              ctx.lineTo(x + w * 0.75, y);
+              ctx.lineTo(x + w, y + h * 0.5);
+              ctx.lineTo(x + w * 0.75, y + h);
+              ctx.lineTo(x + w * 0.25, y + h);
+              ctx.lineTo(x, y + h * 0.5);
+              ctx.closePath();
+            } else if (s === 'star') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.61, y + h * 0.35);
+              ctx.lineTo(x + w * 0.98, y + h * 0.35);
+              ctx.lineTo(x + w * 0.68, y + h * 0.57);
+              ctx.lineTo(x + w * 0.79, y + h * 0.91);
+              ctx.lineTo(x + w * 0.5, y + h * 0.70);
+              ctx.lineTo(x + w * 0.21, y + h * 0.91);
+              ctx.lineTo(x + w * 0.32, y + h * 0.57);
+              ctx.lineTo(x + w * 0.02, y + h * 0.35);
+              ctx.lineTo(x + w * 0.39, y + h * 0.35);
+              ctx.closePath();
+            } else if (s === 'star6') {
+              ctx.beginPath();
+              const centerX = x + w / 2;
+              const centerY = y + h / 2;
+              const outerRadius = Math.min(w, h) / 2;
+              const innerRadius = outerRadius * 0.5;
+              for (let i = 0; i < 12; i++) {
+                const angle = (i * Math.PI) / 6 - Math.PI / 2;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const px = centerX + radius * Math.cos(angle);
+                const py = centerY + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+              ctx.closePath();
+            } else if (s === 'heart') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y + h * 0.85);
+              ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+              ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+              ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+              ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+              ctx.closePath();
+            } else if (s === 'arrow') {
+              ctx.beginPath();
+              ctx.moveTo(x, y + h * 0.3);
+              ctx.lineTo(x + w * 0.6, y + h * 0.3);
+              ctx.lineTo(x + w * 0.6, y + h * 0.1);
+              ctx.lineTo(x + w, y + h * 0.5);
+              ctx.lineTo(x + w * 0.6, y + h * 0.9);
+              ctx.lineTo(x + w * 0.6, y + h * 0.7);
+              ctx.lineTo(x, y + h * 0.7);
+              ctx.closePath();
+            } else if (s === 'arrowLeft') {
+              ctx.beginPath();
+              ctx.moveTo(x + w, y + h * 0.3);
+              ctx.lineTo(x + w * 0.4, y + h * 0.3);
+              ctx.lineTo(x + w * 0.4, y + h * 0.1);
+              ctx.lineTo(x, y + h * 0.5);
+              ctx.lineTo(x + w * 0.4, y + h * 0.9);
+              ctx.lineTo(x + w * 0.4, y + h * 0.7);
+              ctx.lineTo(x + w, y + h * 0.7);
+              ctx.closePath();
+            } else if (s === 'arrowUp') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.3, y + h);
+              ctx.lineTo(x + w * 0.3, y + h * 0.4);
+              ctx.lineTo(x + w * 0.1, y + h * 0.4);
+              ctx.lineTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.9, y + h * 0.4);
+              ctx.lineTo(x + w * 0.7, y + h * 0.4);
+              ctx.lineTo(x + w * 0.7, y + h);
+              ctx.closePath();
+            } else if (s === 'arrowDown') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.3, y);
+              ctx.lineTo(x + w * 0.3, y + h * 0.6);
+              ctx.lineTo(x + w * 0.1, y + h * 0.6);
+              ctx.lineTo(x + w * 0.5, y + h);
+              ctx.lineTo(x + w * 0.9, y + h * 0.6);
+              ctx.lineTo(x + w * 0.7, y + h * 0.6);
+              ctx.lineTo(x + w * 0.7, y);
+              ctx.closePath();
+            } else if (s === 'cloud') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.25, y + h * 0.5);
+              ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+              ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+              ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+              ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+              ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+              ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+              ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+              ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+              ctx.closePath();
+            } else {
+              drawRoundedRect(x, y, w, h, 8);
+            }
+            ctx.stroke();
           }
 
           ctx.restore();
@@ -849,7 +1479,25 @@ const CanvaEditor = () => {
           const h = layer.height || img.height;
 
           ctx.save();
+          // Apply effects
           ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+          ctx.filter = getFilterCSS({
+            brightness: layer.brightness ?? 100,
+            contrast: layer.contrast ?? 100,
+            blur: layer.blur ?? 0
+          });
+          if (layer.shadows?.enabled) {
+            ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+            ctx.shadowBlur = layer.shadows.blur ?? 0;
+            ctx.shadowOffsetX = layer.shadows.x ?? 0;
+            ctx.shadowOffsetY = layer.shadows.y ?? 0;
+          } else {
+            // Explicitly reset shadow properties when disabled
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          }
           // Corner radius mask
           const r = Math.max(0, Math.min(layer.cornerRadius ?? 4, Math.min(w, h) / 2));
           if (r > 0) {
@@ -907,9 +1555,27 @@ const CanvaEditor = () => {
     const drawDrawingLayer = (layer) => {
       if (!Array.isArray(layer.path) || layer.path.length < 2) return;
       ctx.save();
+      // Apply effects (opacity, optional blur via filter)
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+      if (layer.shadows?.enabled) {
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+      } else {
+        // Explicitly reset shadow properties when disabled
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
       ctx.lineWidth = layer.brushSize || 5;
       ctx.strokeStyle = layer.color || '#000000';
-      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -949,6 +1615,209 @@ const CanvaEditor = () => {
     const dataUrl = canvas.toDataURL(mime, format === 'jpeg' ? quality : undefined);
     return dataUrl;
   };
+
+  const drawShapeLayer = (ctx, layer, images) => {
+  const {
+    x,
+    y,
+    width: w,
+    height: h,
+    fillType,
+    fillColor,
+    fillImageSrc,
+    fillImageFit,
+    shadows,
+    strokeWidth,
+    strokeColor,
+  } = layer;
+
+  if (!ctx) return;
+
+  // Helper to convert HEX → RGBA
+  const hexToRgba = (hex, alpha = 1) => {
+    if (!hex) return `rgba(0, 0, 0, ${alpha})`;
+    const [r, g, b] = hex.match(/\w\w/g).map((c) => parseInt(c, 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Helper to draw shape path
+  const drawShapePath = () => {
+    const s = layer.shape;
+    ctx.beginPath();
+
+    switch (s) {
+      case "rectangle":
+        ctx.rect(x, y, w, h);
+        break;
+
+      case "circle":
+        ctx.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        break;
+
+      case "ellipse":
+        ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+        break;
+
+      case "triangle":
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.closePath();
+        break;
+
+      case "star":
+        drawStarPath(ctx, x, y, w, h);
+        break;
+
+      case "star6":
+        drawStar6Path(ctx, x, y, w, h);
+        break;
+
+      case "arrow":
+        drawArrowPath(ctx, x, y, w, h);
+        break;
+
+      case "heart":
+        drawHeartPath(ctx, x, y, w, h);
+        break;
+
+      default:
+        ctx.rect(x, y, w, h); // fallback
+        break;
+    }
+  };
+
+  // 🌟 Step 1: Draw shadow first
+  if (shadows?.enabled) {
+    ctx.save();
+    ctx.shadowColor = hexToRgba(shadows.color || "#000000", (shadows.opacity ?? 50) / 100);
+    ctx.shadowBlur = shadows.blur ?? 0;
+    ctx.shadowOffsetX = shadows.x ?? 0;
+    ctx.shadowOffsetY = shadows.y ?? 0;
+
+    drawShapePath();
+    ctx.fillStyle = fillColor || "#cccccc";
+    ctx.fill("evenodd");
+    ctx.restore();
+  }
+
+  // 🌈 Step 2: Draw actual shape fill
+  ctx.save();
+  drawShapePath();
+
+  if (fillType === "image" && fillImageSrc && images?.[fillImageSrc]) {
+    const img = images[fillImageSrc];
+    ctx.clip();
+
+    const [iw, ih] = [img.width, img.height];
+    const scale =
+      fillImageFit === "cover"
+        ? Math.max(w / iw, h / ih)
+        : Math.min(w / iw, h / ih);
+    const dx = x + (w - iw * scale) / 2;
+    const dy = y + (h - ih * scale) / 2;
+
+    ctx.drawImage(img, dx, dy, iw * scale, ih * scale);
+  } else {
+    ctx.fillStyle = fillColor || "#3182ce";
+    ctx.fill("evenodd");
+  }
+
+  ctx.restore();
+
+  // ✏️ Step 3: Stroke outline (if any)
+  if (strokeWidth > 0) {
+    ctx.save();
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeStyle = strokeColor || "#000";
+    drawShapePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+/* ---------- Shape Helper Functions ---------- */
+
+const drawStarPath = (ctx, x, y, w, h, points = 5) => {
+  const outerRadius = Math.min(w, h) / 2;
+  const innerRadius = outerRadius / 2.5;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+
+  ctx.beginPath();
+  for (let i = 0; i < 2 * points; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (Math.PI * i) / points - Math.PI / 2;
+    const sx = cx + radius * Math.cos(angle);
+    const sy = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+};
+
+const drawStar6Path = (ctx, x, y, w, h) => {
+  const outerRadius = Math.min(w, h) / 2;
+  const innerRadius = outerRadius * 0.5;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+
+  ctx.beginPath();
+  for (let i = 0; i < 12; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / 6 - Math.PI / 2;
+    const sx = cx + radius * Math.cos(angle);
+    const sy = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+};
+
+const drawArrowPath = (ctx, x, y, w, h) => {
+  ctx.beginPath();
+  ctx.moveTo(x, y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y);
+  ctx.lineTo(x + w, y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y + h);
+  ctx.lineTo(x + (w * 0.7), y + (h * 0.5));
+  ctx.lineTo(x, y + (h * 0.5));
+  ctx.closePath();
+};
+
+const drawHeartPath = (ctx, x, y, w, h) => {
+  const topCurveHeight = h * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(x + w / 2, y + h);
+  ctx.bezierCurveTo(
+    x + w / 2,
+    y + h - topCurveHeight / 2,
+    x,
+    y + h / 2,
+    x,
+    y + topCurveHeight
+  );
+  ctx.bezierCurveTo(x, y, x + w / 2, y, x + w / 2, y + topCurveHeight);
+  ctx.bezierCurveTo(
+    x + w / 2,
+    y,
+    x + w,
+    y,
+    x + w,
+    y + topCurveHeight
+  );
+  ctx.bezierCurveTo(
+    x + w,
+    y + h / 2,
+    x + w / 2,
+    y + h - topCurveHeight / 2,
+    x + w / 2,
+    y + h
+  );
+  ctx.closePath();
+};
+
 
   const handleDownloadExport = async () => {
     if (isExporting) return;
@@ -1338,6 +2207,16 @@ const CanvaEditor = () => {
     }
   };
 
+  // Generic effects handler (brightness, contrast, blur, opacity, shadows)
+  const handleEffectChange = (property, value) => {
+    if (!selectedLayer) return;
+    const newLayers = layers.map(l =>
+      l.id === selectedLayer ? { ...l, [property]: value } : l
+    );
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+  };
+
   // Drawing functionality
   const handleDrawingMouseDown = (e) => {
     if (!['brush', 'pen', 'eraser'].includes(selectedTool)) return;
@@ -1514,8 +2393,8 @@ const CanvaEditor = () => {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'flex-start',
-      padding: '20px',
-      paddingRight: '28px',
+      padding: '40px',
+      paddingRight: '48px',
       position: 'relative',
       overflow: 'auto',
       minWidth: 0
@@ -1531,7 +2410,7 @@ const CanvaEditor = () => {
       cursor: selectedTool === 'select' ? 'default' : 
               selectedTool === 'eraser' ? 'crosshair' :
               ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
-      overflow: 'hidden',
+      overflow: 'visible',
       transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
       transformOrigin: 'top left',
       backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
@@ -2756,7 +3635,16 @@ const CanvaEditor = () => {
                         display: 'flex',
                         alignItems: 'center',
                         padding: '4px',
-                        userSelect: 'text'
+                        userSelect: 'text',
+                        filter: getFilterCSS({
+                          brightness: layer.brightness ?? 100,
+                          contrast: layer.contrast ?? 100,
+                          blur: layer.blur ?? 0
+                        }),
+                        textShadow: layer.shadows?.enabled 
+                          ? `${layer.shadows.x ?? 0}px ${layer.shadows.y ?? 0}px ${layer.shadows.blur ?? 0}px ${hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100)}`
+                          : 'none',
+                        opacity: (layer.opacity ?? 100) / 100
                       }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
@@ -2787,7 +3675,14 @@ const CanvaEditor = () => {
                             backgroundImage: `url(${layer.fillImageSrc})`,
                             backgroundSize: layer.fillImageFit === 'contain' ? 'contain' : 'cover',
                             backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'center'
+                            backgroundPosition: 'center',
+                            filter: getFilterCSS({
+                              brightness: layer.brightness ?? 100,
+                              contrast: layer.contrast ?? 100,
+                              blur: layer.blur ?? 0
+                            }),
+                            boxShadow: getShadowCSS(layer.shadows),
+                            opacity: (layer.opacity ?? 100) / 100
                           }}
                         />
                       );
@@ -2800,7 +3695,14 @@ const CanvaEditor = () => {
                           backgroundColor: layer.fillColor,
                           border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
                           borderRadius: display.borderRadius,
-                          clipPath: display.clipPath
+                          clipPath: display.clipPath,
+                          filter: getFilterCSS({
+                            brightness: layer.brightness ?? 100,
+                            contrast: layer.contrast ?? 100,
+                            blur: layer.blur ?? 0
+                          }),
+                          boxShadow: getShadowCSS(layer.shadows),
+                          opacity: (layer.opacity ?? 100) / 100
                         }}
                       />
                     );
@@ -2812,8 +3714,13 @@ const CanvaEditor = () => {
                       borderRadius: `${layer.cornerRadius ?? 4}px`,
                       overflow: 'hidden',
                       position: 'relative',
-                      opacity: (layer.opacity ?? 100) / 100,
-                      filter: `brightness(${layer.brightness ?? 100}%) contrast(${layer.contrast ?? 100}%) saturate(${layer.saturation ?? 100}%) blur(${layer.blur ?? 0}px)`
+                      filter: getFilterCSS({
+                        brightness: layer.brightness ?? 100,
+                        contrast: layer.contrast ?? 100,
+                        blur: layer.blur ?? 0
+                      }),
+                      boxShadow: getShadowCSS(layer.shadows),
+                      opacity: (layer.opacity ?? 100) / 100
                     }}>
                       <img
                         src={layer.src}
@@ -2845,7 +3752,13 @@ const CanvaEditor = () => {
                         position: 'absolute',
                         top: 0,
                         left: 0,
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        filter: getFilterCSS({
+                          brightness: layer.brightness ?? 100,
+                          contrast: layer.contrast ?? 100,
+                          blur: layer.blur ?? 0
+                        }),
+                        opacity: (layer.opacity ?? 100) / 100
                       }}
                       viewBox={`0 0 ${layer.width} ${layer.height}`}
                     >
@@ -3271,6 +4184,21 @@ const CanvaEditor = () => {
         {selectedLayer && !isRightSidebarCollapsed && (
           <div style={styles.propertyPanel}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>Properties</h4>
+            {/* Effects (applies to all layer types) */}
+            {(() => {
+              const sel = layers.find(l => l.id === selectedLayer);
+              if (!sel) return null;
+              return (
+                <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <h5 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#374151' }}>Effects</h5>
+                  <BrightnessControl value={sel.brightness ?? 100} onChange={(v) => handleEffectChange('brightness', v)} />
+                  <ContrastControl value={sel.contrast ?? 100} onChange={(v) => handleEffectChange('contrast', v)} />
+                  <BlurControl value={sel.blur ?? 0} onChange={(v) => handleEffectChange('blur', v)} />
+                  <OpacityControl value={sel.opacity ?? 100} onChange={(v) => handleEffectChange('opacity', v)} />
+                  <ShadowsControl value={sel.shadows} onChange={(v) => handleEffectChange('shadows', v)} />
+                </div>
+              );
+            })()}
             
             {layers.find(l => l.id === selectedLayer)?.type === 'text' && (
               <>
@@ -3561,34 +4489,6 @@ const CanvaEditor = () => {
                   </span>
                 </div>
                 <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Brightness</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={imageSettings.brightness}
-                    onChange={(e) => handleImageSettingsChange('brightness', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.brightness}%
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Contrast</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={imageSettings.contrast}
-                    onChange={(e) => handleImageSettingsChange('contrast', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.contrast}%
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Saturation</span>
                   <input
                     type="range"
@@ -3600,34 +4500,6 @@ const CanvaEditor = () => {
                   />
                   <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
                     {imageSettings.saturation}%
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Blur</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    value={imageSettings.blur}
-                    onChange={(e) => handleImageSettingsChange('blur', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.blur}px
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Opacity</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={imageSettings.opacity}
-                    onChange={(e) => handleImageSettingsChange('opacity', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.opacity}%
                   </span>
                 </div>
               </>
