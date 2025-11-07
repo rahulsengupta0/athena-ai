@@ -17,6 +17,10 @@ app.use(express.json());     // JSON parsing
 const uploadRoutes = require('./routes/upload');
 app.use('/api/upload', uploadRoutes);
 
+const brandKitRoutes = require('./routes/brandKit');
+app.use('/api', brandKitRoutes);
+
+
 
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes );
