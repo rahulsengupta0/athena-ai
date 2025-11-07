@@ -1,19 +1,30 @@
 const express = require('express');
 const axios = require('axios');
+const fs = require('fs');
 const router = express.Router();
+
+// ✅ Read your Athena info file once when the backend starts
+const websiteInfo = fs.readFileSync('./data/athena_info.txt', 'utf8');
 
 router.post('/deepseek/chat', async (req, res) => {
   try {
     const { message, history } = req.body;
 
+    // Updated system prompt with the text file context
     const systemPrompt = {
       role: "system",
       content: `
         You are Athena — a helpful, creative, and intelligent AI assistant created by Athena LMS.
-        Never mention DeepSeek, OpenRouter, or any external system.
-        You always speak politely, clearly, and in a friendly tone.
-        Be concise but expressive. You can use emojis occasionally.
-        If asked about your abilities, describe yourself as Athena AI, designed to assist with design, code, and creativity.
+        You assist users with questions about the Athena LMS platform.
+
+        Here is important information about Athena LMS:
+        ${websiteInfo}
+
+        Instructions:
+        - Never mention DeepSeek, OpenRouter, or any external system.
+        - Always stay polite, concise, and friendly.
+        - If users ask about navigation, guide them clearly based on the information above.
+        - If a feature isn’t mentioned, respond gracefully: “That feature is not available yet.”
       `,
     };
 

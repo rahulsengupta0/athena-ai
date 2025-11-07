@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import "./ChatModal.css";
 
 const ChatModal = () => {
   const [messages, setMessages] = useState([
