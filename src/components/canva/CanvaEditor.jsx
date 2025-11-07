@@ -4,6 +4,7 @@ import { getFilterCSS, getShadowCSS, hexToRgba } from '../../utils/styleUtils';
 import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
 import TopToolbar from './TopToolbar';
 import SaveExportModal from './SaveExportModal';
+import AIImageGenerator from './AIImageGenerator';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
@@ -2157,6 +2158,15 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     }
   };
 
+  // Handle AI generated image - callback from AIImageGenerator component
+  const handleAIGeneratedImage = (newImage) => {
+    const newLayers = [...layers, newImage];
+    setLayers(newLayers);
+    setSelectedLayer(newImage.id);
+    saveToHistory(newLayers);
+    setUploadedImages(prev => [...prev, newImage]);
+  };
+
   // Template selection
   const handleTemplateSelect = (template) => {
     setCanvasSize({ width: template.width, height: template.height });
@@ -3227,6 +3237,14 @@ const drawHeartPath = (ctx, x, y, w, h) => {
                     lineHeight: '1.2'
                   }}>Upload Image</span>
                 </button>
+
+                {/* AI Generate Image Section */}
+                <AIImageGenerator
+                  onImageGenerated={handleAIGeneratedImage}
+                  hoveredOption={hoveredOption}
+                  setHoveredOption={setHoveredOption}
+                  imageSettings={imageSettings}
+                />
             
             <input
               ref={fileInputRef}
