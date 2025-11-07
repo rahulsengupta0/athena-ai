@@ -270,6 +270,36 @@ const handleGenerateLogo = async () => {
       setVideoLoading(false);
     }
   };
+  const handleBrandKitSubmit = async () => {
+  if (creatingBrandKit) return;
+  setCreatingBrandKit(true);
+  try {
+    const payload = {
+      name: brandForm.name,
+      tagline: brandForm.tagline,
+      primaryColor: brandForm.primaryColor,
+      secondaryColor: brandForm.secondaryColor,
+    };
+    // Call backend to generate brand kit assets
+    const response = await fetch("http://localhost:5000/api/generate-brandkit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error("Failed to generate brand kit");
+    const data = await response.json(); // { logo, banner, poster }
+    // Route to results page, passing asset URLs/base64
+    navigate("/brand-kit-result", { state: data });
+  } catch (e) {
+    alert("Failed to create brand kit");
+  } finally {
+    setCreatingBrandKit(false);
+    setBrandKitOpen(false);
+  }
+};
+
 
   return (
     <div
@@ -1048,31 +1078,56 @@ const handleGenerateLogo = async () => {
             <div style={{ display:'flex', justifyContent:'flex-end', gap:10, padding:14, borderTop:'1px solid #eef2f7' }}>
               <button onClick={()=>setBrandKitOpen(false)} style={{ border:'1px solid #e5e7eb', background:'#fff', color:'#0f172a', borderRadius:10, padding:'8px 12px', cursor:'pointer' }}>Cancel</button>
               <button
-                onClick={async ()=>{
-                  if (creatingBrandKit) return;
-                  setCreatingBrandKit(true);
-                  try {
-                    const payload = {
-                      name: brandForm.name,
-                      tagline: brandForm.tagline,
-                      primaryColor: brandForm.primaryColor,
-                      secondaryColor: brandForm.secondaryColor,
-                    };
-                    const created = await api.createBrandKit(payload);
-                    navigate('/brand-kit', { state: created || payload });
-                  } catch (e) {
-                    console.error(e);
-                    alert('Failed to create brand kit');
-                  } finally {
-                    setCreatingBrandKit(false);
-                    setBrandKitOpen(false);
-                  }
-                }}
-                disabled={creatingBrandKit}
-                style={{ border:'none', background:'linear-gradient(90deg,#6b8cff,#9b8bfd)', color:'#fff', borderRadius:10, padding:'10px 16px', fontWeight:700, cursor: creatingBrandKit ? 'not-allowed' : 'pointer', opacity: creatingBrandKit ? 0.7 : 1 }}
-              >
-                {creatingBrandKit ? 'Creating…' : 'Create'}
-              </button>
+  onClick={async () => {
+    if (creatingBrandKit) return;
+    setCreatingBrandKit(true);
+    try {
+      // Prepare data from your form
+      const payload = {
+        name: brandForm.name,
+        tagline: brandForm.tagline,
+        primaryColor: brandForm.primaryColor,
+        secondaryColor: brandForm.secondaryColor,
+      };
+      // Call the backend API to generate logo, banner, and poster
+      const userToken = localStorage.getItem("token"); // or get token from your auth context
+
+const response = await fetch("http://localhost:5000/api/generate-brandkit", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${userToken}`,
+  },
+  body: JSON.stringify(payload),
+});
+
+      if (!response.ok) throw new Error("Failed to generate brand kit");
+      const data = await response.json(); // { logo, banner, poster }
+      // Navigate to BrandKitResult page, passing images in state
+      navigate("/brand-kit-result", { state: data });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create brand kit");
+    } finally {
+      setCreatingBrandKit(false);
+      setBrandKitOpen(false);
+    }
+  }}
+  disabled={creatingBrandKit}
+  style={{ 
+    border: 'none',
+    background: 'linear-gradient(90deg,#6b8cff,#9b8bfd)', 
+    color: '#fff',
+    borderRadius: 10, 
+    padding: '10px 16px',
+    fontWeight: 700,
+    cursor: creatingBrandKit ? 'not-allowed' : 'pointer',
+    opacity: creatingBrandKit ? 0.7 : 1
+  }}
+>
+  {creatingBrandKit ? "Creating..." : "Create"}
+</button>
+
             </div>
           </div>
         </div>
