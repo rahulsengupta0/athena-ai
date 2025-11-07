@@ -31,6 +31,7 @@ import Brandkit from './pages/Brandkit';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
+import BrandKitResult from './pages/BrandKitResult';
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -74,6 +75,8 @@ const AppContent = () => {
           <Route path="/imageeditor" element={<ImageEditor />} />
           <Route path="/canva-clone" element={<CanvaClone />} />
           <Route path="/brand-kit" element={<Brandkit />} />
+          <Route path="/brand-kit-result" element={<BrandKitResult/>} />
+
         </Routes>
       </div>
     </div>
