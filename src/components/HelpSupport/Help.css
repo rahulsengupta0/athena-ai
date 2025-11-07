@@ -5,7 +5,7 @@
   background-color: #f6f0ff; /* soft lavender base */
   min-height: 100vh;
   padding: 3rem 2rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -15,10 +15,10 @@
    Header Section
 =============================== */
 .help-header {
-  background: #ffffff;
+  background: #fff;
   border-radius: 16px;
   padding: 2rem 2.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 15px rgb(0 0 0 / 6%);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,7 +29,7 @@
 
 .help-header:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(127, 86, 218, 0.1);
+  box-shadow: 0 8px 20px rgb(127 86 218 / 10%);
 }
 
 .help-header h1 {
@@ -69,14 +69,14 @@
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 8px 16px -4px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 8px 16px -4px rgb(124 58 237 / 30%);
 }
 
 .header-text h1 {
   font-size: 2.5rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   letter-spacing: -0.025em;
 }
 
@@ -90,6 +90,7 @@
 /* ===============================
    Contact Button (final)
 =============================== */
+
 /* ===============================
    Contact Support Section (Enhanced)
 =============================== */
@@ -101,7 +102,7 @@
 }
 
 .contact-card {
-  background: #ffffff;
+  background: #fff;
   border: 1.5px solid #ede9fe;
   border-radius: 16px;
   padding: 2.25rem 1.75rem;
@@ -109,7 +110,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);
+  box-shadow: 0 4px 12px rgb(124 58 237 / 5%);
 }
 
 /* gradient highlight on hover */
@@ -132,7 +133,7 @@
 
 .contact-card:hover {
   border-color: #a78bfa;
-  box-shadow: 0 8px 20px -4px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 8px 20px -4px rgb(124 58 237 / 12%);
   transform: translateY(-5px);
 }
 
@@ -141,7 +142,7 @@
   font-size: 3rem;
   margin-bottom: 1rem;
   color: #7c3aed;
-  background: rgba(124, 58, 237, 0.08);
+  background: rgb(124 58 237 / 8%);
   width: 70px;
   height: 70px;
   display: flex;
@@ -153,7 +154,7 @@
 }
 
 .contact-card:hover .contact-icon {
-  background: rgba(124, 58, 237, 0.15);
+  background: rgb(124 58 237 / 15%);
   transform: scale(1.1);
 }
 
@@ -188,11 +189,11 @@
 .contact-btn:hover {
   background: #6d28d9;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 6px 12px rgb(124 58 237 / 20%);
 }
 
 /* responsive tweaks */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .contact-card {
     padding: 1.75rem 1.25rem;
   }
@@ -249,10 +250,10 @@
   border-radius: 12px;
   font-size: 1rem;
   color: #2d2d2d;
-  background: #ffffff;
+  background: #fff;
   transition: all 0.25s ease;
   box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(127, 86, 218, 0.04);
+  box-shadow: 0 2px 8px rgb(127 86 218 / 4%);
 }
 
 .search-input:hover {
@@ -262,7 +263,7 @@
 .search-input:focus {
   outline: none;
   border-color: #7f56da;
-  box-shadow: 0 0 0 3px rgba(127, 86, 218, 0.15);
+  box-shadow: 0 0 0 3px rgb(127 86 218 / 15%);
 }
 
 .search-input::placeholder {
@@ -337,13 +338,13 @@
   background: #ece3ff;
   color: #3a275d;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(127, 86, 218, 0.08);
+  box-shadow: 0 2px 6px rgb(127 86 218 / 8%);
 }
 
 .quick-filter-btn.active {
   background: #7f56da;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(127, 86, 218, 0.3);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(127 86 218 / 30%);
 }
 
 /* Category Filters */
@@ -373,13 +374,13 @@
   background: #ece3ff;
   color: #3a275d;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(127, 86, 218, 0.08);
+  box-shadow: 0 2px 6px rgb(127 86 218 / 8%);
 }
 
 .category-filter-btn.active {
   background: #7f56da;
   color: white;
-  box-shadow: 0 2px 6px rgba(127, 86, 218, 0.3);
+  box-shadow: 0 2px 6px rgb(127 86 218 / 30%);
 }
 
 .category-filters.hidden {
@@ -391,12 +392,13 @@
 /* ===============================
    Content Sections (FAQs, Tutorials, Contact, Feedback)
 =============================== */
+
   /* 🌸 Content Section Container */
 .content-section {
-  background: #ffffff;
+  background: #fff;
   border-radius: 16px;
   padding: 2.5rem;
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.06);
+  box-shadow: 0 4px 20px rgb(124 58 237 / 6%);
   border: 1px solid #ede9fe;
   transition: all 0.3s ease;
 }
@@ -407,7 +409,6 @@
   font-weight: 700;
   color: #3a275d;
   margin-bottom: 1.75rem;
- 
  position: relative;
 }
 
@@ -438,14 +439,14 @@
 
 .faq-item:hover {
   border-color: #a78bfa;
-  box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 6px 16px -4px rgb(124 58 237 / 10%);
   transform: translateY(-2px);
 }
 
 .faq-item.expanded {
   border-color: #7c3aed;
-  background: #ffffff;
-  box-shadow: 0 8px 24px -6px rgba(124, 58, 237, 0.12);
+  background: #fff;
+  box-shadow: 0 8px 24px -6px rgb(124 58 237 / 12%);
 }
 
 .faq-question {
@@ -525,11 +526,13 @@
     opacity: 0;
     max-height: 0;
   }
+
   to {
     opacity: 1;
     max-height: 500px;
   }
 }
+
 /* 🧭 Tutorials Section */
 .tutorials-grid {
   display: grid;
@@ -538,17 +541,17 @@
 }
 
 .tutorial-card {
-  background: #ffffff;
+  background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 1.75rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.05);
+  box-shadow: 0 2px 8px rgb(124 58 237 / 5%);
 }
 
 .tutorial-card:hover {
   border-color: #a78bfa;
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 6px 16px rgb(124 58 237 / 12%);
   transform: translateY(-4px);
 }
 
@@ -578,7 +581,7 @@
 .tutorial-description {
   color: #6b7280;
   line-height: 1.6;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.5rem;
 }
 
 .tutorial-footer {
@@ -611,7 +614,7 @@
 .read-more-btn:hover {
   background: #6d28d9;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 10px rgb(124 58 237 / 20%);
 }
 
 
@@ -623,7 +626,7 @@
   }
 
   .contact-card {
-    background: #ffffff;
+    background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 2rem;
@@ -633,7 +636,7 @@
 
   .contact-card:hover {
     border-color: #7c3aed;
-    box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 4px 6px -1px rgb(124 58 237 / 10%);
     transform: translateY(-2px);
   }
 
@@ -646,12 +649,12 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: #1a1a1a;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
   }
 
   .contact-card p {
     color: #6b7280;
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 1.5rem;
     line-height: 1.5;
   }
 
@@ -698,7 +701,7 @@
     border-radius: 6px;
     font-size: 0.875rem;
     color: #1a1a1a;
-    background: #ffffff;
+    background: #fff;
     transition: all 0.2s ease;
     box-sizing: border-box;
   }
@@ -707,7 +710,7 @@
   .form-textarea:focus {
     outline: none;
     border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 0 3px rgb(124 58 237 / 10%);
   }
 
   .form-textarea {
@@ -731,11 +734,11 @@
   .submit-feedback-btn:hover {
     background: #6d28d9;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px -2px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 4px 8px -2px rgb(124 58 237 / 30%);
   }
 
   /* Responsive Design */
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     .help-container {
       padding: 1rem;
     }
@@ -817,7 +820,7 @@
     }
   }
 
-  @media (max-width: 480px) {
+  @media (width <= 480px) {
     .help-container {
       padding: 0.5rem;
     }
@@ -835,7 +838,7 @@
     }
     
     .faq-answer {
-      padding: 0 1rem 1rem 1rem;
+      padding: 0 1rem 1rem;
     }
     
     .tutorial-card,
@@ -854,6 +857,7 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -971,16 +975,17 @@
 /* Hover border and glow */
 .quick-action-card:hover {
   border-color: #7c3aed;
-  box-shadow: 0 8px 16px -4px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 8px 16px -4px rgb(124 58 237 / 12%);
   transform: translateY(-4px);
 }
 
 /* Responsive for mobile */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .contact-options {
     flex-direction: column;
     align-items: center;
   }
+
   .quick-action-card {
     max-width: 100%;
     width: 90%;
