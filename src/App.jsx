@@ -26,6 +26,7 @@ import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenera
 import BackgroundRemover from './components/imageeditor/BackgroundRemover';
 import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
+import Brandkit from './pages/Brandkit';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -72,6 +73,7 @@ const AppContent = () => {
           <Route path="/bgremove" element={<BackgroundRemover />} />
           <Route path="/imageeditor" element={<ImageEditor />} />
           <Route path="/canva-clone" element={<CanvaClone />} />
+          <Route path="/brand-kit" element={<Brandkit />} />
         </Routes>
       </div>
     </div>

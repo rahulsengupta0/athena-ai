@@ -57,6 +57,7 @@ export const ProjectCards = () => {
   const [menuOpen, setMenuOpen] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [brandKits, setBrandKits] = useState([]);
 
   // Fetch projects from backend
   useEffect(() => {
@@ -71,7 +72,17 @@ export const ProjectCards = () => {
         setLoading(false);
       }
     };
+    const fetchBrandKits = async () => {
+      try {
+        const kits = await api.getBrandKits();
+        setBrandKits(kits || []);
+      } catch (error) {
+        console.error('Error fetching brand kits:', error);
+        setBrandKits([]);
+      }
+    };
     fetchProjects();
+    fetchBrandKits();
   }, []);
 
   if (loading) {
@@ -97,6 +108,41 @@ export const ProjectCards = () => {
       margin: "0 auto", 
       padding: "28px 24px 20px 24px"
     }}>
+      {/* Brand Kits section */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: '1.35rem' }}>Your Brand Kits</h2>
+          <span style={{ color: '#94a3b8', fontWeight: 600 }}>{brandKits.length}</span>
+        </div>
+        {brandKits.length === 0 ? (
+          <div style={{ color: '#94a3b8' }}>No brand kits yet. Create one from the Dashboard.</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {brandKits.map((k) => (
+              <div key={k._id} style={{ background: '#fff', border: '1.5px solid #edeefa', borderRadius: 16, padding: 16 }}>
+                <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{k.name}</div>
+                {k.tagline && <div style={{ color: '#64748b', marginBottom: 10 }}>{k.tagline}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 6, background: k.primaryColor || '#e5e7eb', border: '1px solid #e5e7eb' }} />
+                    <code style={{ color: '#475569' }}>{k.primaryColor || '—'}</code>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 6, background: k.secondaryColor || '#e5e7eb', border: '1px solid #e5e7eb' }} />
+                    <code style={{ color: '#475569' }}>{k.secondaryColor || '—'}</code>
+                  </div>
+                </div>
+                {k.logoUrl ? (
+                  <img src={k.logoUrl} alt="Logo" style={{ maxWidth: '100%', maxHeight: 80, borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                ) : (
+                  <div style={{ color: '#94a3b8', fontSize: 14 }}>No logo</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div style={{
         display: "flex",
