@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { BrightnessControl, ContrastControl, BlurControl, ShadowsControl, OpacityControl } from './controls';
 import { getFilterCSS, getShadowCSS, hexToRgba } from '../../utils/styleUtils';
+import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
 import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
 import TopToolbar from './TopToolbar';
 import SaveExportModal from './SaveExportModal';
 import AIImageGenerator from './AIImageGenerator';
+import FloatingToolbar from './FloatingToolbar';
+import TextEnhanceButton from './TextEnhanceButton';
+import { enhanceText } from './TextEnhanceService';
 
 const CanvaEditor = () => {
   const [selectedTool, setSelectedTool] = useState('select');
@@ -102,6 +106,8 @@ const CanvaEditor = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [includeProjectFile, setIncludeProjectFile] = useState(true);
   const [isSavingWorksheet, setIsSavingWorksheet] = useState(false);
+  const [isEnhancingText, setIsEnhancingText] = useState(false);
+  const [isHeading, setIsHeading] = useState(false);
   // Custom scroller state
   const [scrollMetrics, setScrollMetrics] = useState({
     contentWidth: 0,
@@ -449,6 +455,9 @@ const CanvaEditor = () => {
         color: layer.color || '#000000',
         textAlign: layer.textAlign || 'left'
       });
+      // Auto-detect if it's a heading based on name or font size
+      const isHeadingText = isHeadingLayer(layer);
+      setIsHeading(isHeadingText);
     }
   };
 
@@ -1914,14 +1923,57 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     }
   };
 
+
   // Update the textual content of a text layer
-  const handleTextContentChange = (value) => {
+  const handleTextContentChange = (value, shouldAutoResize = false) => {
     if (!selectedLayer) return;
+    
+    const layer = layers.find(l => l.id === selectedLayer && l.type === 'text');
+    if (!layer) return;
+    
+    let updatedLayer = { ...layer, text: value };
+    
+    // Auto-resize if requested
+    if (shouldAutoResize) {
+      const dimensions = calculateTextDimensions(value, layer);
+      updatedLayer = {
+        ...updatedLayer,
+        width: dimensions.width,
+        height: dimensions.height
+      };
+    }
+    
     const newLayers = layers.map(l =>
-      l.id === selectedLayer && l.type === 'text' ? { ...l, text: value } : l
+      l.id === selectedLayer && l.type === 'text' ? updatedLayer : l
     );
     setLayers(newLayers);
     saveToHistory(newLayers);
+  };
+
+  // AI Text Enhancement
+  const handleEnhanceText = async () => {
+    if (!selectedLayer) return;
+    
+    const selectedTextLayer = layers.find(l => l.id === selectedLayer && l.type === 'text');
+    if (!selectedTextLayer || !selectedTextLayer.text || !selectedTextLayer.text.trim()) {
+      alert('Please enter some text to enhance');
+      return;
+    }
+
+    // Determine if it's a heading based on multiple factors
+    const detectedIsHeading = isHeading || isHeadingLayer(selectedTextLayer);
+
+    setIsEnhancingText(true);
+    try {
+      const data = await enhanceText(selectedTextLayer.text, detectedIsHeading);
+      // Update text and auto-resize the box to fit the enhanced text
+      handleTextContentChange(data.enhancedText, true);
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+      alert('Error enhancing text: ' + error.message);
+    } finally {
+      setIsEnhancingText(false);
+    }
   };
 
   const handleShapeSettingsChange = (property, value) => {
@@ -3798,29 +3850,16 @@ const drawHeartPath = (ctx, x, y, w, h) => {
                   )}
                   {/* Floating actions for selected element */}
                   {selectedLayer === layer.id && (
-                    <div style={styles.floatingBar} onMouseDown={(e) => e.stopPropagation()}>
-                      <input
-                        type="color"
-                        aria-label="Change color"
-                        value={getLayerPrimaryColor(layer)}
-                        onChange={(e) => handleQuickColorChange(e.target.value)}
-                        style={styles.floatingColor}
-                      />
-                      <button
-                        title="Duplicate"
-                        style={styles.floatingBtn}
-                        onClick={(e) => { e.stopPropagation(); handleLayerDuplicate(layer.id); }}
-                      >
-                        <FiCopy size={16} color="#111827" />
-                      </button>
-                      <button
-                        title="Delete"
-                        style={styles.floatingBtn}
-                        onClick={(e) => { e.stopPropagation(); handleLayerDelete(layer.id); }}
-                      >
-                        <FiTrash2 size={16} color="#dc2626" />
-                      </button>
-                    </div>
+                    <FloatingToolbar
+                      layer={layer}
+                      styles={styles}
+                      onColorChange={handleQuickColorChange}
+                      onDuplicate={handleLayerDuplicate}
+                      onDelete={handleLayerDelete}
+                      onEnhance={handleEnhanceText}
+                      isEnhancing={isEnhancingText}
+                      getLayerPrimaryColor={getLayerPrimaryColor}
+                    />
                   )}
                   {selectedLayer === layer.id && (
                     <div
@@ -4228,6 +4267,26 @@ const drawHeartPath = (ctx, x, y, w, h) => {
                     onChange={(e) => handleTextContentChange(e.target.value)}
                     style={{ ...styles.propertyInput, width: '100%', marginLeft: 8 }}
                   />
+                </div>
+                <div style={styles.propertyRow}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', marginLeft: 8 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isHeading}
+                        onChange={(e) => setIsHeading(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span>Is Heading</span>
+                    </label>
+                    <TextEnhanceButton
+                      onClick={handleEnhanceText}
+                      disabled={isEnhancingText || !layers.find(l => l.id === selectedLayer)?.text?.trim()}
+                      isEnhancing={isEnhancingText}
+                      variant="inline"
+                      size={14}
+                    />
+                  </div>
                 </div>
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Font Size</span>

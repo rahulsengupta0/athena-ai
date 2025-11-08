@@ -53,6 +53,9 @@ app.use('/api/user-data', userDataRoutes);
 const profileRoutes = require('./routes/profileRoutes');
 app.use('/api/profile', profileRoutes);
 
+const textEnhanceRoutes = require('./routes/textEnhanceRoutes');
+app.use('/api/text-enhance', textEnhanceRoutes);
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
