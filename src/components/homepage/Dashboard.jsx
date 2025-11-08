@@ -16,7 +16,7 @@ import {
 import Creation from "./Creation";
 import AISuggestTemp from "./AISuggestTemp";
 import Recents from "./Recents";
-import api from "../../services/api";
+import BrandKitModal from "../BrandKitModal";
 
 const BUTTONS = [
   { key: "design", label: "Design for me", tag: "Popular", tagColor: "#8b5cf6", icon: <FiPenTool /> },
@@ -107,14 +107,6 @@ const Dashboard = () => {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [brandKitOpen, setBrandKitOpen] = useState(false);
-  const [creatingBrandKit, setCreatingBrandKit] = useState(false);
-  const [brandForm, setBrandForm] = useState({
-    name: '',
-    primaryColor: '#6b8cff',
-    secondaryColor: '#16a34a',
-    logoUrl: '',
-    tagline: ''
-  });
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -268,35 +260,6 @@ const handleGenerateLogo = async () => {
       setOutputText("Error: " + error.message);
       setLoading(false);
       setVideoLoading(false);
-    }
-  };
-  const handleBrandKitSubmit = async () => {
-  if (creatingBrandKit) return;
-  setCreatingBrandKit(true);
-  try {
-    const payload = {
-      name: brandForm.name,
-      tagline: brandForm.tagline,
-      primaryColor: brandForm.primaryColor,
-      secondaryColor: brandForm.secondaryColor,
-    };
-    // Call backend to generate brand kit assets
-    const response = await fetch("http://localhost:5000/api/generate-brandkit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) throw new Error("Failed to generate brand kit");
-    const data = await response.json(); // { logo, banner, poster }
-    // Route to results page, passing asset URLs/base64
-    navigate("/brand-kit-result", { state: data });
-  } catch (e) {
-    alert("Failed to create brand kit");
-  } finally {
-    setCreatingBrandKit(false);
-    setBrandKitOpen(false);
   }
 };
 
@@ -1026,112 +989,10 @@ const handleGenerateLogo = async () => {
       )}
 
       {/* Brand Kit Modal */}
-      {brandKitOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setBrandKitOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1200,
-            padding: 16,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(92vw, 720px)',
-              background: '#ffffff',
-              borderRadius: 16,
-              boxShadow: '0 20px 60px rgba(2,6,23,0.25)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', padding: 14, borderBottom: '1px solid #eef2f7' }}>
-              <div style={{ fontWeight: 800, color: '#0f172a' }}>Create Brand Kit</div>
-              <button onClick={() => setBrandKitOpen(false)} style={{ marginLeft: 'auto', border: 'none', background: '#f1f5f9', borderRadius: 8, padding: '6px 10px', cursor: 'pointer' }}>Close</button>
-            </div>
-            <div style={{ padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Brand Name</label>
-                <input value={brandForm.name} onChange={(e)=>setBrandForm({ ...brandForm, name: e.target.value })} placeholder="Acme Inc" style={{ width:'100%', border:'1px solid #e5e7eb', borderRadius:10, padding:'10px 12px', outline:'none' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Primary Color</label>
-                <input type="color" value={brandForm.primaryColor} onChange={(e)=>setBrandForm({ ...brandForm, primaryColor: e.target.value })} style={{ width:'100%', height:42, border:'1px solid #e5e7eb', borderRadius:10, padding:0 }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Secondary Color</label>
-                <input type="color" value={brandForm.secondaryColor} onChange={(e)=>setBrandForm({ ...brandForm, secondaryColor: e.target.value })} style={{ width:'100%', height:42, border:'1px solid #e5e7eb', borderRadius:10, padding:0 }} />
-              </div>
-              {/* Logo URL removed as requested */}
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Tagline</label>
-                <input value={brandForm.tagline} onChange={(e)=>setBrandForm({ ...brandForm, tagline: e.target.value })} placeholder="Build something great" style={{ width:'100%', border:'1px solid #e5e7eb', borderRadius:10, padding:'10px 12px', outline:'none' }} />
-              </div>
-            </div>
-            <div style={{ display:'flex', justifyContent:'flex-end', gap:10, padding:14, borderTop:'1px solid #eef2f7' }}>
-              <button onClick={()=>setBrandKitOpen(false)} style={{ border:'1px solid #e5e7eb', background:'#fff', color:'#0f172a', borderRadius:10, padding:'8px 12px', cursor:'pointer' }}>Cancel</button>
-              <button
-  onClick={async () => {
-    if (creatingBrandKit) return;
-    setCreatingBrandKit(true);
-    try {
-      // Prepare data from your form
-      const payload = {
-        name: brandForm.name,
-        tagline: brandForm.tagline,
-        primaryColor: brandForm.primaryColor,
-        secondaryColor: brandForm.secondaryColor,
-      };
-      // Call the backend API to generate logo, banner, and poster
-      const userToken = localStorage.getItem("token"); // or get token from your auth context
-
-const response = await fetch("http://localhost:5000/api/generate-brandkit", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${userToken}`,
-  },
-  body: JSON.stringify(payload),
-});
-
-      if (!response.ok) throw new Error("Failed to generate brand kit");
-      const data = await response.json(); // { logo, banner, poster }
-      // Navigate to BrandKitResult page, passing images in state
-      navigate("/brand-kit-result", { state: data });
-    } catch (e) {
-      console.error(e);
-      alert("Failed to create brand kit");
-    } finally {
-      setCreatingBrandKit(false);
-      setBrandKitOpen(false);
-    }
-  }}
-  disabled={creatingBrandKit}
-  style={{ 
-    border: 'none',
-    background: 'linear-gradient(90deg,#6b8cff,#9b8bfd)', 
-    color: '#fff',
-    borderRadius: 10, 
-    padding: '10px 16px',
-    fontWeight: 700,
-    cursor: creatingBrandKit ? 'not-allowed' : 'pointer',
-    opacity: creatingBrandKit ? 0.7 : 1
-  }}
->
-  {creatingBrandKit ? "Creating..." : "Create"}
-</button>
-
-            </div>
-          </div>
-        </div>
-      )}
+      <BrandKitModal 
+        isOpen={brandKitOpen} 
+        onClose={() => setBrandKitOpen(false)} 
+      />
 
       {/* Conditional sections based on active tab */}
       {!isCodeMode && activeTab === "your-designs" && (

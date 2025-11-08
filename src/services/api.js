@@ -205,6 +205,60 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
+
+  // ============= TEAM MANAGEMENT =============
+  async getTeamMembers() {
+    return this.request('/api/team/members', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getMemberProjects(memberId) {
+    return this.request(`/api/team/members/${memberId}/projects`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async inviteTeamMember(email, role = 'member') {
+    return this.request('/api/team/invite', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ email, role }),
+    });
+  }
+
+  async getTeamInvites() {
+    return this.request('/api/team/invites', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async acceptInvite(token) {
+    return this.request(`/api/team/invites/accept/${token}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async removeTeamMember(memberId) {
+    return this.request(`/api/team/members/${memberId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async cancelInvite(inviteId) {
+    return this.request(`/api/team/invites/${inviteId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getTeamStats() {
+    return this.request('/api/team/stats', {
+      headers: getAuthHeaders(),
+    });
+  }
 }
 
 export default new ApiService();

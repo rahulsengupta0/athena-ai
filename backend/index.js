@@ -57,6 +57,9 @@ app.use('/api/user-data', userDataRoutes);
 const profileRoutes = require('./routes/profileRoutes');
 app.use('/api/profile', profileRoutes);
 
+const teamRoutes = require('./routes/teamRoutes');
+app.use('/api/team', teamRoutes);
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))

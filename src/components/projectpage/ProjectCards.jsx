@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiMoreHorizontal,
   FiStar,
@@ -51,6 +52,7 @@ const projectFilters = [
 ];
 
 export const ProjectCards = () => {
+  const navigate = useNavigate();
   const [dropdown, setDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(projectFilters[0]);
   const [hovered, setHovered] = useState(null);
@@ -60,7 +62,40 @@ export const ProjectCards = () => {
   const [brandKits, setBrandKits] = useState([]);
   const [brandKitFolders, setBrandKitFolders] = useState([]);
   const [loadingBrandKitFolders, setLoadingBrandKitFolders] = useState(true);
-  const [openFolder, setOpenFolder] = useState(null);
+  const [hoveredBrandKit, setHoveredBrandKit] = useState(null);
+
+  // Helper function to extract brand name from kitFolder
+  const extractBrandName = (kitFolder) => {
+    // kitFolder format: "name-lowercase-timestamp"
+    // Remove the last part (timestamp) and convert back to readable format
+    const parts = kitFolder.split('-');
+    // Find where the timestamp starts (last part that's all digits and long enough to be a timestamp)
+    let nameParts = [];
+    for (let i = 0; i < parts.length; i++) {
+      // Check if this part is a timestamp (all digits and at least 10 digits long)
+      if (/^\d+$/.test(parts[i]) && parts[i].length >= 10) {
+        // This is the timestamp, stop here
+        break;
+      }
+      nameParts.push(parts[i]);
+    }
+    // Join and capitalize first letter of each word
+    return nameParts
+      .join(' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Match brand kit folders with brand kits from database
+  const getBrandKitInfo = (kitFolder) => {
+    const extractedName = extractBrandName(kitFolder);
+    // Try to find matching brand kit in database
+    const matchedKit = brandKits.find(kit => 
+      kit.name.toLowerCase().replace(/ /g, '-') === extractedName.toLowerCase().replace(/ /g, '-')
+    );
+    return matchedKit || { name: extractedName };
+  };
 
   // Fetch projects from backend
   useEffect(() => {
@@ -127,50 +162,227 @@ export const ProjectCards = () => {
       
 
       {/* Brand Kit Folders (from S3) */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: '1.35rem' }}>Brand Kit Folders</h2>
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ 
+            margin: 0, 
+            fontSize: '1.5rem', 
+            fontWeight: 700, 
+            color: '#0f172a',
+            letterSpacing: '-0.02em'
+          }}>
+            Brand Kits
+          </h2>
           {!loadingBrandKitFolders && (
-            <span style={{ color: '#94a3b8', fontWeight: 600 }}>{brandKitFolders.length}</span>
+            <span style={{ 
+              color: '#64748b', 
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              background: '#f1f5f9',
+              padding: '6px 12px',
+              borderRadius: 12
+            }}>
+              {brandKitFolders.length} {brandKitFolders.length === 1 ? 'kit' : 'kits'}
+            </span>
           )}
         </div>
         {loadingBrandKitFolders ? (
           <div style={{ 
             color: '#94a3b8', 
             textAlign: 'center', 
-            padding: '20px',
-            fontSize: '1.07rem'
+            padding: '40px 20px',
+            fontSize: '1.07rem',
+            background: '#fafbfc',
+            borderRadius: 16,
+            border: '1px solid #e2e8f0'
           }}>
-            Loading brand kit folders...
+            Loading brand kits...
           </div>
         ) : brandKitFolders.length === 0 ? (
-          <div style={{ color: '#94a3b8' }}>No brand kit folders found.</div>
+          <div style={{ 
+            color: '#94a3b8', 
+            textAlign: 'center',
+            padding: '40px 20px',
+            background: '#fafbfc',
+            borderRadius: 16,
+            border: '1px solid #e2e8f0'
+          }}>
+            No brand kits found.
+          </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {brandKitFolders.map((f) => (
-              <div key={f.kitFolder} style={{ background: '#fff', border: '1.5px solid #edeefa', borderRadius: 16, padding: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+            {brandKitFolders.map((f) => {
+              const brandKitInfo = getBrandKitInfo(f.kitFolder);
+              const isHovered = hoveredBrandKit === f.kitFolder;
+              return (
                 <div
-                  onClick={() => setOpenFolder(openFolder === f.kitFolder ? null : f.kitFolder)}
-                  style={{ fontWeight: 800, color: '#0f172a', marginBottom: 8, cursor: 'pointer' }}
-                  title={f.kitFolder}
+                  key={f.kitFolder}
+                  onClick={() => navigate('/brand-kit-detail', { state: { brandKit: f } })}
+                  onMouseEnter={() => setHoveredBrandKit(f.kitFolder)}
+                  onMouseLeave={() => setHoveredBrandKit(null)}
+                  style={{
+                    background: 'linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%)',
+                    border: isHovered ? '2px solid #8b5cf6' : '1.5px solid #e2e8f0',
+                    borderRadius: 20,
+                    padding: 24,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isHovered 
+                      ? '0 12px 32px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.1)' 
+                      : '0 2px 8px rgba(15, 23, 42, 0.04)',
+                    transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
                 >
-                  {f.kitFolder}
-                </div>
-                {openFolder === f.kitFolder && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {/* Gradient accent */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
+                    opacity: isHovered ? 1 : 0.6
+                  }} />
+                  
+                  {/* Logo preview */}
+                  {f.files.logo?.url && (
+                    <div style={{
+                      width: '100%',
+                      height: 180,
+                      borderRadius: 12,
+                      background: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                    }}>
+                      <img 
+                        src={f.files.logo.url} 
+                        alt="Logo" 
+                        style={{ 
+                          maxWidth: '90%',
+                          maxHeight: '90%',
+                          objectFit: 'contain'
+                        }} 
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Brand name */}
+                  <div style={{
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontSize: '1.25rem',
+                    marginBottom: 8,
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1.3
+                  }}>
+                    {brandKitInfo.name}
+                  </div>
+                  
+                  {/* Tagline if available */}
+                  {brandKitInfo.tagline && (
+                    <div style={{
+                      color: '#64748b',
+                      fontSize: '0.9375rem',
+                      marginBottom: 16,
+                      lineHeight: 1.5
+                    }}>
+                      {brandKitInfo.tagline}
+                    </div>
+                  )}
+                  
+                  {/* Preview thumbnails */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 8,
+                    marginTop: 16
+                  }}>
                     {f.files.logo?.url && (
-                      <img src={f.files.logo.url} alt="Logo" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                      <div style={{
+                        aspectRatio: '1',
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff'
+                      }}>
+                        <img 
+                          src={f.files.logo.url} 
+                          alt="Logo" 
+                          style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }} 
+                        />
+                      </div>
                     )}
                     {f.files.banner?.url && (
-                      <img src={f.files.banner.url} alt="Banner" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                      <div style={{
+                        aspectRatio: '1',
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff'
+                      }}>
+                        <img 
+                          src={f.files.banner.url} 
+                          alt="Banner" 
+                          style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }} 
+                        />
+                      </div>
                     )}
                     {f.files.poster?.url && (
-                      <img src={f.files.poster.url} alt="Poster" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                      <div style={{
+                        aspectRatio: '1',
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff'
+                      }}>
+                        <img 
+                          src={f.files.poster.url} 
+                          alt="Poster" 
+                          style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }} 
+                        />
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
+                  
+                  {/* View details hint */}
+                  <div style={{
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTop: '1px solid #e2e8f0',
+                    color: '#8b5cf6',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    opacity: isHovered ? 1 : 0.7,
+                    transition: 'opacity 0.2s'
+                  }}>
+                    <FiEye size={16} />
+                    <span>Click to view details</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -465,6 +677,5 @@ const MenuItem = ({ icon, text, danger }) => (
     {text}
   </div>
 );
-
 
 export default ProjectCards;

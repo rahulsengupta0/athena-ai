@@ -1,0 +1,125 @@
+.accept-invite-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  padding: 2rem;
+}
+
+.accept-invite-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accept-invite-icon {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #7c3aed;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.accept-invite-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.01em;
+}
+
+.accept-invite-message {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+.accept-invite-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.accept-invite-button {
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.accept-invite-button:hover {
+  background: #6d28d9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.accept-invite-button.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.accept-invite-button.secondary:hover {
+  background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .accept-invite-card {
+    padding: 2rem;
+  }
+  
+  .accept-invite-title {
+    font-size: 1.5rem;
+  }
+  
+  .accept-invite-message {
+    font-size: 1rem;
+  }
+  
+  .accept-invite-actions {
+    flex-direction: column;
+  }
+  
+  .accept-invite-button {
+    width: 100%;
+  }
+}
+
