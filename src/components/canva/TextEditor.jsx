@@ -4,6 +4,9 @@ import {
   FiAlignRight, FiAlignJustify, FiType, FiPalette, FiSize,
   FiMove, FiRotateCw, FiTrash2, FiCopy, FiSave
 } from 'react-icons/fi';
+import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
+import { enhanceText } from './TextEnhanceService';
+import TextEnhanceButton from './TextEnhanceButton';
 
 const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +25,8 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [y, setY] = useState(textElement?.y || 100);
   const [width, setWidth] = useState(textElement?.width || 200);
   const [height, setHeight] = useState(textElement?.height || 50);
+  const [isEnhancingText, setIsEnhancingText] = useState(false);
+  const [isHeading, setIsHeading] = useState(isHeadingLayer(textElement));
 
   const textAreaRef = useRef(null);
 
@@ -246,6 +251,41 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
     setTextAlign(align);
   };
 
+  const handleEnhanceText = async () => {
+    if (!text || !text.trim()) {
+      alert('Please enter some text to enhance');
+      return;
+    }
+
+    // Determine if it's a heading based on multiple factors
+    const detectedIsHeading = isHeading || 
+                              (fontSize >= 32) ||
+                              fontWeight === 'bold';
+
+    setIsEnhancingText(true);
+    try {
+      const data = await enhanceText(text, detectedIsHeading);
+      setText(data.enhancedText);
+      // Auto-resize the text box to fit the enhanced text
+      const layer = {
+        width,
+        height,
+        fontSize,
+        fontFamily,
+        fontWeight,
+        fontStyle
+      };
+      const dimensions = calculateTextDimensions(data.enhancedText, layer);
+      setWidth(dimensions.width);
+      setHeight(dimensions.height);
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+      alert('Error enhancing text: ' + error.message);
+    } finally {
+      setIsEnhancingText(false);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -258,7 +298,27 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
       <div style={styles.content}>
         {/* Text Content */}
         <div>
-          <label style={styles.label}>Text:</label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <label style={styles.label}>Text:</label>
+            <TextEnhanceButton
+              onClick={handleEnhanceText}
+              disabled={isEnhancingText || !text?.trim()}
+              isEnhancing={isEnhancingText}
+              variant="inline"
+              size={14}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={isHeading}
+                onChange={(e) => setIsHeading(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              <span>Is Heading</span>
+            </label>
+          </div>
           <textarea
             ref={textAreaRef}
             value={text}
