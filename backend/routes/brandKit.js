@@ -10,11 +10,24 @@ const authMiddleware = require("../middlewares/auth");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // 🧠 Step 1: Create AI prompts
-function getPrompts({ name, tagline, primaryColor, secondaryColor }) {
+function getPrompts({ name, tagline, primaryColor, secondaryColor, logoDescription, bannerDescription, posterDescription }) {
+  // Use individual descriptions if provided, otherwise fall back to default prompts
+  const logoPrompt = logoDescription 
+    ? `${logoDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
+    : `${name} logo in ${primaryColor} and ${secondaryColor}, modern, flat style. Tagline: ${tagline}`;
+  
+  const bannerPrompt = bannerDescription
+    ? `${bannerDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
+    : `${name} brand banner using ${primaryColor}, tagline: ${tagline}, clean abstract design`;
+  
+  const posterPrompt = posterDescription
+    ? `${posterDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
+    : `Promotional poster for ${name}, tagline: "${tagline}", colors: ${primaryColor} and ${secondaryColor}, professional and attractive`;
+  
   return {
-    logo: `${name} logo in ${primaryColor} and ${secondaryColor}, modern, flat style. Tagline: ${tagline}`,
-    banner: `${name} brand banner using ${primaryColor}, tagline: ${tagline}, clean abstract design`,
-    poster: `Promotional poster for ${name}, tagline: "${tagline}", colors: ${primaryColor} and ${secondaryColor}, professional and attractive`
+    logo: logoPrompt,
+    banner: bannerPrompt,
+    poster: posterPrompt
   };
 }
 
@@ -48,12 +61,29 @@ async function uploadToS3(imageUrl, userId, kitFolder, type) {
 // 🧠 Step 4: API route to generate + upload
 router.post("/generate-brandkit", authMiddleware, async (req, res) => {
   try {
-    const { name, tagline, primaryColor, secondaryColor } = req.body;
+    const { name, tagline, primaryColor, secondaryColor, logoDescription, bannerDescription, posterDescription } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: "Brand name is required" });
+    }
+    
+    if (!logoDescription || !bannerDescription || !posterDescription) {
+      return res.status(400).json({ error: "Logo, banner, and poster descriptions are required" });
+    }
+    
     const userId = req.user.id; // comes from decoded JWT
     const kitFolder = name.toLowerCase().replace(/ /g, "-") + "-" + Date.now();
 
-    // Build prompts
-    const prompts = getPrompts({ name, tagline, primaryColor, secondaryColor });
+    // Build prompts using individual descriptions
+    const prompts = getPrompts({ 
+      name, 
+      tagline, 
+      primaryColor, 
+      secondaryColor, 
+      logoDescription, 
+      bannerDescription, 
+      posterDescription 
+    });
 
     // Generate all 3 images
     const logoUrl = await generateImage(prompts.logo);

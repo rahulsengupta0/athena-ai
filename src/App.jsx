@@ -22,11 +22,13 @@ import { Analatics } from './pages/Analatics';
 import { Setting } from './pages/Setting';
 import Help from './pages/Help';
 import { Team } from './pages/Team';
+import AcceptInvite from './pages/AcceptInvite';
 import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenerator';
 import BackgroundRemover from './components/imageeditor/BackgroundRemover';
 import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
 import Brandkit from './pages/Brandkit';
+import BrandKitDetail from './pages/BrandKitDetail';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -70,12 +72,14 @@ const AppContent = () => {
           <Route path="/settings" element={<Setting />} />
           <Route path="/help-support" element={<Help />} />
           <Route path="/team" element={<Team />} />
+          <Route path="/team/accept" element={<AcceptInvite />} />
           <Route path="/artisticiamge" element={<ArtisticImageGenerator />} />
           <Route path="/bgremove" element={<BackgroundRemover />} />
           <Route path="/imageeditor" element={<ImageEditor />} />
           <Route path="/canva-clone" element={<CanvaClone />} />
           <Route path="/brand-kit" element={<Brandkit />} />
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
+          <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
 
         </Routes>
       </div>
