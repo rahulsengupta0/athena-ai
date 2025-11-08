@@ -58,6 +58,9 @@ export const ProjectCards = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [brandKits, setBrandKits] = useState([]);
+  const [brandKitFolders, setBrandKitFolders] = useState([]);
+  const [loadingBrandKitFolders, setLoadingBrandKitFolders] = useState(true);
+  const [openFolder, setOpenFolder] = useState(null);
 
   // Fetch projects from backend
   useEffect(() => {
@@ -81,8 +84,21 @@ export const ProjectCards = () => {
         setBrandKits([]);
       }
     };
+    const fetchBrandKitFolders = async () => {
+      try {
+        setLoadingBrandKitFolders(true);
+        const folders = await api.getBrandKitFolders();
+        setBrandKitFolders(folders || []);
+      } catch (error) {
+        console.error('Error fetching brand kit folders:', error);
+        setBrandKitFolders([]);
+      } finally {
+        setLoadingBrandKitFolders(false);
+      }
+    };
     fetchProjects();
     fetchBrandKits();
+    fetchBrandKitFolders();
   }, []);
 
   if (loading) {
@@ -108,34 +124,50 @@ export const ProjectCards = () => {
       margin: "0 auto", 
       padding: "28px 24px 20px 24px"
     }}>
-      {/* Brand Kits section */}
-      <div style={{ marginBottom: 24 }}>
+      
+
+      {/* Brand Kit Folders (from S3) */}
+      <div style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: '1.35rem' }}>Your Brand Kits</h2>
-          <span style={{ color: '#94a3b8', fontWeight: 600 }}>{brandKits.length}</span>
+          <h2 style={{ margin: 0, fontSize: '1.35rem' }}>Brand Kit Folders</h2>
+          {!loadingBrandKitFolders && (
+            <span style={{ color: '#94a3b8', fontWeight: 600 }}>{brandKitFolders.length}</span>
+          )}
         </div>
-        {brandKits.length === 0 ? (
-          <div style={{ color: '#94a3b8' }}>No brand kits yet. Create one from the Dashboard.</div>
+        {loadingBrandKitFolders ? (
+          <div style={{ 
+            color: '#94a3b8', 
+            textAlign: 'center', 
+            padding: '20px',
+            fontSize: '1.07rem'
+          }}>
+            Loading brand kit folders...
+          </div>
+        ) : brandKitFolders.length === 0 ? (
+          <div style={{ color: '#94a3b8' }}>No brand kit folders found.</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {brandKits.map((k) => (
-              <div key={k._id} style={{ background: '#fff', border: '1.5px solid #edeefa', borderRadius: 16, padding: 16 }}>
-                <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{k.name}</div>
-                {k.tagline && <div style={{ color: '#64748b', marginBottom: 10 }}>{k.tagline}</div>}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: 6, background: k.primaryColor || '#e5e7eb', border: '1px solid #e5e7eb' }} />
-                    <code style={{ color: '#475569' }}>{k.primaryColor || '—'}</code>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: 6, background: k.secondaryColor || '#e5e7eb', border: '1px solid #e5e7eb' }} />
-                    <code style={{ color: '#475569' }}>{k.secondaryColor || '—'}</code>
-                  </div>
+            {brandKitFolders.map((f) => (
+              <div key={f.kitFolder} style={{ background: '#fff', border: '1.5px solid #edeefa', borderRadius: 16, padding: 16 }}>
+                <div
+                  onClick={() => setOpenFolder(openFolder === f.kitFolder ? null : f.kitFolder)}
+                  style={{ fontWeight: 800, color: '#0f172a', marginBottom: 8, cursor: 'pointer' }}
+                  title={f.kitFolder}
+                >
+                  {f.kitFolder}
                 </div>
-                {k.logoUrl ? (
-                  <img src={k.logoUrl} alt="Logo" style={{ maxWidth: '100%', maxHeight: 80, borderRadius: 10, border: '1px solid #e5e7eb' }} />
-                ) : (
-                  <div style={{ color: '#94a3b8', fontSize: 14 }}>No logo</div>
+                {openFolder === f.kitFolder && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                    {f.files.logo?.url && (
+                      <img src={f.files.logo.url} alt="Logo" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                    )}
+                    {f.files.banner?.url && (
+                      <img src={f.files.banner.url} alt="Banner" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                    )}
+                    {f.files.poster?.url && (
+                      <img src={f.files.poster.url} alt="Poster" style={{ width: '100%', borderRadius: 10, border: '1px solid #e5e7eb' }} />
+                    )}
+                  </div>
                 )}
               </div>
             ))}

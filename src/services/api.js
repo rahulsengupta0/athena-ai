@@ -177,6 +177,12 @@ class ApiService {
     });
   }
 
+  async getBrandKitFolders() {
+    return this.request('/api/brandkit-list', {
+      headers: getAuthHeaders(),
+    });
+  }
+
   async createBrandKit(brandKitData) {
     return this.request('/api/user-data/brandkits', {
       method: 'POST',

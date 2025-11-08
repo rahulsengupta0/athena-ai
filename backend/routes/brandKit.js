@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* eslint-disable no-undef */
 const express = require("express");
 const router = express.Router();
 const { OpenAI } = require("openai");
@@ -72,6 +74,54 @@ router.post("/generate-brandkit", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("❌ BrandKit generation error:", err);
     res.status(500).json({ error: "Failed to generate brand kit." });
+  }
+});
+
+// List brand kit folders and images for the authenticated user
+router.get("/brandkit-list", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const Bucket = process.env.AWS_S3_BUCKET;
+    if (!Bucket) {
+      return res.status(500).json({ error: "Missing AWS_S3_BUCKET" });
+    }
+
+    const Prefix = `${userId}/brandkit/`;
+    let ContinuationToken = undefined;
+    const allObjects = [];
+
+    do {
+      // Paginate in case there are many objects
+      const resp = await s3
+        .listObjectsV2({ Bucket, Prefix, ContinuationToken })
+        .promise();
+      (resp.Contents || []).forEach((obj) => allObjects.push(obj));
+      ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
+    } while (ContinuationToken);
+
+    // Group by kit folder name: <userId>/brandkit/<kitFolder>/<type>.png
+    const folderMap = {};
+    for (const obj of allObjects) {
+      const key = obj.Key; // e.g., 123/brandkit/acme-123/banner.png
+      const parts = key.split("/");
+      if (parts.length < 4) continue;
+      const kitFolder = parts[2];
+      const fileName = parts[3];
+      const type = fileName.replace(/\.[^/.]+$/, ""); // remove extension
+      if (!folderMap[kitFolder]) {
+        folderMap[kitFolder] = { kitFolder, files: {} };
+      }
+      folderMap[kitFolder].files[type] = {
+        key,
+        url: `https://${Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+      };
+    }
+
+    const kits = Object.values(folderMap).sort((a, b) => a.kitFolder < b.kitFolder ? 1 : -1);
+    res.json(kits);
+  } catch (err) {
+    console.error("❌ BrandKit list error:", err);
+    res.status(500).json({ error: "Failed to list brand kits." });
   }
 });
 
