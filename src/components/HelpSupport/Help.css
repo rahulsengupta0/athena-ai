@@ -625,15 +625,6 @@
     gap: 1.5rem;
   }
 
-  .contact-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    transition: all 0.2s ease;
-  }
-
   .contact-card:hover {
     border-color: #7c3aed;
     box-shadow: 0 4px 6px -1px rgb(124 58 237 / 10%);
