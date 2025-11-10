@@ -14,6 +14,8 @@ import CodeGenerator from './components/createpage/CardsPages/CodeGenerator';
 import VideoProducer from './components/createpage/CardsPages/VideoProducer';
 import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
 import { Project } from './pages/Project';
+import AllProjects from './pages/AllProjects';
+import Templates from './pages/Templates';
 import { Favourites } from './pages/Favorites';
 import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
@@ -64,6 +66,8 @@ const AppContent = () => {
           <Route path="/create/video-producer" element={<VideoProducer />} />
           <Route path="/create/brand-builder" element={<BrandBuilder />} />
           <Route path="/projects" element={<Project />} />
+          <Route path="/projects/all" element={<AllProjects />} />
+          <Route path="/projects/templates" element={<Templates />} />
           <Route path="/favorites" element={<Favourites />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
           <Route path="/image-editor" element={<ImageEdit />} />
