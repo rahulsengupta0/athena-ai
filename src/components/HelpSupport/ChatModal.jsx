@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import "./ChatModal.css";
+import {marked} from 'marked';
+import DOMPurify from 'dompurify';
 
 const ChatModal = () => {
   const [messages, setMessages] = useState([
@@ -83,9 +85,9 @@ const ChatModal = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-          >
-            {msg.text}
-          </motion.div>
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(msg.text || "")),
+             }}
+          />
         ))}
 
         {loading && <div className="chat-message bot">Typing...</div>}
