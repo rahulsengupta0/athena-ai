@@ -148,7 +148,7 @@ const BrandKitDetail = () => {
         (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
       );
       if (!matched?._id) {
-        alert("Could not resolve brand kit id to save collaborators.");
+        alert("Could not resolve this Brand Kit in database to save collaborators. Please ensure a Brand Kit with this name exists.");
         return;
       }
       const currentIds = (matched.collaborators || []).map((x) => String(x));
