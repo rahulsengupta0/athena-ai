@@ -1,24 +1,46 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-const fs = require('fs');
 const router = express.Router();
 
-// ✅ Read your Athena info file once when the backend starts
-const websiteInfo = fs.readFileSync('./data/athena_info.txt', 'utf8');
+// ✅ URL where your Chroma FastAPI server runs
+const CHROMA_URL = "http://localhost:8000";
 
-router.post('/deepseek/chat', async (req, res) => {
+// ===============================
+// 🔹 DeepSeek Chat Route (with Chroma search)
+// ===============================
+router.post('/chat', async (req, res) => {
   try {
     const { message, history } = req.body;
 
-    // Updated system prompt with the text file context
+    // ✅ Step 1: Fetch context from ChromaDB
+    let contextDocs = "";
+    try {
+      const chromaResponse = await axios.get(`${CHROMA_URL}/search`, {
+        params: { query: message },
+      });
+
+      if (chromaResponse.data?.matches?.length > 0) {
+        contextDocs = chromaResponse.data.matches.join("\n");
+        console.log("🧠 Retrieved context from ChromaDB");
+      } else {
+        contextDocs = "No relevant context found.";
+        console.log("⚠️ No matches found in ChromaDB");
+      }
+    } catch (chromaErr) {
+      console.error("❌ Error connecting to ChromaDB:", chromaErr.message);
+      contextDocs = "Knowledge base unavailable.";
+    }
+
+    // ✅ Step 2: Build system prompt
     const systemPrompt = {
       role: "system",
       content: `
         You are Athena — a helpful, creative, and intelligent AI assistant created by Athena LMS.
         You assist users with questions about the Athena LMS platform.
 
-        Here is important information about Athena LMS:
-        ${websiteInfo}
+        Here is important information from the knowledge base:
+        ${contextDocs}
 
         Instructions:
         - Never mention DeepSeek, OpenRouter, or any external system.
@@ -28,7 +50,7 @@ router.post('/deepseek/chat', async (req, res) => {
       `,
     };
 
-    // Call OpenRouter DeepSeek API
+    // ✅ Step 3: Send chat request to DeepSeek via OpenRouter
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
@@ -36,7 +58,7 @@ router.post('/deepseek/chat', async (req, res) => {
         messages: [
           systemPrompt,
           ...(history || []),
-          { role: 'user', content: message }
+          { role: 'user', content: message },
         ],
       },
       {
@@ -49,6 +71,7 @@ router.post('/deepseek/chat', async (req, res) => {
       }
     );
 
+    // ✅ Step 4: Send DeepSeek response back to frontend
     const data = response.data;
     res.json({
       reply: data?.choices?.[0]?.message?.content || 'No response from Athena.',
