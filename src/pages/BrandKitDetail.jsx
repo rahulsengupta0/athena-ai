@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiDownload, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiDownload, FiPlus, FiTrash2, FiImage, FiLayout, FiLayers, FiGrid } from "react-icons/fi";
 import api from "../services/api";
+import AddImageModal from "./AddImageModal";
 
 const BrandKitDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [brandKit, setBrandKit] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [allBrandKits, setAllBrandKits] = useState([]);
+  const [userFiles, setUserFiles] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('logo');
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Extract brand name from kitFolder
   const extractBrandName = (kitFolder) => {
@@ -28,30 +33,62 @@ const BrandKitDetail = () => {
   };
 
   useEffect(() => {
-    // Get brand kit from location state or fetch by kitFolder
+    let initialKitFolder = null;
+
     if (location.state?.brandKit) {
       setBrandKit(location.state.brandKit);
+      initialKitFolder = location.state.brandKit.kitFolder;
       setLoading(false);
     } else if (location.state?.kitFolder) {
-      // Fetch brand kit by kitFolder
-      const fetchBrandKit = async () => {
+      initialKitFolder = location.state.kitFolder;
+    }
+
+    const kitFolderToLoad = initialKitFolder;
+    if (!kitFolderToLoad) {
+      if (!location.state?.brandKit) {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const fetchBrandKit = async () => {
+      try {
+        if (!location.state?.brandKit) {
+          setLoading(true);
+        }
+        const folders = await api.getBrandKitFolders();
+        const found = folders.find(f => f.kitFolder === kitFolderToLoad);
+        if (found) {
+          setBrandKit(found);
+        }
+      } catch (error) {
+        console.error('Error fetching brand kit:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrandKit();
+  }, [location.state]);
+
+  // Fetch all brand kits and user files when upload modal opens
+  useEffect(() => {
+    if (uploadModalOpen) {
+      const fetchData = async () => {
         try {
-          const folders = await api.getBrandKitFolders();
-          const found = folders.find(f => f.kitFolder === location.state.kitFolder);
-          if (found) {
-            setBrandKit(found);
-          }
+          const [folders, files] = await Promise.all([
+            api.getBrandKitFolders(),
+            api.getUserFiles()
+          ]);
+          setAllBrandKits(folders || []);
+          setUserFiles(files || []);
         } catch (error) {
-          console.error('Error fetching brand kit:', error);
-        } finally {
-          setLoading(false);
+          console.error('Error fetching data:', error);
         }
       };
-      fetchBrandKit();
-    } else {
-      setLoading(false);
+      fetchData();
     }
-  }, [location.state]);
+  }, [uploadModalOpen]);
 
   const downloadAsset = (url, filename) => {
     const link = document.createElement('a');
@@ -62,14 +99,117 @@ const BrandKitDetail = () => {
     document.body.removeChild(link);
   };
 
-  const openImageModal = (imageSrc, title) => {
-    setSelectedImage({ src: imageSrc, title });
-    setModalOpen(true);
+  const openUploadModal = () => {
+    setUploadModalOpen(true);
+    setSelectedImages([]);
+    setSelectedCategory('logo');
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedImage(null);
+  const closeUploadModal = () => {
+    setUploadModalOpen(false);
+    setSelectedImages([]);
+  };
+
+  const toggleImageSelection = (imageUrl, source, identifier = "") => {
+    const keyParts = [source];
+    if (identifier) keyParts.push(identifier);
+    keyParts.push(imageUrl);
+    const imageKey = keyParts.join("-");
+    setSelectedImages((prev) => {
+      if (prev.find((img) => img.key === imageKey)) {
+        return prev.filter((img) => img.key !== imageKey);
+      } else {
+        return [
+          ...prev,
+          { key: imageKey, url: imageUrl, source, identifier },
+        ];
+      }
+    });
+  };
+
+  const handleAddImages = async () => {
+    if (selectedImages.length === 0) {
+      alert('Please select at least one image');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      for (const image of selectedImages) {
+        // Generate a cleaner filename: category-timestamp.png
+        const timestamp = Date.now();
+        const fileName = `${selectedCategory}-${timestamp}.png`;
+        await api.addImageToBrandKit(brandKit.kitFolder, image.url, selectedCategory, fileName);
+      }
+      
+      // Refresh brand kit data
+      const folders = await api.getBrandKitFolders();
+      const updated = folders.find(f => f.kitFolder === brandKit.kitFolder);
+      if (updated) {
+        setBrandKit(updated);
+      }
+      
+      alert(`Successfully added ${selectedImages.length} image(s) to ${selectedCategory} category!`);
+      closeUploadModal();
+    } catch (error) {
+      console.error('Error adding images:', error);
+      alert('Failed to add images: ' + (error.message || 'Unknown error'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteImage = async (fileName) => {
+    const confirmed = window.confirm('Are you sure you want to delete this image? This action cannot be undone.');
+    if (!confirmed) return;
+
+    const kitFolder = brandKit?.kitFolder;
+    if (!kitFolder) {
+      console.warn('No kit folder available for deletion.');
+      return;
+    }
+
+    setBrandKit((prev) => {
+      if (!prev?.files) return prev;
+      const updatedFiles = { ...prev.files };
+
+      if (updatedFiles.logo?.fileName === fileName) {
+        delete updatedFiles.logo;
+      }
+
+      if (updatedFiles.banner?.fileName === fileName) {
+        delete updatedFiles.banner;
+      }
+
+      if (updatedFiles.poster?.fileName === fileName) {
+        delete updatedFiles.poster;
+      }
+
+      if (Array.isArray(updatedFiles.custom)) {
+        updatedFiles.custom = updatedFiles.custom.filter((item) => item.fileName !== fileName);
+        if (updatedFiles.custom.length === 0) {
+          delete updatedFiles.custom;
+        }
+      }
+
+      return { ...prev, files: updatedFiles };
+    });
+
+    try {
+      await api.deleteImageFromBrandKit(kitFolder, fileName);
+      
+      // Refresh brand kit data
+      const folders = await api.getBrandKitFolders();
+      const updated = folders.find(f => f.kitFolder === kitFolder);
+      if (updated) {
+        setBrandKit(updated);
+      }
+      
+      alert('Image deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Failed to delete image: ' + (error.message || 'Unknown error'));
+    }
   };
 
   if (loading) {
@@ -140,55 +280,87 @@ const BrandKitDetail = () => {
       <div style={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: 32,
         gap: 16
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <button
+            onClick={() => navigate('/projects')}
+            style={{
+              border: '1.5px solid #e2e8f0',
+              background: '#ffffff',
+              borderRadius: 12,
+              padding: '10px 14px',
+              cursor: 'pointer',
+              color: '#475569',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#f1f5f9';
+              e.target.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#ffffff';
+              e.target.style.borderColor = '#e2e8f0';
+            }}
+          >
+            <FiArrowLeft size={18} />
+            Back
+          </button>
+          <div>
+            <h1 style={{
+              margin: 0,
+              fontSize: '2rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              letterSpacing: '-0.02em'
+            }}>
+              {brandName}
+            </h1>
+            <p style={{
+              margin: '4px 0 0 0',
+              color: '#64748b',
+              fontSize: '0.9375rem'
+            }}>
+              Brand Kit Assets
+            </p>
+          </div>
+        </div>
         <button
-          onClick={() => navigate('/projects')}
+          onClick={openUploadModal}
           style={{
-            border: '1.5px solid #e2e8f0',
-            background: '#ffffff',
+            border: 'none',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
             borderRadius: 12,
-            padding: '10px 14px',
+            padding: '12px 20px',
             cursor: 'pointer',
-            color: '#475569',
+            color: '#ffffff',
             fontWeight: 600,
             fontSize: '0.9375rem',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
           }}
           onMouseEnter={(e) => {
-            e.target.style.background = '#f1f5f9';
-            e.target.style.borderColor = '#cbd5e1';
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.background = '#ffffff';
-            e.target.style.borderColor = '#e2e8f0';
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
           }}
         >
-          <FiArrowLeft size={18} />
-          Back
+          <FiPlus size={18} />
+          Add Image
         </button>
-        <div>
-          <h1 style={{
-            margin: 0,
-            fontSize: '2rem',
-            fontWeight: 700,
-            color: '#0f172a',
-            letterSpacing: '-0.02em'
-          }}>
-            {brandName}
-          </h1>
-          <p style={{
-            margin: '4px 0 0 0',
-            color: '#64748b',
-            fontSize: '0.9375rem'
-          }}>
-            Brand Kit Assets
-          </p>
-        </div>
       </div>
 
       {/* Compact Image Grid */}
@@ -206,7 +378,7 @@ const BrandKitDetail = () => {
             padding: 20,
             boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             transition: 'all 0.3s',
-            cursor: 'pointer'
+            position: 'relative'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
@@ -218,7 +390,6 @@ const BrandKitDetail = () => {
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.04)';
             e.currentTarget.style.borderColor = '#e2e8f0';
           }}
-          onClick={() => openImageModal(brandKit.files.logo.url, 'Logo')}
           >
             <div style={{
               display: 'flex',
@@ -230,13 +401,14 @@ const BrandKitDetail = () => {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #8b5cf6 100%)',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.25rem'
+                color: '#475569'
               }}>
-                🎨
+                <FiImage size={20} />
               </div>
               <h3 style={{
                 margin: 0,
@@ -257,7 +429,8 @@ const BrandKitDetail = () => {
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              marginBottom: 16
+              marginBottom: 16,
+              position: 'relative'
             }}>
               <img
                 src={brandKit.files.logo.url}
@@ -268,40 +441,72 @@ const BrandKitDetail = () => {
                   objectFit: 'contain'
                 }}
               />
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAsset(brandKit.files.logo.url, 'logo.png');
-              }}
-              style={{
-                width: '100%',
-                border: '1.5px solid #e2e8f0',
-                background: '#ffffff',
-                borderRadius: 10,
-                padding: '10px 16px',
-                cursor: 'pointer',
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: '0.875rem',
+              {/* Action buttons overlay */}
+              <div style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = '#f1f5f9';
-                e.target.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = '#ffffff';
-                e.target.style.borderColor = '#e2e8f0';
-              }}
-            >
-              <FiDownload size={16} />
-              Download Logo
-            </button>
+                gap: 8
+              }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadAsset(brandKit.files.logo.url, brandKit.files.logo.fileName || 'logo.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#475569',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f8fafc';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Download"
+                >
+                  <FiDownload size={16} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteImage(brandKit.files.logo.fileName || 'logo.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#fef2f2';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Delete"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -314,7 +519,7 @@ const BrandKitDetail = () => {
             padding: 20,
             boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             transition: 'all 0.3s',
-            cursor: 'pointer'
+            position: 'relative'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
@@ -326,7 +531,6 @@ const BrandKitDetail = () => {
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.04)';
             e.currentTarget.style.borderColor = '#e2e8f0';
           }}
-          onClick={() => openImageModal(brandKit.files.banner.url, 'Banner')}
           >
             <div style={{
               display: 'flex',
@@ -338,13 +542,14 @@ const BrandKitDetail = () => {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.25rem'
+                color: '#475569'
               }}>
-                📐
+                <FiLayout size={20} />
               </div>
               <h3 style={{
                 margin: 0,
@@ -365,7 +570,8 @@ const BrandKitDetail = () => {
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              marginBottom: 16
+              marginBottom: 16,
+              position: 'relative'
             }}>
               <img
                 src={brandKit.files.banner.url}
@@ -376,40 +582,72 @@ const BrandKitDetail = () => {
                   objectFit: 'contain'
                 }}
               />
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAsset(brandKit.files.banner.url, 'banner.png');
-              }}
-              style={{
-                width: '100%',
-                border: '1.5px solid #e2e8f0',
-                background: '#ffffff',
-                borderRadius: 10,
-                padding: '10px 16px',
-                cursor: 'pointer',
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: '0.875rem',
+              {/* Action buttons overlay */}
+              <div style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = '#f1f5f9';
-                e.target.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = '#ffffff';
-                e.target.style.borderColor = '#e2e8f0';
-              }}
-            >
-              <FiDownload size={16} />
-              Download Banner
-            </button>
+                gap: 8
+              }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadAsset(brandKit.files.banner.url, brandKit.files.banner.fileName || 'banner.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#475569',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f8fafc';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Download"
+                >
+                  <FiDownload size={16} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteImage(brandKit.files.banner.fileName || 'banner.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#fef2f2';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Delete"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -422,7 +660,7 @@ const BrandKitDetail = () => {
             padding: 20,
             boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             transition: 'all 0.3s',
-            cursor: 'pointer'
+            position: 'relative'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
@@ -434,7 +672,6 @@ const BrandKitDetail = () => {
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.04)';
             e.currentTarget.style.borderColor = '#e2e8f0';
           }}
-          onClick={() => openImageModal(brandKit.files.poster.url, 'Poster')}
           >
             <div style={{
               display: 'flex',
@@ -446,13 +683,14 @@ const BrandKitDetail = () => {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #ef4444 100%)',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.25rem'
+                color: '#475569'
               }}>
-                🎴
+                <FiLayers size={20} />
               </div>
               <h3 style={{
                 margin: 0,
@@ -473,7 +711,8 @@ const BrandKitDetail = () => {
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              marginBottom: 16
+              marginBottom: 16,
+              position: 'relative'
             }}>
               <img
                 src={brandKit.files.poster.url}
@@ -484,193 +723,250 @@ const BrandKitDetail = () => {
                   objectFit: 'contain'
                 }}
               />
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAsset(brandKit.files.poster.url, 'poster.png');
-              }}
-              style={{
-                width: '100%',
-                border: '1.5px solid #e2e8f0',
-                background: '#ffffff',
-                borderRadius: 10,
-                padding: '10px 16px',
-                cursor: 'pointer',
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: '0.875rem',
+              {/* Action buttons overlay */}
+              <div style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = '#f1f5f9';
-                e.target.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = '#ffffff';
-                e.target.style.borderColor = '#e2e8f0';
-              }}
-            >
-              <FiDownload size={16} />
-              Download Poster
-            </button>
+                gap: 8
+              }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadAsset(brandKit.files.poster.url, brandKit.files.poster.fileName || 'poster.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#475569',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f8fafc';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Download"
+                >
+                  <FiDownload size={16} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteImage(brandKit.files.poster.fileName || 'poster.png');
+                  }}
+                  style={{
+                    border: '1px solid #dde3ea',
+                    background: '#ffffff',
+                    borderRadius: 8,
+                    padding: '6px',
+                    cursor: 'pointer',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#fef2f2';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#ffffff';
+                  }}
+                  title="Delete"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Images */}
+        {brandKit.files?.custom && brandKit.files.custom.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', marginTop: 24 }}>
+            <h3 style={{
+              margin: '0 0 20px 0',
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              color: '#0f172a'
+            }}>
+              Additional Images
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: 24
+            }}>
+              {brandKit.files.custom.map((customFile, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: 'linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%)',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: 20,
+                    padding: 20,
+                    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.3s',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(15, 23, 42, 0.08)';
+                    e.currentTarget.style.borderColor = '#8b5cf6';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.04)';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    marginBottom: 16
+                  }}>
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#475569'
+                    }}>
+                      <FiGrid size={20} />
+                    </div>
+                    <h3 style={{
+                      margin: 0,
+                      fontSize: '1.15rem',
+                      fontWeight: 600,
+                      color: '#0f172a'
+                    }}>
+                      {customFile.type || 'Custom Image'}
+                    </h3>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: 200,
+                    borderRadius: 12,
+                    background: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    marginBottom: 16,
+                    position: 'relative'
+                  }}>
+                    <img
+                      src={customFile.url}
+                      alt={customFile.type || 'Custom'}
+                      style={{
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        objectFit: 'contain'
+                      }}
+                    />
+                    {/* Action buttons overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      display: 'flex',
+                      gap: 8
+                    }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadAsset(customFile.url, customFile.fileName || 'custom-image.png');
+                        }}
+                        style={{
+                          border: '1px solid #dde3ea',
+                          background: '#ffffff',
+                          borderRadius: 8,
+                          padding: '6px',
+                          cursor: 'pointer',
+                          color: '#475569',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#ffffff';
+                        }}
+                        title="Download"
+                      >
+                        <FiDownload size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage(customFile.fileName);
+                        }}
+                        style={{
+                          border: '1px solid #dde3ea',
+                          background: '#ffffff',
+                          borderRadius: 8,
+                          padding: '6px',
+                          cursor: 'pointer',
+                          color: '#ef4444',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#fef2f2';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#ffffff';
+                        }}
+                        title="Delete"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Image Modal */}
-      {modalOpen && selectedImage && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={closeModal}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.6)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1200,
-            padding: 16,
-            animation: 'fadeIn 0.3s ease-out',
-          }}
-        >
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes slideUp {
-              from { transform: translateY(20px); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
-            }
-          `}</style>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(92vw, 900px)',
-              maxWidth: '900px',
-              background: 'linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%)',
-              borderRadius: 24,
-              boxShadow: '0 25px 80px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: '90vh',
-              animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '24px 32px',
-              borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)',
-            }}>
-              <div style={{
-                fontWeight: 700,
-                color: '#0f172a',
-                fontSize: '1.25rem',
-                letterSpacing: '-0.02em',
-                flex: 1
-              }}>
-                {selectedImage.title}
-              </div>
-              <button
-                onClick={closeModal}
-                style={{
-                  border: 'none',
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 12,
-                  padding: '10px 14px',
-                  cursor: 'pointer',
-                  color: '#64748b',
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(241, 245, 249, 0.95)';
-                  e.target.style.color = '#1e293b';
-                  e.target.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.8)';
-                  e.target.style.color = '#64748b';
-                  e.target.style.transform = 'scale(1)';
-                }}
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-            <div style={{
-              padding: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#ffffff',
-              minHeight: 400
-            }}>
-              <img
-                src={selectedImage.src}
-                alt={selectedImage.title}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain'
-                }}
-              />
-            </div>
-            <div style={{
-              padding: '20px 32px',
-              borderTop: '1px solid rgba(226, 232, 240, 0.8)',
-              background: '#fafbfc',
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <button
-                onClick={() => downloadAsset(selectedImage.src, `${selectedImage.title.toLowerCase()}.png`)}
-                style={{
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
-                  color: '#fff',
-                  borderRadius: 12,
-                  padding: '12px 24px',
-                  fontWeight: 600,
-                  fontSize: '0.9375rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.35)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              >
-                <FiDownload size={18} />
-                Download {selectedImage.title}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddImageModal
+        isOpen={uploadModalOpen}
+        onClose={closeUploadModal}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        selectedImages={selectedImages}
+        onToggleImageSelection={toggleImageSelection}
+        allBrandKits={allBrandKits}
+        userFiles={userFiles}
+        onAddImages={handleAddImages}
+        uploading={uploading}
+        currentKitFolder={brandKit?.kitFolder}
+      />
     </div>
   );
 };

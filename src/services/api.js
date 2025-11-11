@@ -206,6 +206,33 @@ class ApiService {
     });
   }
 
+  async deleteBrandKitFolder(kitFolder) {
+    // URL encode the kitFolder to handle special characters
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    return this.request(`/api/brandkit/${encodedKitFolder}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async addImageToBrandKit(kitFolder, imageUrl, category, fileName) {
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    return this.request(`/api/brandkit/${encodedKitFolder}/add-image`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ imageUrl, category, fileName }),
+    });
+  }
+
+  async deleteImageFromBrandKit(kitFolder, fileName) {
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    const encodedFileName = encodeURIComponent(fileName);
+    return this.request(`/api/brandkit/${encodedKitFolder}/image/${encodedFileName}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
   // ============= TEAM MANAGEMENT =============
   async getTeamMembers() {
     return this.request('/api/team/members', {
