@@ -134,6 +134,22 @@ class ApiService {
     });
   }
 
+  // Project collaborators
+  async addProjectCollaborator(projectId, userId) {
+    return this.request(`/api/user-data/projects/${projectId}/collaborators`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async removeProjectCollaborator(projectId, collabUserId) {
+    return this.request(`/api/user-data/projects/${projectId}/collaborators/${collabUserId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
   // Favorites
   async getFavorites() {
     return this.request('/api/user-data/favorites', {
@@ -201,6 +217,22 @@ class ApiService {
 
   async deleteBrandKit(id) {
     return this.request(`/api/user-data/brandkits/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // Brand kit collaborators
+  async addBrandKitCollaborator(brandKitId, userId) {
+    return this.request(`/api/user-data/brandkits/${brandKitId}/collaborators`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async removeBrandKitCollaborator(brandKitId, collabUserId) {
+    return this.request(`/api/user-data/brandkits/${brandKitId}/collaborators/${collabUserId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

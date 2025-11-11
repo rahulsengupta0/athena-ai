@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiDownload, FiPlus, FiTrash2, FiImage, FiLayout, FiLayers, FiGrid } from "react-icons/fi";
+import { FiArrowLeft, FiDownload, FiPlus, FiTrash2, FiImage, FiLayout, FiLayers, FiGrid, FiShare2 } from "react-icons/fi";
 import api from "../services/api";
 import AddImageModal from "./AddImageModal";
+import ShareModal from "../components/ShareModal";
 
 const BrandKitDetail = () => {
   const location = useLocation();
@@ -15,6 +16,10 @@ const BrandKitDetail = () => {
   const [selectedCategory, setSelectedCategory] = useState('logo');
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+  const [savingShare, setSavingShare] = useState(false);
 
   // Extract brand name from kitFolder
   const extractBrandName = (kitFolder) => {
@@ -108,6 +113,62 @@ const BrandKitDetail = () => {
   const closeUploadModal = () => {
     setUploadModalOpen(false);
     setSelectedImages([]);
+  };
+
+  // Open Share modal: fetch team members and pre-select current collaborators (by matching DB brand kit)
+  const openShare = async () => {
+    try {
+      const members = await api.getTeamMembers();
+      setTeamMembers(members || []);
+      // Try to find matching DB brand kit by normalized name
+      const kits = await api.getBrandKits();
+      const thisName = extractBrandName(brandKit?.kitFolder || "");
+      const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+      const matched = (kits || []).find(
+        (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+      );
+      const existing = (matched && matched.collaborators) ? matched.collaborators.map((id) => String(id)) : [];
+      setSelectedCollaborators(existing);
+      setShareOpen(true);
+    } catch (e) {
+      console.error("Error opening share:", e);
+      alert("Failed to open share dialog.");
+    }
+  };
+
+  const closeShare = () => setShareOpen(false);
+
+  const saveShare = async () => {
+    try {
+      setSavingShare(true);
+      const kits = await api.getBrandKits();
+      const thisName = extractBrandName(brandKit?.kitFolder || "");
+      const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+      const matched = (kits || []).find(
+        (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+      );
+      if (!matched?._id) {
+        alert("Could not resolve brand kit id to save collaborators.");
+        return;
+      }
+      const currentIds = (matched.collaborators || []).map((x) => String(x));
+      const toAdd = selectedCollaborators.filter((id) => !currentIds.includes(id));
+      const toRemove = currentIds.filter((id) => !selectedCollaborators.includes(id));
+
+      for (const addId of toAdd) {
+        await api.addBrandKitCollaborator(matched._id, addId);
+      }
+      for (const remId of toRemove) {
+        await api.removeBrandKitCollaborator(matched._id, remId);
+      }
+      alert("Share settings updated.");
+      setShareOpen(false);
+    } catch (e) {
+      console.error("Save share error:", e);
+      alert("Failed to save share settings.");
+    } finally {
+      setSavingShare(false);
+    }
   };
 
   const toggleImageSelection = (imageUrl, source, identifier = "") => {
@@ -281,8 +342,8 @@ const BrandKitDetail = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 32,
-        gap: 16
+        marginBottom: 24,
+        gap: 12
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
@@ -332,35 +393,65 @@ const BrandKitDetail = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={openUploadModal}
-          style={{
-            border: 'none',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
-            borderRadius: 12,
-            padding: '12px 20px',
-            cursor: 'pointer',
-            color: '#ffffff',
-            fontWeight: 600,
-            fontSize: '0.9375rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
-          }}
-        >
-          <FiPlus size={18} />
-          Add Image
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={openUploadModal}
+            style={{
+              border: 'none',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
+              borderRadius: 12,
+              padding: '10px 16px',
+              cursor: 'pointer',
+              color: '#ffffff',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+            }}
+          >
+            <FiPlus size={18} />
+            Add Image
+          </button>
+          <button
+            onClick={openShare}
+            style={{
+              border: '1.5px solid #e2e8f0',
+              background: '#ffffff',
+              borderRadius: 12,
+              padding: '10px 16px',
+              cursor: 'pointer',
+              color: '#0f172a',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#f8fafc';
+              e.target.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#ffffff';
+              e.target.style.borderColor = '#e2e8f0';
+            }}
+          >
+            <FiShare2 size={18} />
+            Share
+          </button>
+        </div>
       </div>
 
       {/* Compact Image Grid */}
@@ -966,6 +1057,17 @@ const BrandKitDetail = () => {
         onAddImages={handleAddImages}
         uploading={uploading}
         currentKitFolder={brandKit?.kitFolder}
+      />
+
+      <ShareModal
+        isOpen={shareOpen}
+        onClose={closeShare}
+        title="Share Brand Kit"
+        members={teamMembers}
+        selectedIds={selectedCollaborators}
+        setSelectedIds={setSelectedCollaborators}
+        onSave={saveShare}
+        saving={savingShare}
       />
     </div>
   );
