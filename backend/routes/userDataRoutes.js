@@ -4,6 +4,7 @@ const auth = require('../middlewares/auth');
 const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
 const BrandKit = require('../model/BrandKit');
+const s3 = require('../utils/s3');
 
 // ============= PROJECT ROUTES =============
 
@@ -135,14 +136,112 @@ router.put('/brandkits/:id', auth, async (req, res) => {
   }
 });
 
+// Helper function to delete S3 folder and all its contents
+async function deleteS3Folder(userId, kitFolder) {
+  try {
+    const Bucket = process.env.AWS_S3_BUCKET;
+    if (!Bucket) {
+      throw new Error('AWS_S3_BUCKET not configured');
+    }
+
+    const Prefix = `${userId}/brandkit/${kitFolder}/`;
+    
+    // List all objects in the folder
+    let ContinuationToken = undefined;
+    const objectsToDelete = [];
+
+    do {
+      const resp = await s3
+        .listObjectsV2({ Bucket, Prefix, ContinuationToken })
+        .promise();
+      
+      if (resp.Contents && resp.Contents.length > 0) {
+        resp.Contents.forEach((obj) => {
+          objectsToDelete.push({ Key: obj.Key });
+        });
+      }
+      
+      ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
+    } while (ContinuationToken);
+
+    // Delete all objects
+    if (objectsToDelete.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket,
+          Delete: {
+            Objects: objectsToDelete,
+            Quiet: false,
+          },
+        })
+        .promise();
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting S3 folder:', error);
+    throw error;
+  }
+}
+
 // Delete brand kit
 router.delete('/brandkits/:id', auth, async (req, res) => {
   try {
-    const brandKit = await BrandKit.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    if (!brandKit) return res.status(404).json({ msg: 'Brand kit not found' });
-    res.json({ msg: 'Brand kit deleted' });
+    // Find the brandkit first to get its name for S3 folder matching
+    const brandKit = await BrandKit.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!brandKit) {
+      return res.status(404).json({ msg: 'Brand kit not found' });
+    }
+
+    const userId = req.user.id;
+    const Bucket = process.env.AWS_S3_BUCKET;
+    
+    // Search for S3 folders matching this brandkit
+    // KitFolder format: name.toLowerCase().replace(/ /g, "-") + "-" + Date.now()
+    const normalizedName = brandKit.name.toLowerCase().replace(/ /g, '-');
+    const Prefix = `${userId}/brandkit/`;
+    
+    let ContinuationToken = undefined;
+    const foldersToDelete = new Set();
+
+    // List all brandkit folders for this user
+    do {
+      const resp = await s3
+        .listObjectsV2({ Bucket, Prefix, ContinuationToken, Delimiter: '/' })
+        .promise();
+      
+      // Check common prefixes (folders)
+      if (resp.CommonPrefixes) {
+        resp.CommonPrefixes.forEach((prefix) => {
+          const folderPath = prefix.Prefix;
+          const folderName = folderPath.replace(Prefix, '').replace('/', '');
+          // Match folders that start with the normalized brand name
+          if (folderName.startsWith(normalizedName + '-')) {
+            foldersToDelete.add(folderName);
+          }
+        });
+      }
+      
+      ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
+    } while (ContinuationToken);
+
+    // Delete all matching S3 folders
+    for (const folderName of foldersToDelete) {
+      try {
+        await deleteS3Folder(userId, folderName);
+      } catch (s3Error) {
+        console.error(`Error deleting S3 folder ${folderName}:`, s3Error);
+        // Continue with database deletion even if S3 deletion fails
+      }
+    }
+
+    // Delete from database
+    await BrandKit.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    
+    res.json({ msg: 'Brand kit deleted successfully' });
   } catch (err) {
-    res.status(500).send('Server Error');
+    console.error('Delete brand kit error:', err);
+    res.status(500).json({ error: 'Server Error', msg: err.message });
   }
 });
 

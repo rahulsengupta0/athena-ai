@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEye } from "react-icons/fi";
+import { FiEye, FiTrash2 } from "react-icons/fi";
 import api from "../../services/api";
 
 export const ProjectCards = () => {
@@ -9,6 +9,7 @@ export const ProjectCards = () => {
   const [brandKitFolders, setBrandKitFolders] = useState([]);
   const [loadingBrandKitFolders, setLoadingBrandKitFolders] = useState(true);
   const [hoveredBrandKit, setHoveredBrandKit] = useState(null);
+  const [deletingKit, setDeletingKit] = useState(null);
 
   // Helper function to extract brand name from kitFolder
   const extractBrandName = (kitFolder) => {
@@ -41,6 +42,46 @@ export const ProjectCards = () => {
       kit.name.toLowerCase().replace(/ /g, '-') === extractedName.toLowerCase().replace(/ /g, '-')
     );
     return matchedKit || { name: extractedName };
+  };
+
+  // Handle delete brand kit
+  const handleDeleteBrandKit = async (e, kitFolder) => {
+    e.stopPropagation(); // Prevent card click navigation
+    
+    const brandKitInfo = getBrandKitInfo(kitFolder);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${brandKitInfo.name}"? This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    setDeletingKit(kitFolder);
+    try {
+      // Delete from S3 using kitFolder
+      await api.deleteBrandKitFolder(kitFolder);
+      
+      // If there's a matching database record, delete it too
+      if (brandKitInfo._id) {
+        try {
+          await api.deleteBrandKit(brandKitInfo._id);
+        } catch (dbError) {
+          console.error('Error deleting from database:', dbError);
+          // Continue even if database deletion fails
+        }
+      }
+      
+      // Refresh the lists
+      const folders = await api.getBrandKitFolders();
+      setBrandKitFolders(folders || []);
+      
+      const kits = await api.getBrandKits();
+      setBrandKits(kits || []);
+    } catch (error) {
+      console.error('Error deleting brand kit:', error);
+      alert('Failed to delete brand kit: ' + (error.message || 'Unknown error'));
+    } finally {
+      setDeletingKit(null);
+    }
   };
 
   // Fetch brand kits from backend
@@ -221,9 +262,53 @@ export const ProjectCards = () => {
                       : '0 2px 8px rgba(15, 23, 42, 0.04)',
                     transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    opacity: deletingKit === f.kitFolder ? 0.6 : 1
                   }}
                 >
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => handleDeleteBrandKit(e, f.kitFolder)}
+                    disabled={deletingKit === f.kitFolder}
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      background: deletingKit === f.kitFolder 
+                        ? '#cbd5e1' 
+                        : isHovered 
+                          ? '#ef4444' 
+                          : 'rgba(239, 68, 68, 0.1)',
+                      border: 'none',
+                      borderRadius: 10,
+                      width: 36,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: deletingKit === f.kitFolder ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      zIndex: 10,
+                      color: isHovered || deletingKit === f.kitFolder ? '#ffffff' : '#ef4444',
+                      boxShadow: isHovered ? '0 4px 12px rgba(239, 68, 68, 0.3)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (deletingKit !== f.kitFolder) {
+                        e.currentTarget.style.background = '#dc2626';
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deletingKit !== f.kitFolder) {
+                        e.currentTarget.style.background = isHovered ? '#ef4444' : 'rgba(239, 68, 68, 0.1)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }
+                    }}
+                    title="Delete brand kit"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+
                   {/* Gradient accent */}
                   <div style={{
                     position: 'absolute',
