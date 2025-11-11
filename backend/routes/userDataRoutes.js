@@ -8,10 +8,14 @@ const s3 = require('../utils/s3');
 
 // ============= PROJECT ROUTES =============
 
-// Get user's projects
+// Get user's projects (own + shared as collaborator)
 router.get('/projects', auth, async (req, res) => {
   try {
-    const projects = await Project.find({ userId: req.user.id });
+    const [own, shared] = await Promise.all([
+      Project.find({ userId: req.user.id }),
+      Project.find({ collaborators: req.user.id })
+    ]);
+    const projects = [...own, ...shared];
     res.json(projects);
   } catch (err) {
     res.status(500).send('Server Error');
@@ -29,7 +33,7 @@ router.post('/projects', auth, async (req, res) => {
   }
 });
 
-// Update project
+// Update project (owner only for core fields)
 router.put('/projects/:id', auth, async (req, res) => {
   try {
     const project = await Project.findOneAndUpdate(
@@ -50,6 +54,39 @@ router.delete('/projects/:id', auth, async (req, res) => {
     const project = await Project.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
     if (!project) return res.status(404).json({ msg: 'Project not found' });
     res.json({ msg: 'Project deleted' });
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Add collaborator to project (owner only)
+router.post('/projects/:id/collaborators', auth, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ msg: 'userId is required' });
+    const project = await Project.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!project) return res.status(404).json({ msg: 'Project not found' });
+    if (!Array.isArray(project.collaborators)) project.collaborators = [];
+    if (!project.collaborators.find((id) => String(id) === String(userId))) {
+      project.collaborators.push(userId);
+      await project.save();
+    }
+    res.json(project);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Remove collaborator from project (owner only)
+router.delete('/projects/:id/collaborators/:collabUserId', auth, async (req, res) => {
+  try {
+    const project = await Project.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!project) return res.status(404).json({ msg: 'Project not found' });
+    project.collaborators = (project.collaborators || []).filter(
+      (uid) => String(uid) !== String(req.params.collabUserId)
+    );
+    await project.save();
+    res.json(project);
   } catch (err) {
     res.status(500).send('Server Error');
   }
@@ -91,10 +128,14 @@ router.delete('/favorites/:id', auth, async (req, res) => {
 
 // ============= BRAND KIT ROUTES =============
 
-// Get user's brand kits
+// Get user's brand kits (own + shared as collaborator)
 router.get('/brandkits', auth, async (req, res) => {
   try {
-    const brandKits = await BrandKit.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const [own, shared] = await Promise.all([
+      BrandKit.find({ userId: req.user.id }),
+      BrandKit.find({ collaborators: req.user.id })
+    ]);
+    const brandKits = [...own, ...shared].sort((a, b) => b.createdAt - a.createdAt);
     res.json(brandKits);
   } catch (err) {
     res.status(500).send('Server Error');
@@ -131,6 +172,39 @@ router.put('/brandkits/:id', auth, async (req, res) => {
     );
     if (!brandKit) return res.status(404).json({ msg: 'Brand kit not found' });
     res.json(brandKit);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Add collaborator to brand kit (owner only)
+router.post('/brandkits/:id/collaborators', auth, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ msg: 'userId is required' });
+    const kit = await BrandKit.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!kit) return res.status(404).json({ msg: 'Brand kit not found' });
+    if (!Array.isArray(kit.collaborators)) kit.collaborators = [];
+    if (!kit.collaborators.find((id) => String(id) === String(userId))) {
+      kit.collaborators.push(userId);
+      await kit.save();
+    }
+    res.json(kit);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Remove collaborator from brand kit (owner only)
+router.delete('/brandkits/:id/collaborators/:collabUserId', auth, async (req, res) => {
+  try {
+    const kit = await BrandKit.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!kit) return res.status(404).json({ msg: 'Brand kit not found' });
+    kit.collaborators = (kit.collaborators || []).filter(
+      (uid) => String(uid) !== String(req.params.collabUserId)
+    );
+    await kit.save();
+    res.json(kit);
   } catch (err) {
     res.status(500).send('Server Error');
   }
