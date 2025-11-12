@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Support.css';
 import ChatModal from './ChatModal'
+import EmailSupport from './EmailSupport';
 
 const Support = () => {
   const [expandedFAQ, setExpandedFAQ] = useState(null);
@@ -141,23 +142,12 @@ const Support = () => {
     if (!modalType) return null;
 
     if (modalType === 'chat') {
-      return <ChatModal />;
+      return <ChatModal onClose={() => setModalType(null)} />;
     }
 
 
     if (modalType === 'email') {
-      return (
-        <div className="modal-body">
-          <h3>Email Support</h3>
-          <p>Send us a detailed message and we’ll get back to you within 24 hours.</p>
-          <div className="form-grid">
-            <input className="form-input" placeholder="Your email" type="email" />
-            <input className="form-input" placeholder="Subject" />
-            <textarea className="form-textarea" placeholder="Describe your issue..." rows="6" />
-          </div>
-          <button className="primary-btn">Send Email</button>
-        </div>
-      );
+      return <EmailSupport onClose={() => setModalType(null)} />;
     }
 
     if (modalType === 'phone') {
