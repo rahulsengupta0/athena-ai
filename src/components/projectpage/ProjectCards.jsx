@@ -41,7 +41,7 @@ export const ProjectCards = () => {
     const matchedKit = brandKits.find(kit => 
       kit.name.toLowerCase().replace(/ /g, '-') === extractedName.toLowerCase().replace(/ /g, '-')
     );
-    return matchedKit || { name: extractedName };
+    return matchedKit || { name: extractedName, isShared: false, sharedBy: null };
   };
 
   // Handle delete brand kit
@@ -347,29 +347,49 @@ export const ProjectCards = () => {
                     </div>
                   )}
                   
-                  {/* Brand name */}
-                  <div style={{
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    fontSize: '1.25rem',
-                    marginBottom: 8,
-                    letterSpacing: '-0.01em',
-                    lineHeight: 1.3
-                  }}>
-                    {brandKitInfo.name}
-                  </div>
-                  
-                  {/* Tagline if available */}
-                  {brandKitInfo.tagline && (
+                  {/* Brand name and shared tag */}
+                  <div style={{ marginBottom: 8 }}>
                     <div style={{
-                      color: '#64748b',
-                      fontSize: '0.9375rem',
-                      marginBottom: 16,
-                      lineHeight: 1.5
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 4
                     }}>
-                      {brandKitInfo.tagline}
+                      <div style={{
+                        fontWeight: 700,
+                        color: '#0f172a',
+                        fontSize: '1.25rem',
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1.3
+                      }}>
+                        {brandKitInfo.name}
+                      </div>
+                      {brandKitInfo.isShared && brandKitInfo.sharedBy && (
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#7c3aed',
+                          background: '#f3f4f6',
+                          padding: '4px 10px',
+                          borderRadius: 12,
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          Shared by {brandKitInfo.sharedBy.name}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    {/* Tagline if available */}
+                    {brandKitInfo.tagline && (
+                      <div style={{
+                        color: '#64748b',
+                        fontSize: '0.9375rem',
+                        marginTop: 4,
+                        lineHeight: 1.5
+                      }}>
+                        {brandKitInfo.tagline}
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Preview thumbnails */}
                   <div style={{

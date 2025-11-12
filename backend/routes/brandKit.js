@@ -107,7 +107,44 @@ router.post("/generate-brandkit", authMiddleware, async (req, res) => {
   }
 });
 
-// List brand kit folders and images for the authenticated user
+// Helper function to process S3 objects into folder map
+function processS3Objects(allObjects, Bucket, folderMap = {}) {
+  for (const obj of allObjects) {
+    const key = obj.Key; // e.g., 123/brandkit/acme-123/banner.png
+    const parts = key.split("/");
+    if (parts.length < 4) continue;
+    const kitFolder = parts[2];
+    const fileName = parts[3];
+    // Extract type from filename (could be logo, banner, poster, or custom-*)
+    const type = fileName.replace(/\.[^/.]+$/, ""); // remove extension
+    if (!folderMap[kitFolder]) {
+      folderMap[kitFolder] = { kitFolder, files: {} };
+    }
+    // If it's a known type (logo, banner, poster), store it directly
+    // Otherwise, add to a custom array
+    if (['logo', 'banner', 'poster'].includes(type)) {
+      folderMap[kitFolder].files[type] = {
+        key,
+        url: `https://${Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        fileName: fileName,
+      };
+    } else {
+      // For custom files, add to a custom array
+      if (!folderMap[kitFolder].files.custom) {
+        folderMap[kitFolder].files.custom = [];
+      }
+      folderMap[kitFolder].files.custom.push({
+        key,
+        url: `https://${Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        fileName: fileName,
+        type: type
+      });
+    }
+  }
+  return folderMap;
+}
+
+// List brand kit folders and images for the authenticated user (own + shared)
 router.get("/brandkit-list", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -116,53 +153,45 @@ router.get("/brandkit-list", authMiddleware, async (req, res) => {
       return res.status(500).json({ error: "Missing AWS_S3_BUCKET" });
     }
 
-    const Prefix = `${userId}/brandkit/`;
+    // Get own brand kit folders
+    const ownPrefix = `${userId}/brandkit/`;
     let ContinuationToken = undefined;
     const allObjects = [];
 
     do {
       // Paginate in case there are many objects
       const resp = await s3
-        .listObjectsV2({ Bucket, Prefix, ContinuationToken })
+        .listObjectsV2({ Bucket, Prefix: ownPrefix, ContinuationToken })
         .promise();
       (resp.Contents || []).forEach((obj) => allObjects.push(obj));
       ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
     } while (ContinuationToken);
 
-    // Group by kit folder name: <userId>/brandkit/<kitFolder>/<type>.png
-    const folderMap = {};
-    for (const obj of allObjects) {
-      const key = obj.Key; // e.g., 123/brandkit/acme-123/banner.png
-      const parts = key.split("/");
-      if (parts.length < 4) continue;
-      const kitFolder = parts[2];
-      const fileName = parts[3];
-      // Extract type from filename (could be logo, banner, poster, or custom-*)
-      const type = fileName.replace(/\.[^/.]+$/, ""); // remove extension
-      if (!folderMap[kitFolder]) {
-        folderMap[kitFolder] = { kitFolder, files: {} };
-      }
-      // If it's a known type (logo, banner, poster), store it directly
-      // Otherwise, add to a custom array
-      if (['logo', 'banner', 'poster'].includes(type)) {
-        folderMap[kitFolder].files[type] = {
-          key,
-          url: `https://${Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
-          fileName: fileName,
-        };
-      } else {
-        // For custom files, add to a custom array
-        if (!folderMap[kitFolder].files.custom) {
-          folderMap[kitFolder].files.custom = [];
+    // Get shared brand kits and their folders
+    const sharedBrandKits = await BrandKit.find({ collaborators: userId }).populate('userId', 'firstName lastName email');
+    
+    // Fetch folders for each shared brand kit
+    for (const sharedKit of sharedBrandKits) {
+      const ownerId = sharedKit.userId._id.toString();
+      const sharedPrefix = `${ownerId}/brandkit/`;
+      let sharedContinuationToken = undefined;
+      
+      do {
+        try {
+          const resp = await s3
+            .listObjectsV2({ Bucket, Prefix: sharedPrefix, ContinuationToken: sharedContinuationToken })
+            .promise();
+          (resp.Contents || []).forEach((obj) => allObjects.push(obj));
+          sharedContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
+        } catch (s3Error) {
+          console.error(`Error fetching shared brand kit folders for owner ${ownerId}:`, s3Error);
+          break; // Continue with next shared kit
         }
-        folderMap[kitFolder].files.custom.push({
-          key,
-          url: `https://${Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
-          fileName: fileName,
-          type: type
-        });
-      }
+      } while (sharedContinuationToken);
     }
+
+    // Group by kit folder name: <userId>/brandkit/<kitFolder>/<type>.png
+    const folderMap = processS3Objects(allObjects, Bucket);
 
     const kits = Object.values(folderMap).sort((a, b) => a.kitFolder < b.kitFolder ? 1 : -1);
     res.json(kits);
