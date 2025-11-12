@@ -134,6 +134,22 @@ class ApiService {
     });
   }
 
+  // Project collaborators
+  async addProjectCollaborator(projectId, userId) {
+    return this.request(`/api/user-data/projects/${projectId}/collaborators`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async removeProjectCollaborator(projectId, collabUserId) {
+    return this.request(`/api/user-data/projects/${projectId}/collaborators/${collabUserId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
   // Favorites
   async getFavorites() {
     return this.request('/api/user-data/favorites', {
@@ -177,6 +193,12 @@ class ApiService {
     });
   }
 
+  async getBrandKitFolders() {
+    return this.request('/api/brandkit-list', {
+      headers: getAuthHeaders(),
+    });
+  }
+
   async createBrandKit(brandKitData) {
     return this.request('/api/user-data/brandkits', {
       method: 'POST',
@@ -196,6 +218,103 @@ class ApiService {
   async deleteBrandKit(id) {
     return this.request(`/api/user-data/brandkits/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // Brand kit collaborators
+  async addBrandKitCollaborator(brandKitId, userId) {
+    return this.request(`/api/user-data/brandkits/${brandKitId}/collaborators`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async removeBrandKitCollaborator(brandKitId, collabUserId) {
+    return this.request(`/api/user-data/brandkits/${brandKitId}/collaborators/${collabUserId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async deleteBrandKitFolder(kitFolder) {
+    // URL encode the kitFolder to handle special characters
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    return this.request(`/api/brandkit/${encodedKitFolder}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async addImageToBrandKit(kitFolder, imageUrl, category, fileName) {
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    return this.request(`/api/brandkit/${encodedKitFolder}/add-image`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ imageUrl, category, fileName }),
+    });
+  }
+
+  async deleteImageFromBrandKit(kitFolder, fileName) {
+    const encodedKitFolder = encodeURIComponent(kitFolder);
+    const encodedFileName = encodeURIComponent(fileName);
+    return this.request(`/api/brandkit/${encodedKitFolder}/image/${encodedFileName}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // ============= TEAM MANAGEMENT =============
+  async getTeamMembers() {
+    return this.request('/api/team/members', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getMemberProjects(memberId) {
+    return this.request(`/api/team/members/${memberId}/projects`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async inviteTeamMember(email, role = 'member') {
+    return this.request('/api/team/invite', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ email, role }),
+    });
+  }
+
+  async getTeamInvites() {
+    return this.request('/api/team/invites', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async acceptInvite(token) {
+    return this.request(`/api/team/invites/accept/${token}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async removeTeamMember(memberId) {
+    return this.request(`/api/team/members/${memberId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async cancelInvite(inviteId) {
+    return this.request(`/api/team/invites/${inviteId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getTeamStats() {
+    return this.request('/api/team/stats', {
       headers: getAuthHeaders(),
     });
   }

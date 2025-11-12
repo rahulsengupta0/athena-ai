@@ -17,6 +17,10 @@ app.use(express.json());     // JSON parsing
 const uploadRoutes = require('./routes/upload');
 app.use('/api/upload', uploadRoutes);
 
+const brandKitRoutes = require('./routes/brandKit');
+app.use('/api', brandKitRoutes);
+
+
 
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes );
@@ -55,6 +59,8 @@ app.use('/api/profile', profileRoutes);
 
 const textEnhanceRoutes = require('./routes/textEnhanceRoutes');
 app.use('/api/text-enhance', textEnhanceRoutes);
+const teamRoutes = require('./routes/teamRoutes');
+app.use('/api/team', teamRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
