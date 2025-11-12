@@ -28,7 +28,10 @@ const logoRoutes = require('./routes/logoRoutes');
 const inferenceRoutes = require('./routes/inferenceRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 const profileRoutes = require('./routes/profileRoutes');
-const deepseekRoutes = require('./routes/deepseekRoutes'); // ✅ Chatbot route
+const deepseekRoutes = require('./routes/deepseekRoutes');
+const emailRoutes = require('./routes/emailRoutes');
+
+
 
 // ✅ Mount routes
 app.use('/api/upload', uploadRoutes);
@@ -45,6 +48,8 @@ app.use('/api/inference', inferenceRoutes);
 app.use('/api/user-data', userDataRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/deepseek', deepseekRoutes); 
+app.use('/api/email', emailRoutes);
+
 
 // ✅ MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
