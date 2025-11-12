@@ -219,6 +219,7 @@
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  justify-content: center;
 }
 
 .help-container .category-filters.hidden {
@@ -733,7 +734,7 @@
 
   .help-container .quick-filters,
   .help-container .category-filters {
-    justify-content: flex-start;
+    justify-content: center;
     overflow-x: auto;
     padding-bottom: 0.5rem;
   }
