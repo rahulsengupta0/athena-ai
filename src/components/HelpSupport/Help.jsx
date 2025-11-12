@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Help.css';
 import ChatModal from './ChatModal'
 
@@ -6,6 +6,7 @@ import ChatModal from './ChatModal'
 const Help = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
+  const contactSectionRef = useRef(null);
 
   const openModal = (type) => {
     setModalType(type);
@@ -183,8 +184,7 @@ const Help = () => {
   };
 
   const handleContactSupport = () => {
-    // Add contact support logic here
-    console.log('Opening contact support...');
+    setSelectedFilter('Contact');
   };
 
   const renderContent = () => {
@@ -251,7 +251,7 @@ const Help = () => {
 
     if (selectedFilter === 'Contact') {
       return (
-        <div className="contact-section">
+        <div className="contact-section" ref={contactSectionRef}>
           <h2 className="section-title">Contact Support</h2>
           <div className="contact-options">
             <div className="contact-card">
@@ -311,6 +311,12 @@ const Help = () => {
 
     return null;
   };
+
+  useEffect(() => {
+    if (selectedFilter === 'Contact' && contactSectionRef.current) {
+      contactSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedFilter]);
 
   return (
     <div className="help-container">
