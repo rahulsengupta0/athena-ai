@@ -1,16 +1,4 @@
-.email-support-modal {
-  background: #fff;
-  border-radius: 16px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 520px;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  font-family: "Inter", sans-serif;
-  animation: fadeIn 0.3s ease;
-}
+
 
 .email-modal-header {
   display: flex;

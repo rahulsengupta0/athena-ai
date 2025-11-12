@@ -42,10 +42,9 @@ const EmailSupport = ({ onClose }) => {
   };
 
   return (
-    <div className="email-support-modal">
+    <div className="modal-body">
       <div className="email-modal-header">
         <h3>Email Support</h3>
-        <button className="close-btn" onClick={onClose}>×</button>
       </div>
 
       <p className="email-modal-subtext">
