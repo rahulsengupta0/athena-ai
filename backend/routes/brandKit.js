@@ -6,6 +6,7 @@ const { OpenAI } = require("openai");
 const axios = require("axios");
 const s3 = require("../utils/s3");
 const authMiddleware = require("../middlewares/auth");
+const BrandKit = require("../model/BrandKit");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
