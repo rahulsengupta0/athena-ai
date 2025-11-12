@@ -4,7 +4,9 @@ const auth = require('../middlewares/auth');
 const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
 const BrandKit = require('../model/BrandKit');
+const User = require('../model/User');
 const s3 = require('../utils/s3');
+const { sendBrandKitShareEmail } = require('../utils/emailService');
 
 // ============= PROJECT ROUTES =============
 
@@ -133,9 +135,27 @@ router.get('/brandkits', auth, async (req, res) => {
   try {
     const [own, shared] = await Promise.all([
       BrandKit.find({ userId: req.user.id }),
-      BrandKit.find({ collaborators: req.user.id })
+      BrandKit.find({ collaborators: req.user.id }).populate('userId', 'firstName lastName email')
     ]);
-    const brandKits = [...own, ...shared].sort((a, b) => b.createdAt - a.createdAt);
+    
+    // Mark shared kits and add owner info
+    const ownKits = own.map(kit => ({ ...kit.toObject(), isShared: false, sharedBy: null }));
+    const sharedKits = shared.map(kit => {
+      const kitObj = kit.toObject();
+      const owner = kit.userId;
+      const ownerName = owner ? `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email : 'Unknown';
+      return {
+        ...kitObj,
+        isShared: true,
+        sharedBy: {
+          id: owner._id,
+          name: ownerName,
+          email: owner.email
+        }
+      };
+    });
+    
+    const brandKits = [...ownKits, ...sharedKits].sort((a, b) => b.createdAt - a.createdAt);
     res.json(brandKits);
   } catch (err) {
     res.status(500).send('Server Error');
@@ -185,10 +205,34 @@ router.post('/brandkits/:id/collaborators', auth, async (req, res) => {
     const kit = await BrandKit.findOne({ _id: req.params.id, userId: req.user.id });
     if (!kit) return res.status(404).json({ msg: 'Brand kit not found' });
     if (!Array.isArray(kit.collaborators)) kit.collaborators = [];
-    if (!kit.collaborators.find((id) => String(id) === String(userId))) {
-      kit.collaborators.push(userId);
-      await kit.save();
+    
+    // Check if already a collaborator
+    if (kit.collaborators.find((id) => String(id) === String(userId))) {
+      return res.json(kit);
     }
+    
+    kit.collaborators.push(userId);
+    await kit.save();
+    
+    // Send email notification to the new collaborator
+    try {
+      const collaborator = await User.findById(userId);
+      if (collaborator && collaborator.email) {
+        const owner = await User.findById(req.user.id);
+        const ownerName = owner ? `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email : 'Team Owner';
+        
+        await sendBrandKitShareEmail(
+          collaborator.email,
+          kit.name,
+          ownerName
+        );
+        console.log(`Brand kit share email sent to ${collaborator.email}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending brand kit share email:', emailError);
+      // Don't fail the request if email fails, just log it
+    }
+    
     res.json(kit);
   } catch (err) {
     res.status(500).send('Server Error');

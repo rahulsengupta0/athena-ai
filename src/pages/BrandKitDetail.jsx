@@ -20,6 +20,8 @@ const BrandKitDetail = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedCollaborators, setSelectedCollaborators] = useState([]);
   const [savingShare, setSavingShare] = useState(false);
+  const [brandKitDb, setBrandKitDb] = useState(null);
+  const [collaboratorsInfo, setCollaboratorsInfo] = useState([]);
 
   // Extract brand name from kitFolder
   const extractBrandName = (kitFolder) => {
@@ -61,10 +63,46 @@ const BrandKitDetail = () => {
         if (!location.state?.brandKit) {
           setLoading(true);
         }
-        const folders = await api.getBrandKitFolders();
+        const [folders, dbKits] = await Promise.all([
+          api.getBrandKitFolders(),
+          api.getBrandKits()
+        ]);
         const found = folders.find(f => f.kitFolder === kitFolderToLoad);
         if (found) {
           setBrandKit(found);
+        }
+        
+        // Find matching database brand kit
+        const thisName = extractBrandName(kitFolderToLoad);
+        const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+        const matched = (dbKits || []).find(
+          (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+        );
+        if (matched) {
+          setBrandKitDb(matched);
+          
+          // Fetch collaborators info if there are any
+          if (matched.collaborators && matched.collaborators.length > 0) {
+            const members = await api.getTeamMembers();
+            const collabInfo = matched.collaborators.map(collabId => {
+              const member = members.find(m => 
+                String(m.userId?._id || m.userId || m._id) === String(collabId)
+              );
+              if (member) {
+                const userId = member.userId || member;
+                return {
+                  id: collabId,
+                  name: `${userId.firstName || ''} ${userId.lastName || ''}`.trim() || userId.email || 'Unknown',
+                  email: userId.email || '',
+                  avatar: userId.avatar
+                };
+              }
+              return { id: collabId, name: 'Unknown', email: '', avatar: null };
+            });
+            setCollaboratorsInfo(collabInfo);
+          } else {
+            setCollaboratorsInfo([]);
+          }
         }
       } catch (error) {
         console.error('Error fetching brand kit:', error);
@@ -120,13 +158,16 @@ const BrandKitDetail = () => {
     try {
       const members = await api.getTeamMembers();
       setTeamMembers(members || []);
-      // Try to find matching DB brand kit by normalized name
-      const kits = await api.getBrandKits();
-      const thisName = extractBrandName(brandKit?.kitFolder || "");
-      const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
-      const matched = (kits || []).find(
-        (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
-      );
+      // Use brandKitDb if available, otherwise try to find matching DB brand kit by normalized name
+      let matched = brandKitDb;
+      if (!matched) {
+        const kits = await api.getBrandKits();
+        const thisName = extractBrandName(brandKit?.kitFolder || "");
+        const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+        matched = (kits || []).find(
+          (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+        );
+      }
       const existing = (matched && matched.collaborators) ? matched.collaborators.map((id) => String(id)) : [];
       setSelectedCollaborators(existing);
       setShareOpen(true);
@@ -141,31 +182,97 @@ const BrandKitDetail = () => {
   const saveShare = async () => {
     try {
       setSavingShare(true);
-      const kits = await api.getBrandKits();
-      const thisName = extractBrandName(brandKit?.kitFolder || "");
-      const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
-      const matched = (kits || []).find(
-        (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
-      );
-      if (!matched?._id) {
-        alert("Could not resolve this Brand Kit in database to save collaborators. Please ensure a Brand Kit with this name exists.");
-        return;
+      
+      // First, try to use the brandKitDb if it exists
+      let brandKitId = brandKitDb?._id;
+      
+      // If not found, try to find it in the database
+      if (!brandKitId) {
+        const kits = await api.getBrandKits();
+        const thisName = extractBrandName(brandKit?.kitFolder || "");
+        const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+        const matched = (kits || []).find(
+          (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+        );
+        
+        if (matched?._id) {
+          brandKitId = matched._id;
+          setBrandKitDb(matched);
+        }
       }
-      const currentIds = (matched.collaborators || []).map((x) => String(x));
+      
+      // If still not found, create a new brand kit entry in the database
+      if (!brandKitId) {
+        const thisName = extractBrandName(brandKit?.kitFolder || "");
+        if (!thisName) {
+          alert("Could not determine brand kit name. Please try again.");
+          return;
+        }
+        
+        // Create the brand kit in the database
+        const newBrandKit = await api.createBrandKit({
+          name: thisName,
+          tagline: '',
+          primaryColor: '',
+          secondaryColor: '',
+          logoUrl: brandKit?.files?.logo?.url || ''
+        });
+        
+        brandKitId = newBrandKit._id;
+        setBrandKitDb(newBrandKit);
+      }
+      
+      // Get current collaborators - fetch fresh to ensure we have the latest state
+      const allKits = await api.getBrandKits();
+      const currentKit = allKits.find(k => String(k._id) === String(brandKitId));
+      const currentIds = (currentKit?.collaborators || []).map((x) => String(x));
       const toAdd = selectedCollaborators.filter((id) => !currentIds.includes(id));
       const toRemove = currentIds.filter((id) => !selectedCollaborators.includes(id));
 
       for (const addId of toAdd) {
-        await api.addBrandKitCollaborator(matched._id, addId);
+        await api.addBrandKitCollaborator(brandKitId, addId);
       }
       for (const remId of toRemove) {
-        await api.removeBrandKitCollaborator(matched._id, remId);
+        await api.removeBrandKitCollaborator(brandKitId, remId);
       }
+      
+      // Refresh collaborators info
+      const updatedKits = await api.getBrandKits();
+      const thisName = extractBrandName(brandKit?.kitFolder || "");
+      const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
+      const updated = updatedKits.find(
+        (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
+      );
+      if (updated) {
+        setBrandKitDb(updated);
+        if (updated.collaborators && updated.collaborators.length > 0) {
+          const members = await api.getTeamMembers();
+          const collabInfo = updated.collaborators.map(collabId => {
+            const member = members.find(m => 
+              String(m.userId?._id || m.userId || m._id) === String(collabId)
+            );
+            if (member) {
+              const userId = member.userId || member;
+              return {
+                id: collabId,
+                name: `${userId.firstName || ''} ${userId.lastName || ''}`.trim() || userId.email || 'Unknown',
+                email: userId.email || '',
+                avatar: userId.avatar
+              };
+            }
+            return { id: collabId, name: 'Unknown', email: '', avatar: null };
+          });
+          setCollaboratorsInfo(collabInfo);
+        } else {
+          setCollaboratorsInfo([]);
+        }
+      }
+      
       alert("Share settings updated.");
       setShareOpen(false);
     } catch (e) {
       console.error("Save share error:", e);
-      alert("Failed to save share settings.");
+      alert("Failed to save share settings: " + (e.message || "Unknown error"));
     } finally {
       setSavingShare(false);
     }
@@ -375,22 +482,66 @@ const BrandKitDetail = () => {
             Back
           </button>
           <div>
-            <h1 style={{
-              margin: 0,
-              fontSize: '2rem',
-              fontWeight: 700,
-              color: '#0f172a',
-              letterSpacing: '-0.02em'
-            }}>
-              {brandName}
-            </h1>
-            <p style={{
-              margin: '4px 0 0 0',
-              color: '#64748b',
-              fontSize: '0.9375rem'
-            }}>
-              Brand Kit Assets
-            </p>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                <h1 style={{
+                  margin: 0,
+                  fontSize: '2rem',
+                  fontWeight: 700,
+                  color: '#0f172a',
+                  letterSpacing: '-0.02em'
+                }}>
+                  {brandName}
+                </h1>
+                {brandKitDb?.isShared && brandKitDb?.sharedBy && (
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#7c3aed',
+                    background: '#f3f4f6',
+                    padding: '6px 12px',
+                    borderRadius: 12,
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    Shared by {brandKitDb.sharedBy.name}
+                  </span>
+                )}
+              </div>
+              <p style={{
+                margin: '4px 0 0 0',
+                color: '#64748b',
+                fontSize: '0.9375rem'
+              }}>
+                Brand Kit Assets
+              </p>
+              {collaboratorsInfo.length > 0 && (
+                <div style={{
+                  marginTop: 8,
+                  fontSize: '0.875rem',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}>
+                  <span>Also shared with:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {collaboratorsInfo.slice(0, 3).map((collab, idx) => (
+                      <span key={collab.id} style={{
+                        color: '#7c3aed',
+                        fontWeight: 600
+                      }}>
+                        {collab.name}{idx < Math.min(collaboratorsInfo.length, 3) - 1 ? ',' : ''}
+                      </span>
+                    ))}
+                    {collaboratorsInfo.length > 3 && (
+                      <span style={{ color: '#64748b' }}>
+                        +{collaboratorsInfo.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -169,8 +169,160 @@ const sendInviteEmail = async (email, inviteToken, inviterName, role) => {
   }
 };
 
+// Send brand kit sharing email
+const sendBrandKitShareEmail = async (email, kitName, ownerName) => {
+  try {
+    const transporter = createTransporter();
+    
+    // Frontend URL where users can view the brand kit
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    // We'll need to find the kitFolder from the kitId, but for now we'll use a direct link
+    // The frontend will need to handle routing to the brand kit
+    const joinUrl = `${frontendUrl}/projects`; // User will see shared kits in their projects page
+    
+    const mailOptions = {
+      from: `"${process.env.EMAIL_FROM_NAME || 'Athena AI'}" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
+      to: email,
+      subject: `${ownerName} shared a Brand Kit with you: ${kitName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .container {
+              background: #ffffff;
+              border: 1px solid #e5e7eb;
+              border-radius: 12px;
+              padding: 30px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+            }
+            .logo {
+              font-size: 24px;
+              font-weight: bold;
+              color: #7c3aed;
+              margin-bottom: 10px;
+            }
+            .button {
+              display: inline-block;
+              padding: 14px 32px;
+              background: #7c3aed;
+              color: #ffffff;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 600;
+              margin: 20px 0;
+              font-size: 16px;
+            }
+            .button:hover {
+              background: #6d28d9;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 12px;
+              color: #6b7280;
+              text-align: center;
+            }
+            .info-box {
+              background: #f3f4f6;
+              border-left: 4px solid #7c3aed;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 4px;
+            }
+            .kit-name {
+              font-size: 20px;
+              font-weight: 700;
+              color: #7c3aed;
+              margin: 10px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">Athena AI</div>
+              <h1>Brand Kit Shared</h1>
+            </div>
+            
+            <p>Hello,</p>
+            
+            <p><strong>${ownerName}</strong> has shared a Brand Kit with you:</p>
+            
+            <div class="info-box">
+              <div class="kit-name">${kitName}</div>
+            </div>
+            
+            <p>You now have access to this Brand Kit and can view all its assets. Click the button below to view it:</p>
+            
+            <div style="text-align: center;">
+              <a href="${joinUrl}" class="button">View Brand Kit</a>
+            </div>
+            
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6b7280; font-size: 14px;">${joinUrl}</p>
+            
+            <p style="color: #6b7280; font-size: 14px;">
+              The Brand Kit will appear in your Projects page with a "Shared by ${ownerName}" tag.
+            </p>
+            
+            <div class="footer">
+              <p>This email was sent by Athena AI Brand Kit Sharing System.</p>
+              <p>If you have any questions, please contact ${ownerName}.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Brand Kit Shared
+        
+        Hello,
+        
+        ${ownerName} has shared a Brand Kit with you: ${kitName}
+        
+        You now have access to this Brand Kit and can view all its assets.
+        
+        View the Brand Kit by visiting:
+        ${joinUrl}
+        
+        The Brand Kit will appear in your Projects page with a "Shared by ${ownerName}" tag.
+        
+        If you have any questions, please contact ${ownerName}.
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Brand kit share email sent successfully to:', email);
+    console.log('   Message ID:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Error sending brand kit share email to:', email);
+    console.error('   Error details:', error.message);
+    if (error.code) {
+      console.error('   Error code:', error.code);
+    }
+    throw error;
+  }
+};
+
 module.exports = {
   sendInviteEmail,
+  sendBrandKitShareEmail,
   createTransporter,
 };
 
