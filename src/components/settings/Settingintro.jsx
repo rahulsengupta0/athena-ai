@@ -1,8 +1,166 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Settingintro.css';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+const AVATAR_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'initials', label: 'Initials' },
+  { key: 'emoji', label: 'Emoji' },
+  { key: 'illustration', label: 'Illustrated' },
+  { key: 'abstract', label: 'Abstract' }
+];
+
+const AVATAR_CATALOG = [
+  {
+    id: 'initials-at',
+    label: 'Default Initials',
+    value: 'AT',
+    type: 'initials',
+    tags: ['default', 'text', 'brand']
+  },
+  {
+    id: 'initials-creator',
+    label: 'Creator Initials',
+    value: 'CX',
+    type: 'initials',
+    tags: ['initials', 'creative']
+  },
+  {
+    id: 'emoji-engineer',
+    label: 'Engineer',
+    value: '👩🏻‍💻',
+    type: 'emoji',
+    tags: ['tech', 'developer', 'emoji']
+  },
+  {
+    id: 'emoji-artist',
+    label: 'Designer',
+    value: '🧑🏽‍🎨',
+    type: 'emoji',
+    tags: ['creative', 'artist', 'emoji']
+  },
+  {
+    id: 'emoji-robot',
+    label: 'Robot',
+    value: '🤖',
+    type: 'emoji',
+    tags: ['ai', 'automation', 'emoji']
+  },
+  {
+    id: 'emoji-brain',
+    label: 'Thinker',
+    value: '🧠',
+    type: 'emoji',
+    tags: ['ai', 'focus', 'emoji']
+  },
+  {
+    id: 'emoji-rocket',
+    label: 'Launch',
+    value: '🚀',
+    type: 'emoji',
+    tags: ['startup', 'space', 'emoji']
+  },
+  {
+    id: 'emoji-spark',
+    label: 'Spark',
+    value: '✨',
+    type: 'emoji',
+    tags: ['magic', 'shine', 'emoji']
+  },
+  {
+    id: 'emoji-unicorn',
+    label: 'Unicorn',
+    value: '🦄',
+    type: 'emoji',
+    tags: ['growth', 'myth', 'emoji']
+  },
+  {
+    id: 'emoji-satellite',
+    label: 'Satellite',
+    value: '🛰️',
+    type: 'emoji',
+    tags: ['space', 'signal', 'emoji']
+  },
+  {
+    id: 'emoji-ruler',
+    label: 'Architect',
+    value: '📐',
+    type: 'emoji',
+    tags: ['build', 'precision', 'emoji']
+  },
+  {
+    id: 'illustration-aurora',
+    label: 'Aurora Gradient',
+    value: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=240&q=80',
+    type: 'illustration',
+    tags: ['gradient', 'vibrant', 'unsplash']
+  },
+  {
+    id: 'illustration-ocean',
+    label: 'Ocean Haze',
+    value: 'https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&w=240&q=80',
+    type: 'illustration',
+    tags: ['calm', 'ocean', 'unsplash']
+  },
+  {
+    id: 'illustration-mesh',
+    label: 'Mesh Glow',
+    value: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=240&q=80',
+    type: 'illustration',
+    tags: ['mesh', 'abstract', 'unsplash']
+  },
+  {
+    id: 'abstract-dicebear-aurora',
+    label: 'Aurora Glyph',
+    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Aurora&backgroundType=gradientLinear&size=120',
+    type: 'abstract',
+    tags: ['generated', 'gradient', 'dicebear']
+  },
+  {
+    id: 'abstract-dicebear-comet',
+    label: 'Comet Glyph',
+    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Comet&backgroundType=gradientLinear&size=120',
+    type: 'abstract',
+    tags: ['generated', 'space', 'dicebear']
+  },
+  {
+    id: 'abstract-dicebear-summit',
+    label: 'Summit Glyph',
+    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Summit&backgroundType=gradientLinear&size=120',
+    type: 'abstract',
+    tags: ['generated', 'mountain', 'dicebear']
+  },
+  {
+    id: 'illustration-avatar-1',
+    label: 'Product Designer',
+    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=ProductDesigner&skinColor=ecad80&backgroundColor=ffdfbf&size=120',
+    type: 'illustration',
+    tags: ['professional', 'people', 'dicebear']
+  },
+  {
+    id: 'illustration-avatar-2',
+    label: 'AI Researcher',
+    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=AIResearcher&skinColor=f2d3b1&backgroundColor=d3f4ff&size=120',
+    type: 'illustration',
+    tags: ['tech', 'people', 'dicebear']
+  },
+  {
+    id: 'illustration-avatar-3',
+    label: 'Growth Lead',
+    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=GrowthLead&skinColor=f9c9b6&backgroundColor=c3b1e1&size=120',
+    type: 'illustration',
+    tags: ['growth', 'people', 'dicebear']
+  },
+  {
+    id: 'illustration-avatar-4',
+    label: 'Support Hero',
+    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=SupportHero&skinColor=f9c9b6&backgroundColor=ffe0d4&size=120',
+    type: 'illustration',
+    tags: ['support', 'people', 'dicebear']
+  }
+];
 
 const Settingintro = () => {
   const { logout } = useAuth();
@@ -14,6 +172,8 @@ const Settingintro = () => {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState('AT');
   const [loading, setLoading] = useState(true);
+  const [avatarFilter, setAvatarFilter] = useState('all');
+  const [avatarSearch, setAvatarSearch] = useState('');
   
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -93,17 +253,29 @@ const Settingintro = () => {
     // Add password update logic here
   };
 
-  const avatarOptions = [
-    'AT', '👩🏻‍💻', '🧑🏽‍🎨', '🤖', '🧠', '🚀',
-    '🌈', '🎨', '✨', '🦄', '🛰️', '📐',
-    'https://i.pravatar.cc/120?img=1',
-    'https://i.pravatar.cc/120?img=5',
-    'https://i.pravatar.cc/120?img=12',
-    'https://i.pravatar.cc/120?img=23'
-  ];
+  const filteredAvatars = useMemo(() => {
+    const normalizedQuery = avatarSearch.trim().toLowerCase();
+
+    return AVATAR_CATALOG.filter((option) => {
+      const matchesFilter =
+        avatarFilter === 'all' ? true : option.type === avatarFilter;
+      const matchesSearch =
+        !normalizedQuery ||
+        option.label.toLowerCase().includes(normalizedQuery) ||
+        option.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)) ||
+        (typeof option.value === 'string' &&
+          option.value.toLowerCase().includes(normalizedQuery));
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [avatarFilter, avatarSearch]);
 
   const openAvatarModal = () => setIsAvatarModalOpen(true);
-  const closeAvatarModal = () => setIsAvatarModalOpen(false);
+  const closeAvatarModal = () => {
+    setIsAvatarModalOpen(false);
+    setAvatarSearch('');
+    setAvatarFilter('all');
+  };
   const saveAvatar = async () => {
     try {
       await api.updateProfile({ ...profileData, avatar: selectedAvatar });
@@ -382,22 +554,65 @@ const Settingintro = () => {
               <button className="modal-close" onClick={closeAvatarModal} aria-label="Close">✕</button>
             </div>
             <div className="modal-body">
-              <div className="avatar-grid">
-                {avatarOptions.map((opt) => (
-                  <button
-                    key={opt}
-                    className={`avatar-option ${selectedAvatar === opt ? 'selected' : ''}`}
-                    onClick={() => setSelectedAvatar(opt)}
-                    aria-label={`Select avatar ${opt}`}
-                  >
-                    {String(opt).startsWith('http') ? (
-                      <img src={opt} alt="avatar option" />
-                    ) : (
-                      <span>{opt}</span>
-                    )}
-                  </button>
-                ))}
+              <div className="avatar-filter-bar">
+                <div className="avatar-search">
+                  <input
+                    type="search"
+                    value={avatarSearch}
+                    onChange={(event) => setAvatarSearch(event.target.value)}
+                    placeholder="Search by vibe, role, or keyword..."
+                    aria-label="Search avatars"
+                  />
+                </div>
+                <div className="avatar-filters" role="tablist" aria-label="Avatar categories">
+                  {AVATAR_FILTERS.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      className={`avatar-filter-btn ${avatarFilter === filter.key ? 'active' : ''}`}
+                      onClick={() => setAvatarFilter(filter.key)}
+                      aria-pressed={avatarFilter === filter.key}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {filteredAvatars.length > 0 ? (
+                <div className="avatar-grid">
+                  {filteredAvatars.map((option) => (
+                    <button
+                      key={option.id}
+                      className={`avatar-option ${selectedAvatar === option.value ? 'selected' : ''}`}
+                      onClick={() => setSelectedAvatar(option.value)}
+                      aria-label={`Select avatar ${option.label}`}
+                      title={option.label}
+                    >
+                      {String(option.value).startsWith('http') ? (
+                        <img src={option.value} alt={option.label} loading="lazy" />
+                      ) : (
+                        <span>{option.value}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="avatar-empty-state">
+                  <h4>No avatars match your filters</h4>
+                  <p>Try a different keyword or reset your filters.</p>
+                  <button
+                    type="button"
+                    className="avatar-filter-reset"
+                    onClick={() => {
+                      setAvatarFilter('all');
+                      setAvatarSearch('');
+                    }}
+                  >
+                    Reset filters
+                  </button>
+                </div>
+              )}
               <div className="modal-actions">
                 <button className="secondary-btn" onClick={closeAvatarModal}>Cancel</button>
                 <button className="primary-btn" onClick={saveAvatar}>Save & Proceed</button>
