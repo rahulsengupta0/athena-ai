@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX } from 'react-icons/fi';
 import { useSidebar } from '../contexts/SidebarContext';
+import api from '../services/api';
 
 const NAV_ITEMS = [
   {
@@ -151,6 +152,8 @@ const SideBar = () => {
   const { isCollapsed, setIsCollapsed, isMobile, setIsMobile } = useSidebar();
 
   const [isOpen, setIsOpen] = React.useState(false);
+  const [profile, setProfile] = React.useState(null);
+  const [isHoveringProfile, setIsHoveringProfile] = React.useState(false);
 
   // Detect viewport size
   React.useEffect(() => {
@@ -158,7 +161,7 @@ const SideBar = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [setIsMobile]);
 
   // Auto close drawer on route change for mobile
   React.useEffect(() => {
@@ -168,7 +171,7 @@ const SideBar = () => {
   // Auto collapse sidebar on route change for desktop
   React.useEffect(() => {
     if (!isMobile) setIsCollapsed(true);
-  }, [activePath, isMobile]);
+  }, [activePath, isMobile, setIsCollapsed]);
 
   // Prevent background scroll when mobile drawer is open
   React.useEffect(() => {
@@ -183,6 +186,23 @@ const SideBar = () => {
       document.body.style.overflow = originalOverflow || '';
     };
   }, [isOpen, isMobile]);
+
+  // Fetch profile for avatar and basic info
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const data = await api.getProfile();
+        if (!isMounted) return;
+        setProfile(data || null);
+      } catch {
+        // Ignore silently if not authenticated or endpoint unavailable
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const drawerWidth = isMobile ? Math.min(window.innerWidth, 420) : (isCollapsed ? 60 : 260);
   const sidebarStyle = {
@@ -380,6 +400,7 @@ const SideBar = () => {
           padding: isCollapsed && !isMobile ? "16px 12px" : "16px 20px",
           borderTop: "1px solid #4a4594",
           background: "#4a4594",
+          position: "relative"
         }}
       >
         <div style={{ 
@@ -387,7 +408,10 @@ const SideBar = () => {
           alignItems: "center", 
           gap: 10,
           justifyContent: isCollapsed && !isMobile ? "center" : "flex-start"
-        }}>
+        }}
+        onMouseEnter={() => setIsHoveringProfile(true)}
+        onMouseLeave={() => setIsHoveringProfile(false)}
+        >
           <div
             style={{
               width: 38,
@@ -400,17 +424,100 @@ const SideBar = () => {
               alignItems: "center",
               justifyContent: "center",
               fontSize: "1.0rem",
+              overflow: "hidden"
             }}
           >
-            AT
+            {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
+              <img
+                src={profile.avatar}
+                alt="avatar"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <span>
+                {(profile?.firstName?.[0] || 'A').toUpperCase()}
+                {(profile?.lastName?.[0] || 'T').toUpperCase()}
+              </span>
+            )}
           </div>
           {(!isCollapsed || isMobile) && (
             <div>
-              <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#ffffff" }}>Alex Thompson</div>
-              <div style={{ fontSize: "0.8rem", color: "#b8b5d6" }}>Pro Plan</div>
+              <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#ffffff" }}>
+                {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
+              </div>
+              {profile?.plan && (
+                <div style={{ fontSize: "0.8rem", color: "#b8b5d6" }}>
+                  {profile.plan}
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Hover profile mini-card */}
+        {isHoveringProfile && isCollapsed && !isMobile && (
+          <div
+            style={{
+              position: "absolute",
+              left: 68,
+              bottom: 16,
+              background: "#ffffff",
+              color: "#0f172a",
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              boxShadow: "0 12px 32px rgba(15,23,42,0.18)",
+              padding: 12,
+              minWidth: 220,
+              zIndex: 1200,
+            }}
+            role="dialog"
+            aria-label="Profile preview"
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "#f1f5f9",
+                  color: "#5f5aad",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.95rem",
+                  overflow: "hidden"
+                }}
+              >
+                {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
+                  <img
+                    src={profile.avatar}
+                    alt="avatar"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span>
+                    {(profile?.firstName?.[0] || 'A').toUpperCase()}
+                    {(profile?.lastName?.[0] || 'T').toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a" }}>
+                  {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
+                </div>
+                <div style={{ fontSize: "0.82rem", color: "#475569", overflow: "hidden", textOverflow: "ellipsis" }} title={profile?.email || ''}>
+                  {profile?.email || '—'}
+                </div>
+              </div>
+            </div>
+            {profile?.plan && (
+              <div style={{ fontSize: "0.82rem", color: "#64748b" }}>
+                Plan: <span style={{ color: "#111827", fontWeight: 600 }}>{profile.plan}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
     </>

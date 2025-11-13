@@ -143,20 +143,86 @@ export const ProjectCards = ({ folderType = "recent" }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [brandKits, setBrandKits] = useState([]);
+  const [brandKitFolders, setBrandKitFolders] = useState([]);
+  const [loadingBrandKitFolders, setLoadingBrandKitFolders] = useState(true);
+  const [hoveredBrandKit, setHoveredBrandKit] = useState(null);
+  const [deletingKit, setDeletingKit] = useState(null);
 
-  // Fetch projects from backend
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await api.getProjects();
-        setProjects(data);
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setProjects([]);
-      } finally {
-        setLoading(false);
+  // Helper function to extract brand name from kitFolder
+  const extractBrandName = (kitFolder) => {
+    // kitFolder format: "name-lowercase-timestamp"
+    // Remove the last part (timestamp) and convert back to readable format
+    const parts = kitFolder.split('-');
+    // Find where the timestamp starts (last part that's all digits and long enough to be a timestamp)
+    let nameParts = [];
+    for (let i = 0; i < parts.length; i++) {
+      // Check if this part is a timestamp (all digits and at least 10 digits long)
+      if (/^\d+$/.test(parts[i]) && parts[i].length >= 10) {
+        // This is the timestamp, stop here
+        break;
       }
-    };
+      nameParts.push(parts[i]);
+    }
+    // Join and capitalize first letter of each word
+    return nameParts
+      .join(' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Match brand kit folders with brand kits from database
+  const getBrandKitInfo = (kitFolder) => {
+    const extractedName = extractBrandName(kitFolder);
+    // Try to find matching brand kit in database
+    const matchedKit = brandKits.find(kit => 
+      kit.name.toLowerCase().replace(/ /g, '-') === extractedName.toLowerCase().replace(/ /g, '-')
+    );
+    return matchedKit || { name: extractedName, isShared: false, sharedBy: null };
+  };
+
+  // Handle delete brand kit
+  const handleDeleteBrandKit = async (e, kitFolder) => {
+    e.stopPropagation(); // Prevent card click navigation
+    
+    const brandKitInfo = getBrandKitInfo(kitFolder);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${brandKitInfo.name}"? This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    setDeletingKit(kitFolder);
+    try {
+      // Delete from S3 using kitFolder
+      await api.deleteBrandKitFolder(kitFolder);
+      
+      // If there's a matching database record, delete it too
+      if (brandKitInfo._id) {
+        try {
+          await api.deleteBrandKit(brandKitInfo._id);
+        } catch (dbError) {
+          console.error('Error deleting from database:', dbError);
+          // Continue even if database deletion fails
+        }
+      }
+      
+      // Refresh the lists
+      const folders = await api.getBrandKitFolders();
+      setBrandKitFolders(folders || []);
+      
+      const kits = await api.getBrandKits();
+      setBrandKits(kits || []);
+    } catch (error) {
+      console.error('Error deleting brand kit:', error);
+      alert('Failed to delete brand kit: ' + (error.message || 'Unknown error'));
+    } finally {
+      setDeletingKit(null);
+    }
+  };
+
+  // Fetch brand kits from backend
+  useEffect(() => {
     const fetchBrandKits = async () => {
       try {
         const kits = await api.getBrandKits();
@@ -166,8 +232,20 @@ export const ProjectCards = ({ folderType = "recent" }) => {
         setBrandKits([]);
       }
     };
-    fetchProjects();
+    const fetchBrandKitFolders = async () => {
+      try {
+        setLoadingBrandKitFolders(true);
+        const folders = await api.getBrandKitFolders();
+        setBrandKitFolders(folders || []);
+      } catch (error) {
+        console.error('Error fetching brand kit folders:', error);
+        setBrandKitFolders([]);
+      } finally {
+        setLoadingBrandKitFolders(false);
+      }
+    };
     fetchBrandKits();
+    fetchBrandKitFolders();
   }, []);
 
   if (loading) {

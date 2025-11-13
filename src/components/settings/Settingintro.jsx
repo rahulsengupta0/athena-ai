@@ -29,7 +29,7 @@ const Settingintro = () => {
     confirmPassword: ''
   });
 
-  const tabs = ['Profile', 'Notifications', 'Appearance', 'Privacy', 'Billing', 'Advanced'];
+  const tabs = ['Profile'];
 
   const handleProfileChange = (field, value) => {
     setProfileData(prev => ({

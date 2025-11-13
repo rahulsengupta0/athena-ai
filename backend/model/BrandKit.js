@@ -8,6 +8,8 @@ const BrandKitSchema = new mongoose.Schema(
     primaryColor: { type: String, default: '' },
     secondaryColor: { type: String, default: '' },
     logoUrl: { type: String, default: '' },
+    // Per-item collaborators (additional users with access)
+    collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }]
   },
   { timestamps: true }
 );

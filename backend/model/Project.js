@@ -11,7 +11,9 @@ const ProjectSchema = new mongoose.Schema({
   hashtags: [{ type: String }],
   date: { type: String, default: () => new Date().toLocaleDateString() },
   size: { type: String },
-  favorite: { type: Boolean, default: false }
+  favorite: { type: Boolean, default: false },
+  // Per-item collaborators (additional users with access)
+  collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', ProjectSchema);
