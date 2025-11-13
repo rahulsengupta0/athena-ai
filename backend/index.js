@@ -52,6 +52,10 @@ app.use('/api/email', emailRoutes);
 
 
 // ✅ MongoDB connection
+const teamRoutes = require('./routes/teamRoutes');
+app.use('/api/team', teamRoutes);
+
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch((err) => console.error('❌ MongoDB error:', err.message));
