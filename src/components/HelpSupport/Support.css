@@ -521,6 +521,7 @@
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  align-items: stretch;
 }
 
 .support-container .quick-action-card {
@@ -538,6 +539,7 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: pointer;
   overflow: hidden;
+  height: 100%;
 }
 
 .support-container .quick-action-card::before {
@@ -585,13 +587,16 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--support-text);
+  flex-shrink: 0;
 }
 
 .support-container .quick-action-card p {
-  margin: 0 0 1.5rem;
+  margin: 0;
   color: var(--support-text-muted);
   font-size: 0.95rem;
   line-height: 1.6;
+  flex: 1;
+  min-height: 3rem;
 }
 
 .support-container .quick-action-card button,
@@ -610,6 +615,9 @@
   font-weight: 500;
   box-shadow: 0 3px 10px rgba(124, 58, 237, 0.2);
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
 }
 
 .support-container .quick-action-card button:hover,

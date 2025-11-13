@@ -520,6 +520,7 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.75rem;
   margin-top: 2rem;
+  align-items: stretch;
 }
 
 .help-container .contact-card {
@@ -532,6 +533,9 @@
   overflow: hidden;
   transition: border 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .help-container .contact-card::before {
@@ -580,12 +584,15 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--help-text);
+  flex-shrink: 0;
 }
 
 .help-container .contact-card p {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   color: #6b7280;
   line-height: 1.5;
+  flex: 1;
+  min-height: 3rem;
 }
 
 .help-container .contact-btn {
@@ -599,6 +606,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  margin-top: auto;
 }
 
 .help-container .contact-btn:hover {
@@ -634,6 +642,9 @@
   background: #fff;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .help-container .form-select:focus,
@@ -641,6 +652,18 @@
   outline: none;
   border-color: var(--help-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+/* Purple theme for selected option */
+.help-container .form-select option:checked {
+  background: linear-gradient(135deg, #7f56da, #a855f7) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.help-container .form-select option[selected] {
+  background: linear-gradient(135deg, #7f56da, #a855f7) !important;
+  color: #fff !important;
 }
 
 .help-container .form-textarea {
