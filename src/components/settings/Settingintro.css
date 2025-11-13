@@ -428,11 +428,82 @@
 .modal-close { background:none; border:none; font-size:1.1rem; color:#6b7280; cursor:pointer; }
 .modal-close:hover{ color:#111827; }
 .modal-body { padding: 1rem; }
+.avatar-filter-bar { display:flex; flex-direction:column; gap: 0.75rem; margin-bottom: 1rem; }
+.avatar-search input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.avatar-search input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+.avatar-filters { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.avatar-filter-btn {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.avatar-filter-btn:hover {
+  border-color: #cbd5f5;
+  color: #1f2937;
+  background: #eef2ff;
+}
+.avatar-filter-btn.active {
+  border-color: #7c3aed;
+  color: #4c1d95;
+  background: rgba(124, 58, 237, 0.12);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
 .avatar-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.75rem; }
 .avatar-option { width:100%; aspect-ratio:1/1; border-radius:12px; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; font-size:1.5rem; background:#fff; cursor:pointer; transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
 .avatar-option img{ width:100%; height:100%; object-fit:cover; border-radius:12px; }
 .avatar-option:hover{ transform:translateY(-2px); box-shadow:0 10px 20px -12px rgba(0,0,0,.25); }
 .avatar-option.selected{ border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15) inset; }
+.avatar-empty-state {
+  background: #f8fafc;
+  border: 1px dashed #cbd5f5;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.avatar-empty-state h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+.avatar-empty-state p {
+  margin: 0 0 1rem 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+.avatar-filter-reset {
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.avatar-filter-reset:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -12px rgba(124, 58, 237, 0.45);
+}
 .modal-actions { display:flex; justify-content:flex-end; align-items:center; gap: 0.5rem; margin-top: 1rem; }
 
 .save-btn:disabled:hover,
