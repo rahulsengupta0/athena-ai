@@ -3,164 +3,22 @@ import './Settingintro.css';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import multiavatar from '@multiavatar/multiavatar';
 
 const AVATAR_FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'initials', label: 'Initials' },
   { key: 'emoji', label: 'Emoji' },
-  { key: 'illustration', label: 'Illustrated' },
-  { key: 'abstract', label: 'Abstract' }
+  { key: 'female', label: 'Female Avatars' },
+  { key: 'male', label: 'Male Avatars' }
 ];
 
-const AVATAR_CATALOG = [
-  {
-    id: 'initials-at',
-    label: 'Default Initials',
-    value: 'AT',
-    type: 'initials',
-    tags: ['default', 'text', 'brand']
-  },
-  {
-    id: 'initials-creator',
-    label: 'Creator Initials',
-    value: 'CX',
-    type: 'initials',
-    tags: ['initials', 'creative']
-  },
-  {
-    id: 'emoji-engineer',
-    label: 'Engineer',
-    value: '👩🏻‍💻',
-    type: 'emoji',
-    tags: ['tech', 'developer', 'emoji']
-  },
-  {
-    id: 'emoji-artist',
-    label: 'Designer',
-    value: '🧑🏽‍🎨',
-    type: 'emoji',
-    tags: ['creative', 'artist', 'emoji']
-  },
-  {
-    id: 'emoji-robot',
-    label: 'Robot',
-    value: '🤖',
-    type: 'emoji',
-    tags: ['ai', 'automation', 'emoji']
-  },
-  {
-    id: 'emoji-brain',
-    label: 'Thinker',
-    value: '🧠',
-    type: 'emoji',
-    tags: ['ai', 'focus', 'emoji']
-  },
-  {
-    id: 'emoji-rocket',
-    label: 'Launch',
-    value: '🚀',
-    type: 'emoji',
-    tags: ['startup', 'space', 'emoji']
-  },
-  {
-    id: 'emoji-spark',
-    label: 'Spark',
-    value: '✨',
-    type: 'emoji',
-    tags: ['magic', 'shine', 'emoji']
-  },
-  {
-    id: 'emoji-unicorn',
-    label: 'Unicorn',
-    value: '🦄',
-    type: 'emoji',
-    tags: ['growth', 'myth', 'emoji']
-  },
-  {
-    id: 'emoji-satellite',
-    label: 'Satellite',
-    value: '🛰️',
-    type: 'emoji',
-    tags: ['space', 'signal', 'emoji']
-  },
-  {
-    id: 'emoji-ruler',
-    label: 'Architect',
-    value: '📐',
-    type: 'emoji',
-    tags: ['build', 'precision', 'emoji']
-  },
-  {
-    id: 'illustration-aurora',
-    label: 'Aurora Gradient',
-    value: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=240&q=80',
-    type: 'illustration',
-    tags: ['gradient', 'vibrant', 'unsplash']
-  },
-  {
-    id: 'illustration-ocean',
-    label: 'Ocean Haze',
-    value: 'https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&w=240&q=80',
-    type: 'illustration',
-    tags: ['calm', 'ocean', 'unsplash']
-  },
-  {
-    id: 'illustration-mesh',
-    label: 'Mesh Glow',
-    value: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=240&q=80',
-    type: 'illustration',
-    tags: ['mesh', 'abstract', 'unsplash']
-  },
-  {
-    id: 'abstract-dicebear-aurora',
-    label: 'Aurora Glyph',
-    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Aurora&backgroundType=gradientLinear&size=120',
-    type: 'abstract',
-    tags: ['generated', 'gradient', 'dicebear']
-  },
-  {
-    id: 'abstract-dicebear-comet',
-    label: 'Comet Glyph',
-    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Comet&backgroundType=gradientLinear&size=120',
-    type: 'abstract',
-    tags: ['generated', 'space', 'dicebear']
-  },
-  {
-    id: 'abstract-dicebear-summit',
-    label: 'Summit Glyph',
-    value: 'https://api.dicebear.com/7.x/shapes/png?seed=Summit&backgroundType=gradientLinear&size=120',
-    type: 'abstract',
-    tags: ['generated', 'mountain', 'dicebear']
-  },
-  {
-    id: 'illustration-avatar-1',
-    label: 'Product Designer',
-    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=ProductDesigner&skinColor=ecad80&backgroundColor=ffdfbf&size=120',
-    type: 'illustration',
-    tags: ['professional', 'people', 'dicebear']
-  },
-  {
-    id: 'illustration-avatar-2',
-    label: 'AI Researcher',
-    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=AIResearcher&skinColor=f2d3b1&backgroundColor=d3f4ff&size=120',
-    type: 'illustration',
-    tags: ['tech', 'people', 'dicebear']
-  },
-  {
-    id: 'illustration-avatar-3',
-    label: 'Growth Lead',
-    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=GrowthLead&skinColor=f9c9b6&backgroundColor=c3b1e1&size=120',
-    type: 'illustration',
-    tags: ['growth', 'people', 'dicebear']
-  },
-  {
-    id: 'illustration-avatar-4',
-    label: 'Support Hero',
-    value: 'https://api.dicebear.com/7.x/avataaars/png?seed=SupportHero&skinColor=f9c9b6&backgroundColor=ffe0d4&size=120',
-    type: 'illustration',
-    tags: ['support', 'people', 'dicebear']
-  }
-];
+const AVATAR_CATALOG = Array.from({ length: 12 }, (_, i) => ({
+  id: `avatar-${i}`,
+  label: `Avatar ${i + 1}`,
+  value: `User${i + 1}`, // used as input for multiavatar()
+}));
+
 
 const Settingintro = () => {
   const { logout } = useAuth();
@@ -304,13 +162,8 @@ const Settingintro = () => {
 
       <div className="avatar-section">
         <div className="avatar-container">
-          <div className="avatar">
-            {String(selectedAvatar).startsWith('http') ? (
-              <img src={selectedAvatar} alt="avatar" className="avatar-img" />
-            ) : (
-              <span>{selectedAvatar}</span>
-            )}
-          </div>
+        <div className="avatar" dangerouslySetInnerHTML={{ __html:  multiavatar(selectedAvatar || 'Default') }} />
+
           <div className="avatar-actions">
             <button className="change-avatar-btn" onClick={openAvatarModal}>Change Avatar</button>
             <p className="avatar-hint">JPG, GIF or PNG. Max size 2MB.</p>
@@ -581,19 +434,16 @@ const Settingintro = () => {
 
               {filteredAvatars.length > 0 ? (
                 <div className="avatar-grid">
-                  {filteredAvatars.map((option) => (
+                  {AVATAR_CATALOG.map((option) => (
                     <button
                       key={option.id}
                       className={`avatar-option ${selectedAvatar === option.value ? 'selected' : ''}`}
                       onClick={() => setSelectedAvatar(option.value)}
-                      aria-label={`Select avatar ${option.label}`}
-                      title={option.label}
                     >
-                      {String(option.value).startsWith('http') ? (
-                        <img src={option.value} alt={option.label} loading="lazy" />
-                      ) : (
-                        <span>{option.value}</span>
-                      )}
+                      <div
+                        dangerouslySetInnerHTML={{ __html: multiavatar(option.value) }}
+                        style={{ width: 64, height: 64 }}
+                      />
                     </button>
                   ))}
                 </div>
