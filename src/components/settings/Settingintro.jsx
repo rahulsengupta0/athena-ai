@@ -10,14 +10,31 @@ const AVATAR_FILTERS = [
   { key: 'initials', label: 'Initials' },
   { key: 'emoji', label: 'Emoji' },
   { key: 'female', label: 'Female Avatars' },
-  { key: 'male', label: 'Male Avatars' }
+  { key: 'male', label: 'Male Avatars' },
 ];
 
-const AVATAR_CATALOG = Array.from({ length: 12 }, (_, i) => ({
-  id: `avatar-${i}`,
-  label: `Avatar ${i + 1}`,
-  value: `User${i + 1}`, // used as input for multiavatar()
-}));
+const AVATAR_CATALOG = [
+  // Female-type avatars
+  { id: 'female-1', label: 'Creative Female', value: 'female_creative', type: 'female' },
+  { id: 'female-2', label: 'Professional Female', value: 'female_pro', type: 'female' },
+  { id: 'female-3', label: 'Casual Female', value: 'female_casual', type: 'female' },
+
+  // Male-type avatars
+  { id: 'male-1', label: 'Creative Male', value: 'male_creative', type: 'male' },
+  { id: 'male-2', label: 'Professional Male', value: 'male_pro', type: 'male' },
+  { id: 'male-3', label: 'Casual Male', value: 'male_casual', type: 'male' },
+
+  // Emoji-style avatars (custom seeds)
+  { id: 'emoji-1', label: 'Rocket', value: '🚀', type: 'emoji' },
+  { id: 'emoji-2', label: 'Robot', value: '🤖', type: 'emoji' },
+  { id: 'emoji-3', label: 'Spark', value: '✨', type: 'emoji' },
+
+  // Initials-based
+  { id: 'init-1', label: 'AT', value: 'AT', type: 'initials' },
+  { id: 'init-2', label: 'PS', value: 'PS', type: 'initials' },
+  
+];
+
 
 
 const Settingintro = () => {
@@ -434,16 +451,24 @@ const Settingintro = () => {
 
               {filteredAvatars.length > 0 ? (
                 <div className="avatar-grid">
-                  {AVATAR_CATALOG.map((option) => (
+                  {filteredAvatars.map((option) => (
                     <button
                       key={option.id}
                       className={`avatar-option ${selectedAvatar === option.value ? 'selected' : ''}`}
                       onClick={() => setSelectedAvatar(option.value)}
+                      aria-label={`Select avatar ${option.label}`}
+                      title={option.label}
                     >
-                      <div
-                        dangerouslySetInnerHTML={{ __html: multiavatar(option.value) }}
-                        style={{ width: 64, height: 64 }}
-                      />
+                      {option.type === 'emoji' ? (
+                        <span style={{ fontSize: '2rem' }}>{option.value}</span>
+                      ) : option.type === 'initials' ? (
+                        <div className="avatar-initials">{option.value}</div>
+                      ) : (
+                        <div
+                          dangerouslySetInnerHTML={{ __html: multiavatar(option.value) }}
+                          style={{ width: 64, height: 64 }}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
