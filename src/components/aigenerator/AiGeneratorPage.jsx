@@ -247,7 +247,7 @@ export const AiGeneratorPage = () => {
       icon: <MdOutlineContentPaste size={34} color="#9760ff" />,
       desc: 'Generate compelling copy and marketing content instantly',
       accuracy: 88,
-      to: '/create/content-writer',
+      to: '/docGenerator',
     },
     {
       title: 'Layout Builder',
