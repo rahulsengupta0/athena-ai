@@ -9,10 +9,6 @@
   --support-text: #1a1a1a;
   --support-text-muted: #6b7280;
   --support-shadow: rgba(124, 58, 237, 0.18);
-  --support-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --support-motion-fast: 0.2s;
-  --support-motion-medium: 0.45s;
-  --support-motion-slow: 0.65s;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   background-color: var(--support-muted);
   min-height: 100vh;
@@ -267,36 +263,6 @@
   animation: fadeInUp 0.4s ease-out;
 }
 
-/* Section switch animations */
-.support-container .faq-list,
-.support-container .quick-actions-grid,
-.support-container .contact-options {
-  animation: supportSectionIn var(--support-motion-medium) var(--support-motion-ease) both;
-  will-change: transform, opacity;
-}
-
-.support-container .faq-list > .faq-item,
-.support-container .quick-actions-grid > *,
-.support-container .contact-options > * {
-  animation: supportSectionItemIn calc(var(--support-motion-medium) * 0.85) var(--support-motion-ease) both;
-}
-
-.support-container .faq-list > .faq-item:nth-child(1),
-.support-container .quick-actions-grid > *:nth-child(1),
-.support-container .contact-options > *:nth-child(1) { animation-delay: 0.03s; }
-
-.support-container .faq-list > .faq-item:nth-child(2),
-.support-container .quick-actions-grid > *:nth-child(2),
-.support-container .contact-options > *:nth-child(2) { animation-delay: 0.07s; }
-
-.support-container .faq-list > .faq-item:nth-child(3),
-.support-container .quick-actions-grid > *:nth-child(3),
-.support-container .contact-options > *:nth-child(3) { animation-delay: 0.11s; }
-
-.support-container .faq-list > .faq-item:nth-child(4),
-.support-container .quick-actions-grid > *:nth-child(4),
-.support-container .contact-options > *:nth-child(4) { animation-delay: 0.15s; }
-
 .support-container .faq-section {
   margin-bottom: 3rem;
 }
@@ -521,7 +487,6 @@
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  align-items: stretch;
 }
 
 .support-container .quick-action-card {
@@ -539,7 +504,6 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: pointer;
   overflow: hidden;
-  height: 100%;
 }
 
 .support-container .quick-action-card::before {
@@ -587,16 +551,13 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--support-text);
-  flex-shrink: 0;
 }
 
 .support-container .quick-action-card p {
-  margin: 0;
+  margin: 0 0 1.5rem;
   color: var(--support-text-muted);
   font-size: 0.95rem;
   line-height: 1.6;
-  flex: 1;
-  min-height: 3rem;
 }
 
 .support-container .quick-action-card button,
@@ -615,9 +576,6 @@
   font-weight: 500;
   box-shadow: 0 3px 10px rgba(124, 58, 237, 0.2);
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  margin-top: auto;
-  flex-shrink: 0;
-  width: 100%;
 }
 
 .support-container .quick-action-card button:hover,
@@ -764,7 +722,7 @@
 @media (max-width: 768px) {
   .support-container {
     padding: 2rem 1.25rem;
-  }
+  }  
 
   .support-container .header-text h1 {
     font-size: 2rem;
@@ -865,36 +823,6 @@
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes supportSectionIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.97) rotateX(4deg);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotateX(0);
-  }
-}
-
-@keyframes supportSectionItemIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .support-container * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
   }
 }
 
