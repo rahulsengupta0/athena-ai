@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Support.css';
 import ChatModal from './ChatModal'
 import EmailSupport from './EmailSupport';
+import PhoneSupport from './PhoneSupport';
 
 const Support = () => {
   const [expandedFAQ, setExpandedFAQ] = useState(null);
@@ -151,16 +152,7 @@ const Support = () => {
     }
 
     if (modalType === 'phone') {
-      return (
-        <div className="modal-body">
-          <h3>Phone Support</h3>
-          <p>Call us at <strong>+1 (800) 555-0199</strong> Mon–Fri, 9am–6pm (UTC).</p>
-          <div className="contact-actions">
-            <a className="primary-btn" href="tel:+18005550199">Call Now</a>
-            <a className="secondary-btn" href="https://cal.com" target="_blank" rel="noreferrer">Schedule a Call</a>
-          </div>
-        </div>
-      );
+      return <PhoneSupport onClose={() => setModalType(null)} />;
     }
 
     if (modalType === 'docs') {
