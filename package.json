@@ -15,9 +15,12 @@
     "@tailwindcss/forms": "^0.5.10",
     "antd": "^5.27.4",
     "axios": "^1.12.2",
+    "docx": "^9.5.1",
     "fabric": "^6.7.1",
     "konva": "^10.0.2",
-    "openai": "^6.8.1",
+    "openai": "^6.9.0",
+    "pdfkit": "^0.17.2",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.1.1",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.1",
@@ -26,7 +29,8 @@
     "react-image-crop": "^11.0.10",
     "react-konva": "^19.0.10",
     "react-router-dom": "^7.9.1",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^4.1.13",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
