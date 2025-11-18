@@ -1,0 +1,4 @@
+/* CTA.css */
+.cta-inner{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:28px; background:linear-gradient(90deg, rgba(91,110,245,0.08), rgba(192,107,255,0.06));}
+.cta-right{ display:flex; gap:12px; align-items:center}
+@media (max-width:980px){ .cta-inner{flex-direction:column; text-align:center} .cta-right{justify-content:center} }

@@ -37,6 +37,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import BrandKitResult from './pages/BrandKitResult';
 
+import LandingPage from './pages/LandingPage';
+
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
 
@@ -100,6 +102,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
+            <Route path="/landing" element={<LandingPage />} />
             <Route
               path="/*"
               element={
