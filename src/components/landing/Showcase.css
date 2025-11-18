@@ -11,3 +11,4 @@
 
 /* responsive */
 @media (max-width:980px){ .showcase-row{flex-direction:column} .showcase-left{order:2} .showcase-right{order:1} }
+@media (max-width:700px){ .sc-mini-title{font-size:16px} .sc-chat{font-size:14px} .sc-code{font-size:12px} }
