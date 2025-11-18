@@ -58,9 +58,22 @@
 .chat-line{color:var(--text-muted); font-size:13px}
 
 /* floating chips (rotor removed) */
-.mockup-floating{position:absolute; right:-28px; bottom:-20px; display:flex; gap:12px; align-items:center}
-.tag{background:white;padding:8px 12px;border-radius:12px;border:1px solid rgba(0,0,0,0.04); font-weight:600}
-.icons-inline{display:flex; gap:8px}
+.mockup-floating{
+  position: absolute;
+  right: -28px;
+  bottom: -20px;
+  display: flex;
+  gap: 12px;
+  align-items: center
+}
+.tag{
+  background: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.04);
+  font-weight: 600
+}
+.icons-inline{ display: flex; gap: 8px }
 .ico-small{width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:9px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white; font-size:14px}
 
 /* reveal animation helpers (for scroll) */
@@ -72,4 +85,18 @@
   .hero-title{font-size:40px}
   .mockup-card{width:92%; margin-top:18px}
   .hero-right{justify-content:center}
+  .hero-inner{flex-direction:column}
+  .hero-left{text-align:center}
+  .hero-features{justify-content:center}
+}
+
+@media (max-width:700px){
+  .mockup-card{width:100%; padding:12px}
+  .mockup-canvas{flex-direction:column; gap:10px}
+  .mockup-leftpanel{width:100%; flex-direction:row; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .mockup-leftpanel::-webkit-scrollbar{display:none}
+  .mp-item{flex:0 0 auto; white-space:nowrap}
+  .mockup-main{padding:4px}
+  .mockup-stage{grid-template-columns:1fr}
+  .mockup-floating{position:static; margin-top:12px; justify-content:center}
 }
