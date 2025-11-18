@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import "./PhoneSupport.css";
 
@@ -54,17 +55,31 @@ const PhoneSupport = ({ onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // TODO: Add API call here when backend is ready
-      // const response = await fetch("http://localhost:5000/api/phone/schedule-call", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ date: preferredDate, time: preferredTime }),
-      // });
+      const response = await fetch("http://localhost:5000/api/phone/schedule-call", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          date: preferredDate,
+          time: preferredTime,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.msg || "Failed to schedule call");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setIsSubmitted(true);
+
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setIsSubmitted(true);
       
       // Reset form after showing confirmation
       setTimeout(() => {

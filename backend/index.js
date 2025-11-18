@@ -30,6 +30,7 @@ const userDataRoutes = require('./routes/userDataRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const deepseekRoutes = require('./routes/deepseekRoutes');
 const emailRoutes = require('./routes/emailRoutes');
+const phoneSupport = require("./routes/phoneSupport");
 
 
 
@@ -49,6 +50,8 @@ app.use('/api/user-data', userDataRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/deepseek', deepseekRoutes); 
 app.use('/api/email', emailRoutes);
+app.use('/api/phone', phoneSupport.router);
+
 
 
 // ✅ MongoDB connection
@@ -66,3 +69,4 @@ app.get('/', (req, res) => res.send('API is working ✅'));
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
