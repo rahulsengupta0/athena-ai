@@ -1,13 +1,32 @@
-/* Showcase.css */
-.showcase-row{ display:flex; gap:22px; align-items:flex-start; max-width:var(--max-width); margin:28px auto 0 }
-.showcase-left{ flex:0.65; padding:18px}
+.showcase-row{
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  max-width: var(--max-width);
+  margin: 28px auto 0
+}
+.showcase-left{
+  flex: 0.65;
+  padding: 18px
+}
 .sc-img.placeholder{height:260px; border-radius:14px; background: linear-gradient(180deg,#fff,#f6f9ff); border:1px solid rgba(90,95,255,0.06) }
 
-.showcase-right{ flex:0.35; display:flex; flex-direction:column; gap:16px }
-.sc-small{ padding:12px }
-.sc-mini-title{ font-weight:700; margin-bottom:8px }
-.sc-chat{ color:var(--text-muted) }
-.sc-code{ background:linear-gradient(180deg,#fbfbff,#fff); padding:10px; border-radius:8px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:13px }
+.showcase-right{ 
+  flex: 0.35; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px 
+}
+.sc-small{ padding: 12px }
+.sc-mini-title{ font-weight: 700; margin-bottom: 8px }
+.sc-chat{ color: var(--text-muted) }
+.sc-code{ 
+  background: linear-gradient(180deg,#fbfbff,#fff);
+  padding: 10px; 
+  border-radius: 8px; 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; 
+  font-size: 13px 
+}
 
 /* responsive */
 @media (max-width:980px){ .showcase-row{flex-direction:column} .showcase-left{order:2} .showcase-right{order:1} }
