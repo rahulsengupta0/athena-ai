@@ -3,6 +3,8 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
+const { auth } = require("./phoneSupport");
+
 
 // Registration route
 router.post('/register', async (req, res) => {
@@ -46,5 +48,17 @@ router.post('/login', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+
+// Get current user route
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    res.json(user);
+  } catch (err) {
+    res.status(500).send("Server Error");
+  }
+});
+
 
 module.exports = router;
