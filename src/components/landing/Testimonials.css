@@ -6,4 +6,4 @@
 
 /* responsive */
 @media (max-width:1100px){ .test-grid{ grid-template-columns:repeat(2,1fr) } }
-@media (max-width:700px){ .test-grid{ grid-template-columns:1fr } }
+@media (max-width:700px){ .test-grid{ grid-template-columns:1fr } .test-card{padding:16px} }

@@ -80,3 +80,15 @@ body,html,#root{height:100%}
   .row{flex-direction:column; align-items:stretch}
   .section{padding:40px 16px}
 }
+
+@media (max-width:700px){
+  .h2{font-size:28px}
+  .muted{font-size:14px; line-height:1.5}
+  .card{padding:14px}
+  .btn{padding:10px 16px; border-radius:12px}
+}
+
+@media (max-width:480px){
+  .h2{font-size:24px}
+  .section{padding:28px 14px}
+}
