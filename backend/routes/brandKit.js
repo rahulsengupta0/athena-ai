@@ -130,7 +130,6 @@ function processS3Objects(allObjects, Bucket, folderMap = {}) {
         fileName: fileName,
       };
     } else {
-      // For custom files, add to a custom array
       if (!folderMap[kitFolder].files.custom) {
         folderMap[kitFolder].files.custom = [];
       }

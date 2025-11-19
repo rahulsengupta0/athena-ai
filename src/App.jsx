@@ -36,6 +36,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import BrandKitResult from './pages/BrandKitResult';
+import DocumentGenerator from './components/aigenerator/DocumentGenerator';
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -84,6 +85,7 @@ const AppContent = () => {
           <Route path="/brand-kit" element={<Brandkit />} />
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
+          <Route path="/docGenerator" element={<DocumentGenerator/>} />
 
         </Routes>
       </div>
@@ -99,14 +101,17 @@ function App() {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
-            <Route
+            {<Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <AppContent />
                 </ProtectedRoute>
               }
-            />
+            /> 
+            //<Route path="/*" element={<AppContent />} />
+
+            }
           </Routes>
         </Router>
       </SidebarProvider>
