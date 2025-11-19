@@ -101,15 +101,15 @@ function App() {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
-            {/* <Route
+            {<Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <AppContent />
                 </ProtectedRoute>
               }
-            /> */
-            <Route path="/*" element={<AppContent />} />
+            /> 
+            //<Route path="/*" element={<AppContent />} />
 
             }
           </Routes>
