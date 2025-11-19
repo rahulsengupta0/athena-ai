@@ -20,6 +20,9 @@ app.use('/api/upload', uploadRoutes);
 const brandKitRoutes = require('./routes/brandKit');
 app.use('/api', brandKitRoutes);
 
+// In backend/app.js or backend/server.js
+const generateDocument = require('./routes/generateDocument');
+app.use('/api', generateDocument);
 
 
 const authRoutes = require('./routes/authRoutes');

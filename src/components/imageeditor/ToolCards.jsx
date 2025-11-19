@@ -163,6 +163,7 @@ export default function ToolCards() {
                 onClick={() => {
                   if (tool.key === 'remove') navigate('/bgremove');
                   else if (tool.key === 'enhance') navigate('/artisticiamge');
+                  else if (tool.key === 'color') navigate('/imageeditor');
                 }}
               >
                 Try Now
