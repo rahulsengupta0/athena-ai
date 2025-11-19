@@ -18,34 +18,43 @@ function DocumentGenerator() {
   const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState('');
 
-  const handleGenerate = async () => {
-    setLoading(true);
-    setFileUrl('');
+const handleGenerate = async () => {
+  setLoading(true);
+  setFileUrl('');
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/generate-document', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ prompt, format }),
+    });
 
-    try {
-      const res = await fetch('/api/generate-document', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, format }),
-      });
-
-      if (res.headers.get("content-type")?.includes("application/json")) {
-        const err = await res.json();
-        alert(err.error);
-        setLoading(false);
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setFileUrl(url);
-
-    } catch (err) {
-      alert("Error generating file.");
+    if (res.status === 401) {
+      alert("Unauthorized. Please log in again.");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
-  };
+    // The backend now sends JSON with fileUrl!
+    const result = await res.json();
+
+    if (!result.fileUrl) {
+      alert("File URL not received. Something went wrong.");
+      setLoading(false);
+      return;
+    }
+
+    setFileUrl(result.fileUrl); // Use the S3 link directly
+  } catch (err) {
+    alert("Error generating file.");
+  }
+  setLoading(false);
+};
+
+
 
   return (
     <div className="document-generator">
