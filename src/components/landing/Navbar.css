@@ -4,8 +4,8 @@
   top:0;
   z-index:80;
   backdrop-filter: blur(8px);
-  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.38));
-  border-bottom: 1px solid rgba(255,255,255,0.4);
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
   box-shadow: 0 6px 18px rgba(20,18,40,0.04);
 }
 
@@ -36,6 +36,9 @@
 /* actions */
 .nav-actions{ display:flex; gap:10px; align-items:center }
 .nav-btn{ font-size:14px; text-decoration:none; }
+.theme-btn{ width:36px; height:36px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text) }
+.theme-btn:hover{ box-shadow:0 8px 24px rgba(20,18,40,0.08) }
+.landing-page.dark .theme-btn{ background: rgba(28,30,44,0.85); border-color: rgba(255,255,255,0.12); color:#eaeaf3 }
 
 /* hamburger (mobile) */
 .hamburger{ display:none; background:none; border:0; padding:8px; cursor:pointer }

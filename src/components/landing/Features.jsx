@@ -1,4 +1,6 @@
 import React from "react";
+import Reveal from "./Reveal";
+import MotionCard from "./MotionCard";
 import "./Features.css";
 
 const featureList = [
@@ -12,21 +14,23 @@ const featureList = [
 
 const Features = () => {
   return (
-    <section className="features section">
-      <div className="center">
+    <section className="features section" id="features">
+      <Reveal className="center">
         <div className="kicker">Core tools</div>
         <h2 className="h2">Built for creators & teams</h2>
         <p className="muted">Everything you need to design, write, code and collaborate — in one workspace.</p>
-      </div>
+      </Reveal>
 
       <div className="features-grid">
         {featureList.map((f,i)=>(
-          <div key={i} className="feature card">
-            <div className="f-ico">{f.ico}</div>
-            <h3 className="f-title">{f.title}</h3>
-            <p className="f-desc">{f.desc}</p>
-            <div className="f-cta">Open <span>→</span></div>
-          </div>
+          <Reveal key={i} delay={i*0.06}>
+            <MotionCard className="feature card">
+              <div className="f-ico">{f.ico}</div>
+              <h3 className="f-title">{f.title}</h3>
+              <p className="f-desc">{f.desc}</p>
+              <div className="f-cta">Open <span>→</span></div>
+            </MotionCard>
+          </Reveal>
         ))}
       </div>
     </section>

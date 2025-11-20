@@ -27,6 +27,9 @@
   background: linear-gradient(180deg, rgba(91,110,245,0.06), rgba(192,107,255,0.04));
   box-shadow: var(--shadow-soft) 
 }
+.landing-page.dark .faq-item.open{ 
+  background: linear-gradient(180deg, rgba(91,110,245,0.12), rgba(192,107,255,0.10));
+}
 .faq-item.open .faq-a{ max-height: 500px; opacity: 1; margin-top: 8px }
 
 /* responsive */

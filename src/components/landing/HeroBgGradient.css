@@ -1,0 +1,14 @@
+.hero-bg-gradient{
+  position: absolute;
+  inset: -80px -120px -40px -120px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(91,110,245,0.16), transparent 60%),
+              radial-gradient(900px 500px at 90% 0%, rgba(192,107,255,0.16), transparent 60%);
+  animation: heroGlow 10s ease-in-out infinite alternate;
+}
+
+@keyframes heroGlow { 
+  0% { filter: blur(22px); opacity: 0.6 }
+  100% { filter: blur(28px); opacity: 0.8 }
+}
