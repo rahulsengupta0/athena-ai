@@ -23,6 +23,7 @@
 .hero-ctas { display:flex; gap:14px; margin-bottom:18px; }
 .hero-features {display:flex; gap:12px; margin-top:18px; align-items:center; flex-wrap:wrap}
 .hf-item{font-size:13px; color:var(--text-muted); padding:8px 12px; background:rgba(255,255,255,0.9); border-radius:12px; border:1px solid rgba(90,95,255,0.06)}
+.landing-page.dark .hf-item{ background: rgba(24,24,36,0.76); border:1px solid var(--glass-border) }
 
 /* mockup */
 .mockup-card{
@@ -32,6 +33,7 @@
   transform:translateY(0); animation:float 6s ease-in-out infinite;
   transition: transform .32s ease, box-shadow .32s ease;
 }
+.landing-page.dark .mockup-card{ background: var(--dark-card); border:1px solid var(--glass-border) }
 
 @keyframes float {0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}
 
@@ -60,8 +62,8 @@
 /* floating chips (rotor removed) */
 .mockup-floating{
   position: absolute;
-  right: -28px;
-  bottom: -20px;
+  right: 8px;
+  bottom: -12px;
   display: flex;
   gap: 12px;
   align-items: center
@@ -73,8 +75,9 @@
   border: 1px solid rgba(0,0,0,0.04);
   font-weight: 600
 }
+.landing-page.dark .tag{ background: rgba(24,24,36,0.76); border:1px solid var(--glass-border); color: var(--text) }
 .icons-inline{ display: flex; gap: 8px }
-.ico-small{width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:9px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white; font-size:14px}
+.ico-small{width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white; font-size:15px; box-shadow: 0 8px 20px rgba(93,69,255,0.22); border:1px solid rgba(0,0,0,0.06)}
 
 /* reveal animation helpers (for scroll) */
 .reveal { opacity:0; transform:translateY(22px) scale(.995); transition: opacity .6s ease, transform .55s cubic-bezier(.2,.9,.3,1) }
@@ -100,3 +103,4 @@
   .mockup-stage{grid-template-columns:1fr}
   .mockup-floating{position:static; margin-top:12px; justify-content:center}
 }
+.hero{position:relative; overflow:hidden}

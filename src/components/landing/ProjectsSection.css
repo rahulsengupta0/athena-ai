@@ -1,0 +1,13 @@
+.projects-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: var(--max-width); margin: 24px auto 0 }
+.proj-card{ padding: 18px }
+.pc-title{ font-weight: 700; margin-bottom: 10px }
+.pc-list{ display: grid; gap: 8px }
+.pc-item{ background: rgba(255,255,255,0.92); border: 1px solid rgba(0,0,0,0.04); border-radius: 10px; padding: 10px; color: var(--text) }
+.landing-page.dark .pc-item{ background: rgba(24,24,36,0.76); border: 1px solid var(--glass-border) }
+.pc-stats{ display: flex; gap: 12px }
+.stat-box{ flex: 1; background: linear-gradient(180deg,#fff,#fbfbff); border: 1px solid rgba(0,0,0,0.04); border-radius: 10px; padding: 12px; text-align: center }
+.landing-page.dark .stat-box{ background: linear-gradient(180deg,#1a1c2a,#1f2130); border: 1px solid var(--glass-border) }
+.stat-box span{ font-weight: 800; font-size: 18px }
+.stat-box small{ display:block; color: var(--text-muted) }
+
+@media (max-width:980px){ .projects-row{ grid-template-columns: 1fr } }

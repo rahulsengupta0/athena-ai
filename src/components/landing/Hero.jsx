@@ -1,25 +1,28 @@
 // src/components/landing/Hero.jsx
 import React from "react";
+import { motion } from "framer-motion";
+import HeroBgGradient from "./HeroBgGradient";
 import "./Hero.css";
 
 const Hero = () => {
   return (
     <section className="hero section reveal" id="hero">
+      <HeroBgGradient />
       <div className="hero-inner">
         <div className="hero-left">
           <div className="kicker">Athena AI • Creative Suite</div>
-          <h1 className="hero-title">
+          <motion.h1 className="hero-title" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}>
             What will you <span>create</span> today?
-          </h1>
-          <p className="hero-lead">
+          </motion.h1>
+          <motion.p className="hero-lead" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: "easeOut", delay: 0.05 }}>
             Design, write, generate code, and create videos — all powered by AI.
             Build solo or collaborate with your team. Fast, flexible, and beautiful.
-          </p>
+          </motion.p>
 
-          <div className="hero-ctas">
+          <motion.div className="hero-ctas" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}>
             <a className="btn btn-cta" href="/login">Start Creating</a>
             <a className="btn btn-ghost" href="/login">Explore Tools</a>
-          </div>
+          </motion.div>
 
           <div className="hero-features">
             <div className="hf-item">AI Design Generator</div>
@@ -31,7 +34,7 @@ const Hero = () => {
         </div>
 
         <div className="hero-right">
-          <div className="mockup-card">
+          <motion.div className="mockup-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}>
             <div className="mockup-topbar">
               <div className="dot red" />
               <div className="dot yellow" />
@@ -66,7 +69,6 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* small floating tag only (rotor removed) */}
             <div className="mockup-floating">
               <div className="tag">New • Templates</div>
               <div className="icons-inline">
@@ -76,7 +78,7 @@ const Hero = () => {
                 <div className="ico-small">🎬</div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

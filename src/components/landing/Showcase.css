@@ -10,6 +10,7 @@
   padding: 18px
 }
 .sc-img.placeholder{height:260px; border-radius:14px; background: linear-gradient(180deg,#fff,#f6f9ff); border:1px solid rgba(90,95,255,0.06) }
+.landing-page.dark .sc-img.placeholder{ background: linear-gradient(180deg,#1a1c2a,#202334); border-color: var(--glass-border) }
 
 .showcase-right{ 
   flex: 0.35; 
@@ -27,6 +28,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; 
   font-size: 13px 
 }
+.landing-page.dark .sc-code{ background: linear-gradient(180deg,#1a1c2a,#202334); color: var(--text) }
 
 /* responsive */
 @media (max-width:980px){ .showcase-row{flex-direction:column} .showcase-left{order:2} .showcase-right{order:1} }
