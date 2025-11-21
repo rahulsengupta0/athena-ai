@@ -18,6 +18,14 @@ const CreateSection = () => {
   const { isAuthenticated } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selected, setSelected] = React.useState(null);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth <= 700);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   const openModal = (title, desc) => {
     setSelected({ title, desc });
@@ -54,9 +62,9 @@ const CreateSection = () => {
           <div style={box}>
             <div style={title}>Design Preview</div>
             <div style={muted}>Sample generated posters and logos</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(3,1fr)", gap: 8 }}>
               {[...Array(6)].map((_, i) => (
-                <div key={i} style={{ height: 100, borderRadius: 10, background: "linear-gradient(135deg,#e6f0ff,#fff0ff)", border: "1px dashed #e5e7eb" }} />
+                <div key={i} style={{ height: isMobile ? 80 : 100, borderRadius: 10, background: "linear-gradient(135deg,#e6f0ff,#fff0ff)", border: "1px dashed #e5e7eb" }} />
               ))}
             </div>
           </div>
@@ -66,9 +74,9 @@ const CreateSection = () => {
           <div style={box}>
             <div style={title}>Image Enhancer Preview</div>
             <div style={muted}>Before vs after enhancement</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div style={{ height: 160, borderRadius: 10, background: "var(--modal-panel-bg)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>Before</div>
-              <div style={{ height: 160, borderRadius: 10, background: "var(--modal-panel-bg)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>After</div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+              <div style={{ height: isMobile ? 120 : 160, borderRadius: 10, background: "var(--modal-panel-bg)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>Before</div>
+              <div style={{ height: isMobile ? 120 : 160, borderRadius: 10, background: "var(--modal-panel-bg)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>After</div>
             </div>
           </div>
         );
@@ -89,7 +97,7 @@ const CreateSection = () => {
           <div style={box}>
             <div style={title}>Code Preview</div>
             <div style={muted}>Generated React component snippet</div>
-            <pre style={{ background: "#0f172a", color: "#e2e8f0", padding: 12, borderRadius: 10, fontSize: 12, overflowX: "auto" }}>{`
+            <pre style={{ background: "#0f172a", color: "#e2e8f0", padding: 12, borderRadius: 10, fontSize: isMobile ? 11 : 12, overflowX: "auto" }}>{`
 function Button({ label }) {
   return (
     <button style={{
@@ -130,23 +138,25 @@ export default Button;`}</pre>
           alignItems: "center",
           justifyContent: "center",
           zIndex: 99999,
-          padding: 16,
+          padding: isMobile ? 12 : 16,
         }}
       >
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            width: "min(95vw, 820px)",
+            width: isMobile ? "calc(100vw - 24px)" : "min(95vw, 820px)",
+            maxHeight: "calc(100vh - 24px)",
             background: "var(--modal-bg)",
-            borderRadius: 16,
+            borderRadius: isMobile ? 12 : 16,
             boxShadow: "0 30px 80px rgba(15,23,42,0.3)",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
             color: "var(--text)",
+            overflowY: "auto",
           }}
         >
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ padding: isMobile ? "12px 14px" : "16px 20px", borderBottom: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text)" }}>{selected.title} — Preview</div>
             <button
               onClick={closeModal}
@@ -157,7 +167,7 @@ export default Button;`}</pre>
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 12 : 16, padding: isMobile ? 12 : 16 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, background: "var(--modal-panel-bg)", border: "1px solid var(--glass-border)", borderRadius: 12, padding: 12 }}>
               <div style={{ fontWeight: 700, color: "var(--text)" }}>About this tool</div>
               <div style={{ color: "var(--text-muted)", fontSize: 14 }}>{selected.desc}</div>
@@ -172,7 +182,7 @@ export default Button;`}</pre>
               <button
                 onClick={handleGenerate}
                 style={{
-                  marginTop: 8,
+                  marginTop: isMobile ? 6 : 8,
                   alignSelf: "flex-start",
                   display: "flex",
                   alignItems: "center",
@@ -181,7 +191,7 @@ export default Button;`}</pre>
                   color: "white",
                   border: "none",
                   borderRadius: 12,
-                  padding: "10px 14px",
+                  padding: isMobile ? "8px 12px" : "10px 14px",
                   cursor: "pointer",
                 }}
               >
