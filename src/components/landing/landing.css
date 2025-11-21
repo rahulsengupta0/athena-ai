@@ -14,7 +14,7 @@
   --shadow-strong: 0 18px 50px rgba(20,18,40,0.12);
   --text: #141424;
   --text-muted: #646579;
-  --nav-bg: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.38));
+  --nav-bg: var(--section-even-bg);
   --nav-border: rgba(255,255,255,0.4);
   --section-even-bg: linear-gradient(180deg, rgba(91,110,245,0.28), rgba(192,107,255,0.24));
 }
@@ -39,7 +39,7 @@ body,html,#root{height:100%}
   --glass-border: rgba(255,255,255,0.12);
   --shadow-soft: 0 12px 30px rgba(0,0,0,0.35);
   --shadow-strong: 0 18px 50px rgba(0,0,0,0.45);
-  --nav-bg: linear-gradient(180deg, rgba(18,20,28,0.6), rgba(18,20,28,0.42));
+  --nav-bg: var(--section-even-bg);
   --nav-border: rgba(255,255,255,0.08);
   --section-even-bg: linear-gradient(180deg, rgba(91,110,245,0.35), rgba(192,107,255,0.28));
 }
