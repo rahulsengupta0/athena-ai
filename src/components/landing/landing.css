@@ -17,6 +17,10 @@
   --nav-bg: var(--section-even-bg);
   --nav-border: rgba(255,255,255,0.4);
   --section-even-bg: linear-gradient(180deg, rgba(91,110,245,0.28), rgba(192,107,255,0.24));
+  --modal-bg: #ffffff;
+  --modal-panel-bg: #f9fafb;
+  --modal-input-bg: #ffffff;
+  --overlay-bg: rgba(15,23,42,0.75);
 }
 
 *{box-sizing:border-box}
@@ -42,6 +46,10 @@ body,html,#root{height:100%}
   --nav-bg: var(--section-even-bg);
   --nav-border: rgba(255,255,255,0.08);
   --section-even-bg: linear-gradient(180deg, rgba(91,110,245,0.35), rgba(192,107,255,0.28));
+  --modal-bg: #1a1a28;
+  --modal-panel-bg: #232336;
+  --modal-input-bg: #1f2030;
+  --overlay-bg: rgba(0,0,0,0.85);
 }
 
 .landing-page .section{ position: relative; z-index: 0 }
