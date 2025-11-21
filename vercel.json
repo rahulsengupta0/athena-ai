@@ -1,0 +1,5 @@
+{
+  "env": {
+    "ROLLUP_USE_NATIVE": "false"
+  }
+}

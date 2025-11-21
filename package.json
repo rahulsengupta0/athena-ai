@@ -31,7 +31,9 @@
     "marked": "^17.0.0",
     "mongoose": "^8.19.2",
     "node-fetch": "^3.3.2",
-    "openai": "^6.8.1",
+    "openai": "^6.9.0",
+    "pdfkit": "^0.17.2",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.1.1",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.1",
@@ -41,7 +43,8 @@
     "react-konva": "^19.0.10",
     "react-router-dom": "^7.9.1",
     "recharts": "^3.3.0",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^4.1.13",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
@@ -52,6 +55,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "rollup": "^4.17.2",
     "vite": "^7.1.2"
   }
 }

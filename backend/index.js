@@ -17,6 +17,13 @@ app.use(express.json());
 // ✅ Import routes
 const uploadRoutes = require('./routes/upload');
 const brandKitRoutes = require('./routes/brandKit');
+app.use('/api', brandKitRoutes);
+
+// In backend/app.js or backend/server.js
+const generateDocument = require('./routes/generateDocument');
+app.use('/api', generateDocument);
+
+
 const authRoutes = require('./routes/authRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const applyStyleRoutes = require('./routes/applyStyle');
