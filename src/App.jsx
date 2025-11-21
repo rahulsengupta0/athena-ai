@@ -37,6 +37,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import BrandKitResult from './pages/BrandKitResult';
 import DocumentGenerator from './components/aigenerator/DocumentGenerator';
+import UiPhotoGenerator from './components/aigenerator/UiPhotoGenerator';
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -86,6 +87,7 @@ const AppContent = () => {
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
           <Route path="/docGenerator" element={<DocumentGenerator/>} />
+          <Route path="/uiphoto" element={<UiPhotoGenerator/>} />
 
         </Routes>
       </div>
