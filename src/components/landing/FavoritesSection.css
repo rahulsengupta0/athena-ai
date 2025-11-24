@@ -1,7 +1,31 @@
-.fav-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: var(--max-width); margin: 24px auto 0 }
-.fav-card{ padding: 18px }
-.fav-title{ font-weight: 700 }
-.fav-meta{ color: var(--text-muted); font-size: 13px }
+.fav-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 18px; 
+  max-width: var(--max-width); 
+  margin: 24px auto 0 
+}
+.fav-card{ 
+  padding: 18px 
+}
+.fav-title{ 
+  font-weight: 700 
+}
+.fav-meta{ 
+  color: var(--text-muted); 
+  font-size: 13px 
+}
 
-@media (max-width:980px){ .fav-grid{ grid-template-columns: repeat(2, 1fr) } }
-@media (max-width:700px){ .fav-grid{ grid-template-columns: 1fr } .fav-card{ padding: 16px } }
+@media (max-width:980px){ 
+  .fav-grid{ 
+    grid-template-columns: repeat(2, 1fr) 
+  } 
+}
+@media (max-width:700px){ 
+  .fav-grid{ 
+    grid-template-columns: 1fr 
+  } 
+  .fav-card{ 
+    padding: 16px 
+  } 
+}

@@ -23,9 +23,15 @@
   --overlay-bg: rgba(15,23,42,0.75);
 }
 
-*{box-sizing:border-box}
-html{ scroll-behavior: smooth }
-body,html,#root{height:100%}
+*{
+  box-sizing:border-box
+}
+html{ 
+  scroll-behavior: smooth 
+}
+body,html,#root{
+  height:100%
+}
 .landing-page{
   min-height:100vh;
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -78,9 +84,18 @@ body,html,#root{height:100%}
   gap:28px;
   align-items:center;
 }
-.col{flex:1}
-.center{text-align:center}
-.kicker{font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px}
+.col{
+  flex:1
+}
+.center{
+  text-align:center
+}
+.kicker{
+  font-size:13px; 
+  color:var(--text-muted); 
+  text-transform:uppercase; 
+  letter-spacing:1px
+}
 .h2{
   font-size:34px;
   font-weight:700;
@@ -115,18 +130,37 @@ body,html,#root{height:100%}
 
 /* responsive */
 @media (max-width:980px){
-  .row{flex-direction:column; align-items:stretch}
-  .section{padding:40px 16px}
+  .row{
+    flex-direction:column; 
+    align-items:stretch
+  }
+  .section{
+    padding:40px 16px
+  }
 }
 
 @media (max-width:700px){
-  .h2{font-size:28px}
-  .muted{font-size:14px; line-height:1.5}
-  .card{padding:14px}
-  .btn{padding:10px 16px; border-radius:12px}
+  .h2{
+    font-size:28px
+  }
+  .muted{
+    font-size:14px; 
+    line-height:1.5
+  }
+  .card{
+    padding:14px
+  }
+  .btn{
+    padding:10px 16px; 
+    border-radius:12px
+  }
 }
 
 @media (max-width:480px){
-  .h2{font-size:24px}
-  .section{padding:28px 14px}
+  .h2{
+    font-size:24px
+  }
+  .section{
+    padding:28px 14px
+  }
 }

@@ -1,2 +1,5 @@
 /* Footer.css */
-.footer{ padding:26px 0; color:var(--text-muted) }
+.footer{ 
+  padding:26px 0; 
+  color:var(--text-muted) 
+}
