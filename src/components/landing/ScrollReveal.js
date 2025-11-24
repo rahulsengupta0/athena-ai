@@ -1,5 +1,4 @@
 // src/components/landing/scrollReveal.js
-// Call initScrollReveal() once in your top-level landing page component (useEffect).
 
 export function initScrollReveal(root = document) {
   if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
@@ -42,4 +41,5 @@ export function initScrollReveal(root = document) {
       }
     });
   });
+
 }
