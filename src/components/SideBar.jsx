@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX, FiShield } from 'react-icons/fi';
 import { useSidebar } from '../contexts/SidebarContext';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 const NAV_ITEMS = [
@@ -150,10 +151,28 @@ const SideBar = () => {
   const location = useLocation();
   const activePath = location.pathname;
   const { isCollapsed, setIsCollapsed, isMobile, setIsMobile } = useSidebar();
+  const { isAdmin } = useAuth();
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [profile, setProfile] = React.useState(null);
   const [isHoveringProfile, setIsHoveringProfile] = React.useState(false);
+
+  // Dynamically add Admin Dash if user is admin
+  const navItems = React.useMemo(() => {
+    if (!isAdmin) return NAV_ITEMS;
+    return [
+      ...NAV_ITEMS,
+      {
+        label: "Admin Dash",
+        key: "adminDash",
+        icon: <FiShield size={18} />,
+        section: "Workspace",
+        path: "/admin-dash",
+        sublabel: "Admin",
+        sublabelClass: "pro",
+      },
+    ];
+  }, [isAdmin]);
 
   // Detect viewport size
   React.useEffect(() => {
@@ -341,7 +360,7 @@ const SideBar = () => {
               </div>
             )}
             <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-              {NAV_ITEMS.filter((item) => item.section === section).map((item) => {
+              {navItems.filter((item) => item.section === section).map((item) => {
                 const isActive = activePath === item.path;
                 return (
                   <li key={item.key}>

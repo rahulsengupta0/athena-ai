@@ -318,6 +318,39 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
+
+  // ============= TEMPLATE MANAGEMENT (ADMIN) =============
+  async uploadTemplateThumbnail(file) {
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+    return this.request('/api/templates/upload-thumbnail', {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthHeaders().Authorization
+      },
+      body: formData,
+    });
+  }
+
+  async uploadTemplateBackground(file) {
+    const formData = new FormData();
+    formData.append('background', file);
+    return this.request('/api/templates/upload-background', {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthHeaders().Authorization
+      },
+      body: formData,
+    });
+  }
+
+  async uploadTemplateJSON(templateData) {
+    return this.request('/api/templates/upload-template-json', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(templateData),
+    });
+  }
 }
 
 export default new ApiService();
