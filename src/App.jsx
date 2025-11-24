@@ -31,6 +31,7 @@ import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
 import Brandkit from './pages/Brandkit';
 import BrandKitDetail from './pages/BrandKitDetail';
+import Presentation from './pages/Presentation';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -84,6 +85,7 @@ const AppContent = () => {
           <Route path="/brand-kit" element={<Brandkit />} />
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
+          <Route path="/presentation" element={<Presentation />} />
 
         </Routes>
       </div>

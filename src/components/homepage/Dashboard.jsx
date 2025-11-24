@@ -12,6 +12,7 @@ import {
   FiZap,
   FiLayers,
   FiCopy,
+  FiLayout,
 } from "react-icons/fi";
 import Creation from "./Creation";
 import AISuggestTemp from "./AISuggestTemp";
@@ -24,6 +25,7 @@ const BUTTONS = [
   { key: "draft-document", label: "Draft a document", icon: <FiFileText /> },
   { key: "generate-code", label: "Generate code", icon: <FiCode /> },
   { key: "create-video", label: "Create video", tag: "Pro", tagColor: "#f59e0b", icon: <FiVideo /> },
+  { key: "create-presentation", label: "Presentation deck", tag: "New", tagColor: "#6366f1", icon: <FiLayout /> },
   { key: "brand-kit", label: "Brand kit", icon: <FiLayers /> },
   { key: "smart-edit", label: "Smart edit", icon: <FiScissors /> },
   { key: "ai-assistant", label: "AI assistant", icon: <FiCpu /> },
@@ -803,6 +805,10 @@ const handleGenerateLogo = async () => {
             <button
               key={btn.key}
               onClick={() => {
+                if (btn.key === "create-presentation") {
+                  navigate('/presentation');
+                  return;
+                }
                 setSelectedButton(btn.key);
                 if (btn.key !== "generate-code") {
                   setCodeMessages([]);
