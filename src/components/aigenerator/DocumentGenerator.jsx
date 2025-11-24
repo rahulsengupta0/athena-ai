@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const formats = [
   { key: 'pdf', label: 'PDF', icon: '📄' },
@@ -9,7 +9,7 @@ const formats = [
   { key: 'md', label: 'Markdown', icon: '🔖' },
   { key: 'json', label: 'JSON', icon: '⚙️' },
   { key: 'image', label: 'Image (PNG)', icon: '🖼️' },
-  { key: 'pptx', label: 'PPTX Presentation', icon: '📽️' },
+  { key: 'pptx', label: 'PPTX', icon: '📽️' },
 ];
 
 function DocumentGenerator() {
@@ -17,53 +17,91 @@ function DocumentGenerator() {
   const [format, setFormat] = useState('pdf');
   const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState('');
+  const [userDocs, setUserDocs] = useState([]);
 
-const handleGenerate = async () => {
-  setLoading(true);
-  setFileUrl('');
-  try {
+  // ---------------- FETCH USER DOCUMENTS ----------------
+  const fetchMyDocuments = async () => {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/generate-document', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ prompt, format }),
+
+    const res = await fetch('/api/my-documents', {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    if (res.status === 401) {
-      alert("Unauthorized. Please log in again.");
-      setLoading(false);
-      return;
+    const data = await res.json();
+    setUserDocs(data.files || []);
+  };
+
+  useEffect(() => {
+    fetchMyDocuments();
+  }, []);
+
+  // ---------------- GENERATE DOCUMENT ----------------
+  const handleGenerate = async () => {
+    setLoading(true);
+    setFileUrl('');
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const res = await fetch('/api/generate-document', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ prompt, format }),
+      });
+
+      const result = await res.json();
+
+      if (result.fileUrl) {
+        setFileUrl(result.fileUrl);
+        fetchMyDocuments(); // Refresh list
+      }
+
+    } catch (err) {
+      alert("Error generating file.");
     }
 
-    // The backend now sends JSON with fileUrl!
-    const result = await res.json();
+    setLoading(false);
+  };
 
-    if (!result.fileUrl) {
-      alert("File URL not received. Something went wrong.");
-      setLoading(false);
-      return;
+  // ---------------- DELETE DOCUMENT ----------------
+  const deleteDocument = async (key) => {
+    if (!window.confirm("Are you sure you want to delete this document?")) return;
+
+    const token = localStorage.getItem('token');
+
+    const res = await fetch('/api/delete-document', {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ key })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Document deleted!");
+      fetchMyDocuments();
+    } else {
+      alert("Error deleting document.");
     }
-
-    setFileUrl(result.fileUrl); // Use the S3 link directly
-  } catch (err) {
-    alert("Error generating file.");
-  }
-  setLoading(false);
-};
-
-
+  };
 
   return (
     <div className="document-generator">
+
+      {/* ========= GENERATOR CARD ========= */}
       <div className="generator-card">
         <div className="header">
           <h1 className="title">AI Document Generator</h1>
           <p className="subtitle">Transform your ideas into professional documents</p>
         </div>
 
+        {/* FORMAT SELECT */}
         <div className="format-section">
           <label className="section-label">Select Format</label>
           <div className="format-grid">
@@ -80,260 +118,83 @@ const handleGenerate = async () => {
           </div>
         </div>
 
+        {/* PROMPT INPUT */}
         <div className="prompt-section">
           <label className="section-label">Describe your document</label>
           <textarea
-            rows="5"
+            rows="4"
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            placeholder="Example: Create a quarterly business report with sales data and growth projections..."
+            placeholder="Example: Create a quarterly business report..."
             className="prompt-textarea"
           />
         </div>
 
+        {/* GENERATE BUTTON */}
         <button
           onClick={handleGenerate}
           disabled={loading || !prompt.trim()}
-          className={`generate-button ${loading ? 'loading' : ''} ${!prompt.trim() ? 'disabled' : ''}`}
+          className={`generate-button ${loading ? 'loading' : ''}`}
         >
-          {loading ? (
-            <>
-              <div className="spinner"></div>
-              Generating Document...
-            </>
-          ) : (
-            'Generate Document'
-          )}
+          {loading ? "Generating..." : "Generate Document"}
         </button>
 
+        {/* DOWNLOAD GENERATED FILE */}
         {fileUrl && (
           <div className="download-section">
-            <div className="success-message">
-              <span className="success-icon">✅</span>
-              Document generated successfully!
-            </div>
-            <a 
-              href={fileUrl} 
-              download={`generated.${format}`}
-              className="download-button"
-            >
-              <span className="download-icon">⬇️</span>
-              Download {format.toUpperCase()} File
-            </a>
+            <div className="success-message">Document generated!</div>
+            <a href={fileUrl} download className="download-button">Download File</a>
           </div>
         )}
       </div>
 
+      {/* ========= USER DOCUMENT LIST ========= */}
+      <div className="previous-docs">
+        <h2>Your Documents</h2>
+
+        {userDocs.length === 0 && <p>No documents yet.</p>}
+
+        {userDocs.map((doc, index) => (
+          <div key={index} className="doc-item">
+            <span>{doc.filename}</span>
+
+            <div className="doc-actions">
+              <a href={doc.url} download target="_blank">Download</a>
+              <button onClick={() => deleteDocument(doc.key)} className="delete-btn">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ========= STYLES ========= */}
       <style jsx>{`
-        .document-generator {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .previous-docs {
+          margin-top: 30px;
           padding: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .generator-card {
-          background: white;
-          border-radius: 20px;
-          padding: 40px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          max-width: 650px;
-          width: 100%;
-        }
-
-        .header {
-          text-align: center;
-          margin-bottom: 32px;
-        }
-
-        .title {
-          color: #2d3748;
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin: 0 0 8px 0;
-          background: linear-gradient(135deg, #7b3fe4, #5a2dbb);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-          color: #718096;
-          font-size: 1.1rem;
-          margin: 0;
-        }
-
-        .section-label {
-          display: block;
-          font-weight: 600;
-          color: #2d3748;
-          margin-bottom: 12px;
-          font-size: 1rem;
-        }
-
-        .format-section {
-          margin-bottom: 32px;
-        }
-
-        .format-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 12px;
-        }
-
-        .format-button {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 16px 12px;
-          border: 2px solid #e2e8f0;
-          border-radius: 12px;
-          background: white;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .format-button:hover {
-          border-color: #7b3fe4;
-          transform: translateY(-2px);
-        }
-
-        .format-button.active {
-          border-color: #7b3fe4;
-          background: linear-gradient(135deg, #7b3fe4, #5a2dbb);
-          color: white;
-        }
-
-        .format-icon {
-          font-size: 1.5rem;
-          margin-bottom: 8px;
-        }
-
-        .format-label {
-          font-size: 0.875rem;
-          font-weight: 500;
-          text-align: center;
-        }
-
-        .prompt-section {
-          margin-bottom: 32px;
-        }
-
-        .prompt-textarea {
-          width: 100%;
-          padding: 16px;
-          border: 2px solid #e2e8f0;
-          border-radius: 12px;
-          font-size: 1rem;
-          resize: vertical;
-          transition: border-color 0.2s ease;
-          font-family: inherit;
-        }
-
-        .prompt-textarea:focus {
-          outline: none;
-          border-color: #7b3fe4;
-          box-shadow: 0 0 0 3px rgba(123, 63, 228, 0.1);
-        }
-
-        .prompt-textarea::placeholder {
-          color: #a0aec0;
-        }
-
-        .generate-button {
-          width: 100%;
-          padding: 16px 32px;
-          background: linear-gradient(135deg, #7b3fe4, #5a2dbb);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-
-        .generate-button:hover:not(.disabled):not(.loading) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(123, 63, 228, 0.3);
-        }
-
-        .generate-button.disabled {
-          background: #cbd5e0;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .generate-button.loading {
-          cursor: not-allowed;
-        }
-
-        .spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid transparent;
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .download-section {
-          margin-top: 24px;
-          text-align: center;
-        }
-
-        .success-message {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          color: #38a169;
-          font-weight: 600;
-          margin-bottom: 16px;
-          font-size: 1.1rem;
-        }
-
-        .download-button {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 24px;
-          background: linear-gradient(135deg, #48bb78, #38a169);
-          color: white;
-          text-decoration: none;
           border-radius: 10px;
+          background: white;
+        }
+        .doc-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 10px;
+          border-bottom: 1px solid #eee;
+        }
+        .doc-actions {
+          display: flex;
+          gap: 15px;
+        }
+        .doc-item a {
+          color: #7b3fe4;
           font-weight: 600;
-          transition: all 0.2s ease;
+          text-decoration: none;
         }
-
-        .download-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
-        }
-
-        @media (max-width: 768px) {
-          .generator-card {
-            padding: 24px;
-            margin: 20px;
-          }
-
-          .title {
-            font-size: 2rem;
-          }
-
-          .format-grid {
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          }
+        .delete-btn {
+          color: red;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          font-weight: bold;
         }
       `}</style>
     </div>
