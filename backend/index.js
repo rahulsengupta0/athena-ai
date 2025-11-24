@@ -5,10 +5,20 @@ const cors = require('cors');
 
 const app = express();
 
-// app.use(cors());             // Enable CORS
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:5175',
+].filter(Boolean);
+
 app.use(cors({
-  origin: "http://localhost:5173",  // Frontend origin
-  credentials: true,                // Allow credentials (cookies, auth headers)
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
 }));
 
 app.use(express.json());     // JSON parsing

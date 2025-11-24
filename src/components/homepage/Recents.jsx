@@ -373,18 +373,42 @@ const Recents = () => {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: 'relative',
-              maxWidth: '90vw',
+              display: 'flex',
+              maxWidth: '95vw',
               maxHeight: '90vh',
               borderRadius: 12,
               overflow: 'hidden',
-              background: '#000',
+              background: '#fff',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
             }}
           >
-            <img
-              src={preview.list[preview.index]?.url}
-              alt="Preview"
-              style={{ display: 'block', maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
+            {/* Left side - Image */}
+            <div
+              style={{
+                position: 'relative',
+                flex: '1 1 60%',
+                background: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                minWidth: 0,
+                padding: 0,
+                margin: 0,
+            }}
+          >
+              <img
+                src={preview.list[preview.index]?.url}
+                alt="Preview"
+                style={{ 
+                  display: 'block', 
+                  maxWidth: '100%', 
+                  maxHeight: '90vh', 
+                  objectFit: 'contain',
+                  width: 'auto',
+                  height: 'auto',
+                  margin: 0,
+                  padding: 0,
+                }}
               onWheel={(e) => {
                 if (e.deltaY > 0) {
                   setPreview((p) => ({ ...p, index: (p.index + 1) % p.list.length }));
@@ -399,7 +423,7 @@ const Recents = () => {
               style={{
                 position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
                 width: 40, height: 40, borderRadius: 20, border: 'none', background: 'rgba(255,255,255,0.9)', cursor: 'pointer',
-                fontSize: 20, fontWeight: 700
+                  fontSize: 20, fontWeight: 700, zIndex: 10
               }}
             >
               ‹
@@ -410,32 +434,354 @@ const Recents = () => {
               style={{
                 position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                 width: 40, height: 40, borderRadius: 20, border: 'none', background: 'rgba(255,255,255,0.9)', cursor: 'pointer',
-                fontSize: 20, fontWeight: 700
+                  fontSize: 20, fontWeight: 700, zIndex: 10
               }}
             >
               ›
             </button>
+            </div>
+
+            {/* Right side - AI Editing Options */}
+            <div
+              style={{
+                flex: '1 1 40%',
+                background: '#fff',
+                padding: '24px',
+                overflowY: 'auto',
+                maxHeight: '90vh',
+                minWidth: '320px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+              className="custom-scrollbar"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#1f1b2d' }}>AI Editing Tools</h3>
             <button
               onClick={() => setPreview(null)}
               aria-label="Close"
               style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                width: 36,
-                height: 36,
-                borderRadius: 18,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
                 border: 'none',
-                background: 'rgba(255,255,255,0.9)',
+                    background: '#f5f5f5',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
+                    fontSize: '18px',
+                    color: '#666',
               }}
             >
               ×
             </button>
+              </div>
+
+              {/* AI Background Removal */}
+              <div
+                style={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8a5bff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(138, 91, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1f1b2d' }}>AI Background Removal</h4>
+                      <span style={{ 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        background: '#10b981',
+                        color: '#fff'
+                      }}>Popular</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#6f6b80', lineHeight: 1.5 }}>
+                      Remove backgrounds instantly with AI precision
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #8a5bff',
+                    background: 'transparent',
+                    color: '#8a5bff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#8a5bff';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#8a5bff';
+                  }}
+                >
+                  Try Now
+                </button>
+              </div>
+
+              {/* Smart Enhance */}
+              <div
+                style={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8a5bff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(138, 91, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1f1b2d' }}>Smart Enhance</h4>
+                      <span style={{ 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        background: '#3b82f6',
+                        color: '#fff'
+                      }}>New</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#6f6b80', lineHeight: 1.5 }}>
+                      Automatically improve image quality and lighting
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #8a5bff',
+                    background: 'transparent',
+                    color: '#8a5bff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#8a5bff';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#8a5bff';
+                  }}
+                >
+                  Try Now
+                </button>
+              </div>
+
+              {/* Color Grading */}
+              <div
+                style={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8a5bff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(138, 91, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1f1b2d' }}>Color Grading</h4>
+                      <span style={{ 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        background: '#f59e0b',
+                        color: '#fff'
+                      }}>Beta</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#6f6b80', lineHeight: 1.5 }}>
+                      Professional color correction and styling
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #8a5bff',
+                    background: 'transparent',
+                    color: '#8a5bff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#8a5bff';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#8a5bff';
+                  }}
+                >
+                  Try Now
+                </button>
+              </div>
+
+              {/* Smart Crop */}
+              <div
+                style={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8a5bff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(138, 91, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1f1b2d' }}>Smart Crop</h4>
+                      <span style={{ 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        background: '#8a5bff',
+                        color: '#fff'
+                      }}>Pro</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#6f6b80', lineHeight: 1.5 }}>
+                      AI-powered cropping for perfect composition
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #8a5bff',
+                    background: 'transparent',
+                    color: '#8a5bff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#8a5bff';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#8a5bff';
+                  }}
+                >
+                  Try Now
+                </button>
+              </div>
+
+              {/* Style Transfer */}
+              <div
+                style={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8a5bff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(138, 91, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1f1b2d' }}>Style Transfer</h4>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#6f6b80', lineHeight: 1.5 }}>
+                      Apply artistic styles using AI
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #8a5bff',
+                    background: 'transparent',
+                    color: '#8a5bff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#8a5bff';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#8a5bff';
+                  }}
+                >
+                  Try Now
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
