@@ -4,239 +4,341 @@ import {
   MdOutlineDesignServices,
   MdOutlineContentPaste,
   MdViewQuilt,
-  MdImage,
   MdFlashOn,
   MdTextFields,
   MdWidgets,
   MdAutoAwesome,
 } from 'react-icons/md';
 
+const palette = {
+  background: 'linear-gradient(145deg, #fdfaff 0%, #f4f5ff 45%, #fdf8ff 100%)',
+  surface: 'rgba(255, 255, 255, 0.9)',
+  surfaceMuted: 'rgba(255, 255, 255, 0.7)',
+  border: 'rgba(151, 96, 255, 0.15)',
+  accent: '#8a5bff',
+  accentSoft: 'rgba(138, 91, 255, 0.12)',
+  accentDark: '#5b3bd6',
+  text: '#1f1b2d',
+  textMuted: '#6f6b80',
+  success: '#1f9d75',
+};
+
 const styles = {
   page: {
     minHeight: '100vh',
-    backgroundColor: '#fafafd',
-    padding: '2rem 3rem',
-    fontFamily: "'Inter', sans-serif",
+    padding: '3rem clamp(2rem, 4vw, 5rem)',
+    fontFamily: "'Inter', 'Space Grotesk', sans-serif",
+    background: palette.background,
+    color: palette.text,
   },
-  header: {
-    marginBottom: '1rem',
+  heroGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 2fr) minmax(260px, 1fr)',
+    gap: '2rem',
+    alignItems: 'stretch',
+  },
+  heroCard: {
+    background: palette.surface,
+    borderRadius: '1.75rem',
+    padding: '2rem',
+    boxShadow: '0 35px 80px rgba(151, 96, 255, 0.18)',
+    border: `1px solid ${palette.border}`,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  glow: {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    background: 'radial-gradient(circle at 20% 10%, rgba(151,96,255,0.25), transparent 55%)',
   },
   titleRow: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.8rem',
+    position: 'relative',
+    zIndex: 1,
   },
   titleIconBackground: {
     borderRadius: '50%',
-    backgroundColor: '#ede6ff',
-    padding: '0.3rem',
+    background: palette.accentSoft,
+    padding: '0.7rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mainTitle: {
-    fontSize: '2rem',
-    fontWeight: '900',
+    fontSize: 'clamp(2rem, 4vw, 2.8rem)',
+    fontWeight: 800,
     margin: 0,
+  },
+  subtitle: {
+    fontSize: '1rem',
+    color: palette.textMuted,
+    marginTop: '0.5rem',
+    lineHeight: 1.6,
+    maxWidth: '40ch',
   },
   badgeRow: {
     display: 'flex',
-    gap: '0.5rem',
-    marginTop: '0.5rem',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    marginTop: '1.25rem',
+  },
+  badgeDot: {
+    width: '0.45rem',
+    height: '0.45rem',
+    borderRadius: '50%',
+    backgroundColor: palette.success,
+    display: 'inline-block',
   },
   badge: {
-    padding: '0.2rem 0.5rem',
-    borderRadius: '100px',
-    fontWeight: '700',
-    fontSize: '0.75rem',
+    padding: '0.4rem 0.9rem',
+    borderRadius: '999px',
+    fontWeight: 600,
+    fontSize: '0.85rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
   },
   badgeGreen: {
-    backgroundColor: '#e3f9e5',
-    color: '#05944f',
+    backgroundColor: 'rgba(31, 157, 117, 0.1)',
+    color: palette.success,
   },
   badgeGray: {
-    backgroundColor: '#f7f7f7',
-    color: '#999999',
-    fontWeight: '500',
+    backgroundColor: 'rgba(111, 107, 128, 0.1)',
+    color: palette.textMuted,
   },
-  subtitle: {
-    color: '#666666',
-    fontSize: '0.9rem',
-    marginTop: '0.5rem',
-    marginLeft: '0.4rem',
+  heroSecondary: {
+    background: 'rgba(10, 8, 20, 0.85)',
+    borderRadius: '1.5rem',
+    padding: '1.6rem',
+    color: '#f3f2ff',
+    boxShadow: '0 35px 60px rgba(15, 6, 56, 0.35)',
+    position: 'relative',
+    overflow: 'hidden',
   },
-  tabsRow: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '2rem',
-    marginBottom: '3rem',
+  heroSecondaryAccent: {
+    position: 'absolute',
+    inset: 0,
+    background: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.25), transparent 50%)',
+    opacity: 0.6,
   },
-  tab: {
-    padding: '0.5rem 1.2rem',
-    borderRadius: '0.75rem',
-    fontWeight: '700',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    userSelect: 'none',
-    boxShadow: '0 0 8px #ebe9f5',
-    border: '2px solid #ede6ff',
-    backgroundColor: 'white',
-    color: 'black',
-  },
-  tabDisabled: {
-    color: '#c6c6c6',
-    cursor: 'default',
-    backgroundColor: 'white',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit,minmax(350px,1fr))',
-    gap: '2rem',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '1.25rem',
-    padding: '1.5rem 2rem',
-    boxShadow: '0 2px 16px rgb(217 210 237 / 0.12)',
-    border: '1px solid #ebe9f5',
+  heroSecondaryContent: {
+    position: 'relative',
+    zIndex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    transition: 'all 0.25s ease',
+    gap: '1.2rem',
+  },
+  heroSecondaryTitle: {
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    margin: 0,
+  },
+  heroSecondaryDescription: {
+    color: 'rgba(243, 242, 255, 0.8)',
+    fontSize: '0.95rem',
+    lineHeight: 1.6,
+  },
+  heroSecondaryCTA: {
+    marginTop: 'auto',
+    background: '#f8f4ff',
+    color: palette.accentDark,
+    padding: '0.9rem 1.2rem',
+    borderRadius: '1rem',
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    transition: 'transform 0.2s ease',
+  },
+  grid: {
+    marginTop: '3rem',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))',
+    gap: '1.75rem',
+  },
+  card: {
+    position: 'relative',
+    background: 'rgba(255,255,255,0.95)',
+    borderRadius: '1.5rem',
+    padding: '1.9rem',
+    border: `1px solid ${palette.border}`,
+    boxShadow: '0 28px 50px rgba(96, 52, 160, 0.18)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.1rem',
+    overflow: 'hidden',
+    transition: 'transform 0.35s ease, box-shadow 0.35s ease',
     cursor: 'pointer',
   },
+  cardAccent: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(157,118,255,0.18), rgba(255,255,255,0))',
+    opacity: 0,
+    pointerEvents: 'none',
+    transition: 'opacity 0.35s ease',
+  },
   cardHover: {
-    boxShadow: '0 15px 40px rgb(217 210 237 / 0.3)',
-    transform: 'translateY(-6px) scale(1.012)',
+    transform: 'translateY(-8px)',
+    boxShadow: '0 42px 70px rgba(69, 28, 133, 0.2)',
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.7rem',
+    gap: '0.95rem',
   },
   iconBackground: {
-    padding: '0.5rem',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(154, 86, 255, 0.1)',
+    width: '3.4rem',
+    height: '3.4rem',
+    borderRadius: '1.1rem',
+    background: 'linear-gradient(135deg, rgba(138,91,255,0.22), rgba(255,255,255,0.75))',
+    border: `1px solid ${palette.border}`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
+    color: palette.accentDark,
+  },
+  cardHeaderText: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
   },
   tag: {
-    padding: '0.2rem 0.6rem',
-    borderRadius: '0.55rem',
-    fontWeight: '700',
-    fontSize: '0.7rem',
-    whiteSpace: 'nowrap',
-    color: '#9760ff',
-    backgroundColor: '#ebe6ff',
+    padding: '0.25rem 0.8rem',
+    borderRadius: '999px',
+    fontWeight: 600,
+    fontSize: '0.72rem',
+    color: palette.accentDark,
+    backgroundColor: 'rgba(138, 91, 255, 0.16)',
+    width: 'fit-content',
   },
   title: {
-    fontWeight: '700',
-    fontSize: '1.1rem',
+    fontWeight: 700,
+    fontSize: '1.18rem',
+    color: palette.text,
   },
   description: {
-    color: '#666666',
-    marginLeft: '3.5rem',
-    fontSize: '0.9rem',
+    color: palette.textMuted,
+    lineHeight: 1.6,
+  },
+  confidenceRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    flexWrap: 'wrap',
   },
   confidenceLabel: {
-    marginLeft: '3.5rem',
-    color: '#8b8b8b',
-    fontSize: '0.75rem',
+    color: palette.textMuted,
+    fontSize: '0.78rem',
   },
   progressBarBackground: {
-    width: '100%',
+    flex: 1,
     height: '8px',
-    backgroundColor: '#ebe6ff',
-    borderRadius: '6px',
-    marginTop: '0.2rem',
+    backgroundColor: 'rgba(247, 244, 255, 0.8)',
+    borderRadius: '999px',
     overflow: 'hidden',
   },
   progressBar: {
-    height: '8px',
-    borderRadius: '6px',
-    backgroundColor: '#9760ff',
-    transition: 'width 0.3s ease-in-out',
+    height: '100%',
+    borderRadius: '999px',
+    backgroundImage: 'linear-gradient(120deg, #9c6bff, #6f4bff)',
+    transition: 'width 0.4s ease',
   },
   progressPercent: {
-    marginLeft: '0.5rem',
-    color: '#9760ff',
-    fontWeight: '700',
-    fontSize: '0.8rem',
-    lineHeight: 1,
+    fontWeight: 700,
+    color: palette.accentDark,
+    fontSize: '0.85rem',
   },
   startButton: {
-    marginTop: '1rem',
-    backgroundColor: '#c7b8ff',
-    borderRadius: '0.9rem',
+    marginTop: '0.5rem',
+    background: 'linear-gradient(120deg, #9c6bff, #6f4bff)',
+    borderRadius: '1rem',
     border: 'none',
-    padding: '0.7rem 0',
-    fontWeight: '700',
+    padding: '0.85rem',
+    fontWeight: 600,
     color: '#fff',
     cursor: 'pointer',
-    transition: 'background-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '0.4rem',
+    transition: 'transform 0.15s ease, box-shadow 0.2s ease',
   },
   startButtonHover: {
-    backgroundColor: '#9760ff',
-    boxShadow: '0 4px 15px rgba(151, 96, 255, 0.4)',
+    boxShadow: '0 18px 30px rgba(128, 94, 255, 0.3)',
+    transform: 'translateY(-1px)',
   },
   startButtonActive: {
-    transform: 'scale(0.95)',
+    transform: 'scale(0.97)',
   },
   quickActionsContainer: {
     marginTop: '3rem',
-    backgroundColor: 'white',
-    borderRadius: '1rem',
-    padding: '1.5rem 2.5rem',
-    boxShadow: '0 6px 24px rgb(217 210 237 / 0.15)',
-    border: '1px solid #ebe9f5',
+    background: 'rgba(255,255,255,0.9)',
+    borderRadius: '1.5rem',
+    padding: '2rem',
+    border: `1px solid ${palette.border}`,
+    boxShadow: '0 25px 50px rgba(93,62,169,0.12)',
+  },
+  quickActionsHeader: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    marginBottom: '1.5rem',
   },
   quickActionsTitle: {
-    fontWeight: '700',
-    fontSize: '1.2rem',
-    marginBottom: '0.8rem',
+    fontWeight: 700,
+    fontSize: '1.3rem',
+    margin: 0,
   },
   quickActionsSubtitle: {
-    marginBottom: '1.5rem',
-    color: '#999999',
+    color: palette.textMuted,
+    fontSize: '0.95rem',
   },
   quickActionsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat( auto-fill, minmax(160px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     gap: '1rem',
   },
   quickActionButton: {
-    background: '#fafafd',
-    borderRadius: '1rem',
-    padding: '1rem 0',
-    fontWeight: '600',
+    background: 'rgba(252,251,255,0.8)',
+    borderRadius: '1.2rem',
+    padding: '1rem',
+    fontWeight: 600,
     fontSize: '0.9rem',
-    border: '1px solid #e6e6f7',
+    border: `1px solid ${palette.border}`,
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    transition: 'all 0.3s ease',
-    userSelect: 'none',
+    alignItems: 'flex-start',
+    gap: '0.65rem',
+    transition: 'transform 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
+    color: palette.text,
   },
   quickActionIcon: {
-    marginBottom: '0.4rem',
-    color: '#969696',
+    color: palette.accent,
   },
 };
 
 export const AiGeneratorPage = () => {
   const navigate = useNavigate();
   const [hoveredTool, setHoveredTool] = React.useState(null);
+  const [hoveredAction, setHoveredAction] = React.useState(null);
   const [btnActive, setBtnActive] = React.useState(null);
+
+  const iconColor = palette.accentDark;
 
   const tools = [
     {
       title: 'Design Generator',
       tag: 'Popular',
-      icon: <MdOutlineDesignServices size={34} color="#9760ff" />,
+      icon: <MdOutlineDesignServices size={34} color={iconColor} />,
       desc: 'Create stunning designs from text prompts using advanced AI',
       accuracy: 95,
       to: '/create/ai-design',
@@ -244,7 +346,7 @@ export const AiGeneratorPage = () => {
     {
       title: 'Content Creator',
       tag: 'Pro',
-      icon: <MdOutlineContentPaste size={34} color="#9760ff" />,
+      icon: <MdOutlineContentPaste size={34} color={iconColor} />,
       desc: 'Generate compelling copy and marketing content instantly',
       accuracy: 88,
       to: '/docGenerator',
@@ -252,133 +354,111 @@ export const AiGeneratorPage = () => {
     {
       title: 'Layout Builder',
       tag: 'New',
-      icon: <MdViewQuilt size={34} color="#9760ff" />,
+      icon: <MdViewQuilt size={34} color={iconColor} />,
       desc: 'Smart layout generation for web and mobile interfaces',
       accuracy: 92,
-      to: '/create/ai-design',
-    },
-    {
-      title: 'Image Enhancer',
-      tag: 'Beta',
-      icon: <MdImage size={34} color="#9760ff" />,
-      desc: 'AI-powered image editing and enhancement tools',
-      accuracy: 78,
-      to: '/create/image-creator',
+      to: '/canva-clone',
     },
   ];
 
-  const quickActions = [
-    { label: 'Auto Design', icon: <MdFlashOn size={24} style={styles.quickActionIcon} /> },
-    { label: 'Smart Copy', icon: <MdTextFields size={24} style={styles.quickActionIcon} /> },
-    { label: 'Layout Magic', icon: <MdWidgets size={24} style={styles.quickActionIcon} /> },
-    { label: 'AI Enhance', icon: <MdAutoAwesome size={24} style={styles.quickActionIcon} /> },
-  ];
+ 
 
   return (
     <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.titleRow}>
-          <div style={styles.titleIconBackground}>
-            <MdOutlineDesignServices size={28} color="#9760ff" />
+      <div style={styles.heroGrid}>
+        <div style={styles.heroCard}>
+          <div style={styles.glow} />
+          <div style={styles.titleRow}>
+            <div style={styles.titleIconBackground}>
+              <MdOutlineDesignServices size={28} color={palette.accentDark} />
+            </div>
+            <h1 style={styles.mainTitle}>AI Generator Studio</h1>
           </div>
-          <h1 style={styles.mainTitle}>AI Generator Studio</h1>
+          <p style={styles.subtitle}>
+            Launch the core Athena generators that cover visuals, copywriting and layout explorations.
+          </p>
+          <div style={styles.badgeRow}>
+            <span style={{ ...styles.badge, ...styles.badgeGreen }}>
+              <span style={styles.badgeDot} />
+              Models online
+            </span>
+          </div>
         </div>
-        <div style={styles.badgeRow}>
-          <span style={{ ...styles.badge, ...styles.badgeGreen }}>AI Models Online</span>
-          <span style={{ ...styles.badge, ...styles.badgeGray }}>47 generations today</span>
+        <div style={styles.heroSecondary}>
+          <div style={styles.heroSecondaryAccent} />
+          <div style={styles.heroSecondaryContent}>
+            <p style={styles.heroSecondaryTitle}>Live Studio Pulse</p>
+            <p style={styles.heroSecondaryDescription}>
+              See which generators the Athena community is leaning on right now. Launch any workspace with curated prompts ready to go.
+            </p>
+            <button
+              style={styles.heroSecondaryCTA}
+              onClick={() => navigate('/create')}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            >
+              Open Studio
+              <MdFlashOn />
+            </button>
+          </div>
         </div>
-        <p style={styles.subtitle}>Create amazing content with advanced AI tools</p>
-      </div>
-
-      {/* Tabs */}
-      <div style={styles.tabsRow}>
-        <button style={{ ...styles.tab, ...styles.tabActive }}>AI Tools</button>
-        <button style={{ ...styles.tab, ...styles.tabDisabled }}>Recent</button>
-        <button style={{ ...styles.tab, ...styles.tabDisabled }}>Analytics</button>
       </div>
 
       {/* Tools Grid */}
       <div style={styles.grid}>
-        {tools.map((tool, idx) => (
-          <div
-            key={tool.title}
-            style={
-              hoveredTool === idx
-                ? { ...styles.card, ...styles.cardHover }
-                : styles.card
-            }
-            onMouseEnter={() => setHoveredTool(idx)}
-            onMouseLeave={() => setHoveredTool(null)}
-          >
-            <div style={styles.cardHeader}>
-              <div style={styles.iconBackground}>{tool.icon}</div>
-              <span style={styles.tag}>{tool.tag}</span>
-              <span style={styles.title}>{tool.title}</span>
-            </div>
-            <div style={styles.description}>{tool.desc}</div>
-            <div>
-              <span style={styles.confidenceLabel}>AI Confidence</span>
-              <div style={styles.progressBarBackground}>
-                <div
-                  style={{ ...styles.progressBar, width: `${tool.accuracy}%` }}
-                />
-              </div>
-              <span style={styles.progressPercent}>{tool.accuracy}%</span>
-            </div>
-            <button
-              style={{
-                ...styles.startButton,
-                ...(btnActive === idx ? styles.startButtonActive : {}),
-              }}
-              onMouseDown={() => setBtnActive(idx)}
-              onMouseUp={() => setBtnActive(null)}
-              onClick={() => navigate(tool.to)}
-              onMouseLeave={() => setBtnActive(null)}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#9760ff';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(151, 96, 255, 0.4)';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#c7b8ff';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.color = '#fff';
-              }}
+        {tools.map((tool, idx) => {
+          const cardStyle =
+            hoveredTool === idx ? { ...styles.card, ...styles.cardHover } : styles.card;
+
+          return (
+            <div
+              key={tool.title}
+              style={cardStyle}
+              onMouseEnter={() => setHoveredTool(idx)}
+              onMouseLeave={() => setHoveredTool(null)}
             >
-              <MdFlashOn style={{ marginRight: '0.5rem' }} />
-              Start Creating
-            </button>
-          </div>
-        ))}
+              <div
+                style={{
+                  ...styles.cardAccent,
+                  opacity: hoveredTool === idx ? 1 : 0,
+                }}
+              />
+              <div style={styles.cardHeader}>
+                <div style={styles.iconBackground}>{tool.icon}</div>
+                <div style={styles.cardHeaderText}>
+                  <span style={styles.tag}>{tool.tag}</span>
+                  <span style={styles.title}>{tool.title}</span>
+                </div>
+              </div>
+              <div style={styles.description}>{tool.desc}</div>
+              <div style={styles.confidenceRow}>
+                <span style={styles.confidenceLabel}>AI Confidence</span>
+                <div style={styles.progressBarBackground}>
+                  <div style={{ ...styles.progressBar, width: `${tool.accuracy}%` }} />
+                </div>
+                <span style={styles.progressPercent}>{tool.accuracy}%</span>
+              </div>
+              <button
+                style={{
+                  ...styles.startButton,
+                  ...(hoveredTool === idx ? styles.startButtonHover : {}),
+                  ...(btnActive === idx ? styles.startButtonActive : {}),
+                }}
+                onMouseDown={() => setBtnActive(idx)}
+                onMouseUp={() => setBtnActive(null)}
+                onMouseLeave={() => setBtnActive(null)}
+                onClick={() => navigate(tool.to)}
+              >
+                <MdFlashOn style={{ marginRight: '0.4rem' }} />
+                Launch Tool
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Quick Actions */}
-      <div style={styles.quickActionsContainer}>
-        <p style={styles.quickActionsTitle}>Quick Actions</p>
-        <p style={styles.quickActionsSubtitle}>Jump into popular workflows</p>
-        <div style={styles.quickActionsGrid}>
-          {quickActions.map((action, idx) => (
-            <button
-              key={idx}
-              style={styles.quickActionButton}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#ede6ff';
-                e.currentTarget.style.boxShadow = '0 5px 20px rgb(217 210 237 / 0.4)';
-                e.currentTarget.style.transform = 'scale(1.08)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#fafafd';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              {action.icon}
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      
+
     </div>
   );
 };
