@@ -28,7 +28,10 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = isSignup ? '/api/auth/register' : '/api/auth/login';
+      const url = isSignup
+  ? `${import.meta.env.VITE_API_BASE_URL}/auth/register`
+  : `${import.meta.env.VITE_API_BASE_URL}/auth/login`;
+
       const res = await axios.post(url, formData);
       login(res.data.token);
       navigate('/');
