@@ -9,6 +9,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://athena-ai-1-5pif.onrender.com",  // ADD THIS
+  "https://athena-ai-theta.vercel.app",
 ];
 
 app.use(
