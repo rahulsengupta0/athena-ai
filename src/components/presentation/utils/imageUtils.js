@@ -53,6 +53,34 @@ export const loadImageFromFile = (file) => {
 };
 
 /**
+ * Load image metadata from a source string (URL or data URL)
+ * @param {string} src
+ * @returns {Promise<Object>} Promise resolving to { src, width, height }
+ */
+export const loadImageFromSource = (src) => {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      reject(new Error('Image source is required'));
+      return;
+    }
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      resolve({
+        src,
+        width: img.width,
+        height: img.height,
+      });
+    };
+    img.onerror = () => {
+      reject(new Error('Failed to load image source'));
+    };
+    img.src = src;
+  });
+};
+
+/**
  * Create an image layer object
  * @param {Object} imageData - Image data with src, width, height
  * @param {Object} coordinates - Position coordinates { x, y }
