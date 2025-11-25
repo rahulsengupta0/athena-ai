@@ -1,3 +1,17 @@
+  const handleInsertLibraryImage = (image) => {
+    if (!layout || !image?.src) return;
+    const imageLayer = createImageLayer(image, undefined, layout);
+    handleImageUpload(imageLayer);
+  };
+
+  const handleApplyLibraryImageToShape = (image) => {
+    if (!image?.src || !selectedLayer || selectedLayer.type !== 'shape') return;
+    handleLayerChange({
+      fillType: 'image',
+      fillImageSrc: image.src,
+    });
+  };
+
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
 import {
@@ -26,6 +40,8 @@ import ImageUpload from './controls/ImageUpload';
 import LayerEffectsPanel from './effects/LayerEffectsPanel';
 import TextEnhanceControls from './ai/TextEnhanceControls';
 import ImageGenerateControls from './ai/ImageGenerateControls';
+import ShapeImageFillControls from './effects/ShapeImageFillControls';
+import ImageLibrary from './controls/ImageLibrary';
 
 import { getShapePoints } from './utils/shapeUtils';
 import { useHistory } from './utils/useHistory';
@@ -65,6 +81,49 @@ const ElementLayer = ({ effects, scale, children }) => {
       {children}
     </Layer>
   );
+};
+
+const useShapeImageFill = (shapeRef, fillType, imageSrc, fallbackFill, dims, fit = 'cover') => {
+  useEffect(() => {
+    const shape = shapeRef?.current;
+    if (!shape) return;
+
+    const resetFill = () => {
+      shape.fillPatternImage(null);
+      shape.fill(fallbackFill);
+      shape.getLayer()?.batchDraw();
+    };
+
+    if (fillType !== 'image' || !imageSrc) {
+      resetFill();
+      return;
+    }
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const scaleX = dims.width / img.width;
+      const scaleY = dims.height / img.height;
+      const scale = fit === 'contain' ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+      const offsetX = (dims.width - drawWidth) / 2;
+      const offsetY = (dims.height - drawHeight) / 2;
+
+      shape.fillPatternImage(img);
+      shape.fillPatternScale({ x: scale, y: scale });
+      shape.fillPatternRepeat('no-repeat');
+      shape.fillPatternOffset({ x: -offsetX, y: -offsetY });
+      shape.fill('#ffffff');
+      shape.getLayer()?.batchDraw();
+    };
+    img.onerror = resetFill;
+    img.src = imageSrc;
+
+    return () => {
+      resetFill();
+    };
+  }, [shapeRef, fillType, imageSrc, fallbackFill, dims.width, dims.height, fit]);
 };
 
 // Image component for rendering images on canvas
@@ -206,6 +265,14 @@ const ShapeLayer = ({
 }) => {
   const shapeRef = useRef(null);
   useLayerEffects(shapeRef, layer.effects, scale);
+  useShapeImageFill(
+    shapeRef,
+    layer.fillType || 'color',
+    layer.fillImageSrc,
+    layer.fillColor,
+    { width: scaledWidth, height: scaledHeight },
+    layer.fillImageFit || 'cover',
+  );
 
   const renderShape = () => {
     if (layer.shape === 'circle') {
@@ -373,6 +440,9 @@ const createLayer = (definition, coordinates) => {
       height: preset.height,
       fillColor: preset.fillColor,
       borderRadius: preset.shape === 'circle' ? preset.width / 2 : preset.borderRadius || 16,
+      fillType: 'color',
+      fillImageSrc: null,
+      fillImageFit: 'cover',
     };
   }
 
@@ -408,12 +478,16 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [zoom, setZoom] = useState(initialZoom);
   const [isPanning, setIsPanning] = useState(false);
+  const [imageLibrary, setImageLibrary] = useState([]);
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const zoomTargetRef = useRef({ scrollLeft: null, scrollTop: null });
   const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const hasPannedRef = useRef(false);
+  const lastGeneratedImageRef = useRef(null);
   
+  const IMAGE_LIBRARY_STORAGE_KEY = 'presentation-image-library';
+
   // History management hook
   const { historyIndex, historyLength, saveToHistory, handleUndo, handleRedo } = useHistory(slides);
   
@@ -421,6 +495,30 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   useEffect(() => {
     setZoom(initialZoom);
   }, [initialZoom]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const saved = window.localStorage.getItem(IMAGE_LIBRARY_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setImageLibrary(parsed);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load image library', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(IMAGE_LIBRARY_STORAGE_KEY, JSON.stringify(imageLibrary));
+    } catch (error) {
+      console.error('Failed to persist image library', error);
+    }
+  }, [imageLibrary]);
 
   // Adjust scroll position when zoom changes to keep mouse position fixed
   useEffect(() => {
@@ -845,6 +943,25 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     setSelectedPreset(null); // Clear preset selection when tool is selected
   };
 
+  const registerImageInLibrary = (imageData, meta = {}) => {
+    if (!imageData?.src) return null;
+    const entry = {
+      id: meta.id || `library-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+      src: imageData.src,
+      width: imageData.width || layout.width * 0.35,
+      height: imageData.height || layout.height * 0.35,
+      name: meta.label || 'Image',
+      origin: meta.origin || 'upload',
+      prompt: meta.prompt || null,
+      addedAt: Date.now(),
+    };
+    setImageLibrary((prev) => {
+      const withoutDup = prev.filter((img) => img.src !== entry.src);
+      return [entry, ...withoutDup].slice(0, 60);
+    });
+    return entry;
+  };
+
   const handleImageUpload = (imageLayer) => {
     updateActiveSlide((slide) => {
       const updatedSlide = {
@@ -857,10 +974,28 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     });
     setSelectedLayerId(imageLayer.id);
     setSelectedTool('select');
+  registerImageInLibrary(imageLayer, { label: imageLayer.name || 'Image', origin: 'upload' });
   };
 
-const handleAddGeneratedImage = (imageData) => {
+const handleAddGeneratedImage = (imageData, meta = {}) => {
   if (!layout) return;
+  const entry = registerImageInLibrary(imageData, {
+    origin: meta.origin || 'ai',
+    label: meta.label || 'AI Image',
+    prompt: meta.prompt,
+  });
+  if (entry) {
+    lastGeneratedImageRef.current = entry;
+  } else {
+    lastGeneratedImageRef.current = imageData;
+  }
+  if (selectedLayer && selectedLayer.type === 'shape') {
+    handleLayerChange({
+      fillType: 'image',
+      fillImageSrc: imageData.src,
+    });
+    return;
+  }
   const imageLayer = createImageLayer(imageData, undefined, layout);
   handleImageUpload(imageLayer);
 };
@@ -1890,6 +2025,15 @@ const handleApplyEnhancedText = (enhancedText) => {
                         }
                       />
                     </label>
+                    <ShapeImageFillControls
+                      layer={selectedLayer}
+                      onChange={handleLayerChange}
+                      latestGeneratedImage={lastGeneratedImageRef.current}
+                      imageLibrary={imageLibrary}
+                      onStoreImage={(image) =>
+                        registerImageInLibrary(image, { origin: 'upload', label: 'Shape upload' })
+                      }
+                    />
                   </>
                 )}
 
@@ -1972,6 +2116,15 @@ const handleApplyEnhancedText = (enhancedText) => {
             </div>
             <div style={{ marginTop: 12 }}>
               <ImageGenerateControls onImageReady={handleAddGeneratedImage} />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <ImageLibrary
+                images={imageLibrary}
+                onInsertImage={handleInsertLibraryImage}
+                onApplyToShape={
+                  selectedLayer?.type === 'shape' ? handleApplyLibraryImageToShape : undefined
+                }
+              />
             </div>
           </div>
         </aside>
