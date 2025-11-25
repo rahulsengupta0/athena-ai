@@ -3,6 +3,7 @@ import { X, Download, Loader } from 'lucide-react';
 import jsPDF from 'jspdf';
 import Konva from 'konva';
 import { getShapePoints } from '../utils/shapeUtils';
+import { applyLayerEffectsToNode } from '../utils/effectUtils';
 
 // Function to render a slide to an image
 const renderSlideToImage = async (slide, layout, scale = 1) => {
@@ -21,8 +22,8 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
     height: height,
   });
 
-  const layer = new Konva.Layer();
-  stage.add(layer);
+  const backgroundLayer = new Konva.Layer();
+  stage.add(backgroundLayer);
 
   // Background
   const bgRect = new Konva.Rect({
@@ -32,7 +33,7 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
     height: layout.height * scale,
     fill: slide.background || '#ffffff',
   });
-  layer.add(bgRect);
+  backgroundLayer.add(bgRect);
 
   // Render layers - collect image promises
   const imagePromises = [];
@@ -44,6 +45,17 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
     const y = layerData.y * scale;
     const w = layerData.width * scale;
     const h = layerData.height * scale;
+
+    const elementLayer = new Konva.Layer();
+    stage.add(elementLayer);
+
+    const sceneCanvas = elementLayer.getCanvas();
+    const sceneContext = sceneCanvas?.getContext();
+    const nativeContext = sceneContext?._context || sceneContext?._context2d || sceneContext;
+    if (nativeContext) {
+      const blurAmount = (layerData.effects?.blur || 0) * scale;
+      nativeContext.filter = blurAmount > 0 ? `blur(${blurAmount}px)` : 'none';
+    }
 
     if (layerData.type === 'text') {
       const text = new Konva.Text({
@@ -62,9 +74,9 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
         padding: 12 * scale,
         wrap: 'word',
       });
-      layer.add(text);
+      elementLayer.add(text);
+      applyLayerEffectsToNode(text, layerData.effects, scale);
     } else if (layerData.type === 'image') {
-      // Load image and add to layer - return promise
       const imagePromise = new Promise((resolve) => {
         const img = new window.Image();
         img.crossOrigin = 'anonymous';
@@ -76,12 +88,12 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
             height: h,
             image: img,
           });
-          layer.add(konvaImage);
-          layer.draw();
+          elementLayer.add(konvaImage);
+          applyLayerEffectsToNode(konvaImage, layerData.effects, scale);
+          elementLayer.draw();
           resolve();
         };
         img.onerror = () => {
-          // If image fails to load, still resolve to continue
           resolve();
         };
         img.src = layerData.src;
@@ -89,7 +101,7 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
       imagePromises.push(imagePromise);
     } else if (layerData.type === 'shape') {
       let shape;
-      
+
       if (layerData.shape === 'circle') {
         const radius = Math.min(w, h) / 2;
         const groupX = x + radius;
@@ -101,8 +113,9 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
           fill: layerData.fillColor,
         });
         const group = new Konva.Group({ x: groupX - radius, y: groupY - radius });
+        applyLayerEffectsToNode(shape, layerData.effects, scale);
         group.add(shape);
-        layer.add(group);
+        elementLayer.add(group);
       } else if (layerData.shape === 'ellipse') {
         shape = new Konva.Ellipse({
           x: w / 2,
@@ -112,8 +125,9 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
           fill: layerData.fillColor,
         });
         const group = new Konva.Group({ x, y });
+        applyLayerEffectsToNode(shape, layerData.effects, scale);
         group.add(shape);
-        layer.add(group);
+        elementLayer.add(group);
       } else if (layerData.shape === 'rectangle') {
         shape = new Konva.Rect({
           x: 0,
@@ -124,8 +138,9 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
           cornerRadius: layerData.borderRadius * scale,
         });
         const group = new Konva.Group({ x, y });
+        applyLayerEffectsToNode(shape, layerData.effects, scale);
         group.add(shape);
-        layer.add(group);
+        elementLayer.add(group);
       } else {
         const points = getShapePoints(layerData.shape, w, h);
         if (points.length > 0) {
@@ -136,8 +151,9 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
             stroke: layerData.fillColor,
           });
           const group = new Konva.Group({ x, y });
+          applyLayerEffectsToNode(shape, layerData.effects, scale);
           group.add(shape);
-          layer.add(group);
+          elementLayer.add(group);
         }
       }
     }

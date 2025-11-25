@@ -7,6 +7,8 @@
  * @param {File} file - The image file to load
  * @returns {Promise<Object>} Promise that resolves with { src, width, height }
  */
+import { normalizeImageEffects } from './effectDefaults';
+
 export const loadImageFromFile = (file) => {
   return new Promise((resolve, reject) => {
     // Validate file type
@@ -57,7 +59,7 @@ export const loadImageFromFile = (file) => {
  * @param {Object} layout - Layout dimensions for sizing
  * @returns {Object} Image layer object
  */
-export const createImageLayer = (imageData, coordinates, layout) => {
+export const createImageLayer = (imageData, coordinates = {}, layout) => {
   const { src, width: imgWidth, height: imgHeight } = imageData;
   
   // Calculate dimensions to fit within canvas while maintaining aspect ratio
@@ -74,17 +76,21 @@ export const createImageLayer = (imageData, coordinates, layout) => {
     height = height * scale;
   }
   
+  const centeredX = Math.max(0, (layout.width - width) / 2);
+  const centeredY = Math.max(0, (layout.height - height) / 2);
+
   return {
     id: `layer-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
     type: 'image',
     name: 'Image',
-    x: coordinates.x,
-    y: coordinates.y,
+    x: typeof coordinates.x === 'number' ? coordinates.x : Math.round(centeredX),
+    y: typeof coordinates.y === 'number' ? coordinates.y : Math.round(centeredY),
     width: Math.round(width),
     height: Math.round(height),
     src: src,
     rotation: 0,
     visible: true,
+    effects: normalizeImageEffects(),
   };
 };
 
