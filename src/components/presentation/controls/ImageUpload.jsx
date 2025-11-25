@@ -23,14 +23,7 @@ const ImageUpload = ({ onImageUpload, layout }) => {
       const imageData = await loadImageFromFile(file);
       
       // Create image layer (positioned at center of canvas)
-      const imageLayer = createImageLayer(
-        imageData,
-        {
-          x: (layout.width - imageData.width) / 2,
-          y: (layout.height - imageData.height) / 2,
-        },
-        layout
-      );
+      const imageLayer = createImageLayer(imageData, undefined, layout);
       
       // Call callback with the new layer
       onImageUpload(imageLayer);

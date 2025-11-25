@@ -23,9 +23,45 @@ import ShareModal from './modals/ShareModal';
 import ZoomControls from './controls/ZoomControls';
 import UndoRedoControls from './controls/UndoRedoControls';
 import ImageUpload from './controls/ImageUpload';
+import LayerEffectsPanel from './effects/LayerEffectsPanel';
 
 import { getShapePoints } from './utils/shapeUtils';
 import { useHistory } from './utils/useHistory';
+import { applyLayerEffectsToNode } from './utils/effectUtils';
+import { normalizeImageEffects } from './utils/effectDefaults';
+
+const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
+  useEffect(() => {
+    const node = nodeRef?.current;
+    if (!node) return;
+    applyLayerEffectsToNode(node, effects, scaleFactor);
+  }, [nodeRef, effects, scaleFactor, ...dependencies]);
+};
+
+const useLayerBlur = (layerRef, blurValue = 0, scaleFactor = 1) => {
+  useEffect(() => {
+    const layerNode = layerRef?.current;
+    if (!layerNode) return;
+    const canvasElement = layerNode.getCanvas()?._canvas;
+    if (!canvasElement) return;
+    const blurPx = Math.max(0, (blurValue || 0) * scaleFactor);
+    canvasElement.style.filter = blurPx > 0 ? `blur(${blurPx}px)` : 'none';
+    return () => {
+      canvasElement.style.filter = 'none';
+    };
+  }, [layerRef, blurValue, scaleFactor]);
+};
+
+const ElementLayer = ({ effects, scale, children }) => {
+  const layerRef = useRef(null);
+  const blurValue = effects?.blur || 0;
+  useLayerBlur(layerRef, blurValue, scale);
+  return (
+    <Layer ref={layerRef}>
+      {children}
+    </Layer>
+  );
+};
 
 // Image component for rendering images on canvas
 const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSelected, scale, onDragEnd, onClick }) => {
@@ -47,9 +83,10 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
     img.src = layer.src;
   }, [layer.src]);
 
+  useLayerEffects(imageRef, layer.effects, scale, [imageLoaded]);
+
   return (
     <Group
-      key={layer.id}
       x={scaledX}
       y={scaledY}
       draggable
@@ -96,6 +133,188 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
   );
 };
 
+const TextLayer = ({
+  layer,
+  scaledX,
+  scaledY,
+  scaledWidth,
+  scaledHeight,
+  isSelected,
+  scale,
+  onDragEnd,
+  onClick,
+}) => {
+  const textRef = useRef(null);
+  useLayerEffects(textRef, layer.effects, scale);
+
+  return (
+    <Group
+      x={scaledX}
+      y={scaledY}
+      draggable
+      onDragEnd={onDragEnd}
+      onClick={onClick}
+      onTap={onClick}
+    >
+      {isSelected && (
+        <Rect
+          x={-2}
+          y={-2}
+          width={scaledWidth + 4}
+          height={scaledHeight + 4}
+          stroke="rgba(79, 70, 229, 0.9)"
+          strokeWidth={2}
+          fill="transparent"
+          cornerRadius={12}
+        />
+      )}
+      <Text
+        ref={textRef}
+        x={0}
+        y={0}
+        width={scaledWidth}
+        height={scaledHeight}
+        text={layer.text}
+        fontSize={layer.fontSize * scale}
+        fontFamily={layer.fontFamily}
+        fontStyle={layer.fontStyle || 'normal'}
+        fontWeight={layer.fontWeight || 'normal'}
+        fill={layer.color}
+        align={layer.textAlign}
+        verticalAlign="middle"
+        padding={12 * scale}
+        wrap="word"
+      />
+    </Group>
+  );
+};
+
+const ShapeLayer = ({
+  layer,
+  scaledX,
+  scaledY,
+  scaledWidth,
+  scaledHeight,
+  isSelected,
+  scale,
+  onDragEnd,
+  onClick,
+}) => {
+  const shapeRef = useRef(null);
+  useLayerEffects(shapeRef, layer.effects, scale);
+
+  const renderShape = () => {
+    if (layer.shape === 'circle') {
+      const radius = Math.min(scaledWidth, scaledHeight) / 2;
+      return (
+        <>
+          {isSelected && (
+            <Circle
+              x={radius}
+              y={radius}
+              radius={radius + 2}
+              stroke="rgba(79, 70, 229, 0.9)"
+              strokeWidth={2}
+              fill="transparent"
+            />
+          )}
+          <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill={layer.fillColor} />
+        </>
+      );
+    }
+
+    if (layer.shape === 'ellipse') {
+      return (
+        <>
+          {isSelected && (
+            <Ellipse
+              x={scaledWidth / 2}
+              y={scaledHeight / 2}
+              radiusX={scaledWidth / 2 + 2}
+              radiusY={scaledHeight / 2 + 2}
+              stroke="rgba(79, 70, 229, 0.9)"
+              strokeWidth={2}
+              fill="transparent"
+            />
+          )}
+          <Ellipse
+            ref={shapeRef}
+            x={scaledWidth / 2}
+            y={scaledHeight / 2}
+            radiusX={scaledWidth / 2}
+            radiusY={scaledHeight / 2}
+            fill={layer.fillColor}
+          />
+        </>
+      );
+    }
+
+    if (layer.shape === 'rectangle') {
+      return (
+        <>
+          {isSelected && (
+            <Rect
+              x={-2}
+              y={-2}
+              width={scaledWidth + 4}
+              height={scaledHeight + 4}
+              stroke="rgba(79, 70, 229, 0.9)"
+              strokeWidth={2}
+              fill="transparent"
+              cornerRadius={layer.borderRadius * scale + 2}
+            />
+          )}
+          <Rect
+            ref={shapeRef}
+            x={0}
+            y={0}
+            width={scaledWidth}
+            height={scaledHeight}
+            fill={layer.fillColor}
+            cornerRadius={layer.borderRadius * scale}
+          />
+        </>
+      );
+    }
+
+    const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+    if (points.length === 0) return null;
+
+    return (
+      <>
+        {isSelected && (
+          <Line
+            points={points.map((p) => p - 2)}
+            closed
+            stroke="rgba(79, 70, 229, 0.9)"
+            strokeWidth={2}
+            fill="transparent"
+          />
+        )}
+        <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />
+      </>
+    );
+  };
+
+  const circleOffset = Math.min(scaledWidth, scaledHeight) / 2;
+  const isCircle = layer.shape === 'circle';
+  const groupX = isCircle ? scaledX + circleOffset : scaledX;
+  const groupY = isCircle ? scaledY + circleOffset : scaledY;
+
+  return (
+    <Group
+      x={groupX}
+      y={groupY}
+      draggable
+      onDragEnd={onDragEnd}
+      onClick={onClick}
+      onTap={onClick}
+    >
+      {renderShape()}
+    </Group>
+  );
+};
+
 const createLayer = (definition, coordinates) => {
   const preset = definition.preset;
   const base = {
@@ -104,6 +323,7 @@ const createLayer = (definition, coordinates) => {
     y: coordinates.y,
     rotation: 0,
     visible: true,
+    effects: normalizeImageEffects(),
   };
 
   if (preset.type === 'text') {
@@ -679,7 +899,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     // Reset node position to keep it in sync with the new coordinates
     // scale already includes zoom
     node.position({ x: newX * scale, y: newY * scale });
-  };
+    };
 
   const handleLayerClick = (layer, e) => {
     e.cancelBubble = true;
@@ -1306,7 +1526,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                 onTap={handleStageClick}
                 onMouseDown={handlePanStart}
                 data-canvas-stage
-                style={{ 
+                  style={{
                   cursor: isPanning 
                     ? 'grabbing' 
                     : selectedPreset 
@@ -1328,7 +1548,6 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                 }}
               >
                 <Layer>
-                  {/* Background */}
                   <Rect
                     name="background"
                     x={0}
@@ -1337,202 +1556,70 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                     height={layout.height * scale}
                     fill={activeSlide?.background || '#ffffff'}
                   />
-                  
-                  {/* Layers */}
-                  {activeSlide?.layers.map((layer) => {
-                    if (!layer.visible) return null;
-
-                    const isSelected = layer.id === selectedLayerId;
-                    const scaledX = layer.x * scale;
-                    const scaledY = layer.y * scale;
-                    const scaledWidth = layer.width * scale;
-                    const scaledHeight = layer.height * scale;
-
-                    if (layer.type === 'text') {
-                      return (
-                        <Group
-                  key={layer.id}
-                          x={scaledX}
-                          y={scaledY}
-                          draggable
-                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                          onClick={(e) => handleLayerClick(layer, e)}
-                          onTap={(e) => handleLayerClick(layer, e)}
-                        >
-                          {/* Selection border */}
-                          {isSelected && (
-                            <Rect
-                              x={-2}
-                              y={-2}
-                              width={scaledWidth + 4}
-                              height={scaledHeight + 4}
-                              stroke="rgba(79, 70, 229, 0.9)"
-                              strokeWidth={2}
-                              fill="transparent"
-                              cornerRadius={12}
-                            />
-                          )}
-                          <Text
-                            x={0}
-                            y={0}
-                            width={scaledWidth}
-                            height={scaledHeight}
-                            text={layer.text}
-                            fontSize={layer.fontSize * scale}
-                            fontFamily={layer.fontFamily}
-                            fontStyle={layer.fontStyle || 'normal'}
-                            fontWeight={layer.fontWeight || 'normal'}
-                            fill={layer.color}
-                            align={layer.textAlign}
-                            verticalAlign="middle"
-                            padding={12 * scale}
-                            wrap="word"
-                          />
-                        </Group>
-                      );
-                    }
-
-                    if (layer.type === 'image') {
-                      return (
-                        <ImageLayer
-                          key={layer.id}
-                          layer={layer}
-                          scaledX={scaledX}
-                          scaledY={scaledY}
-                          scaledWidth={scaledWidth}
-                          scaledHeight={scaledHeight}
-                          isSelected={isSelected}
-                          scale={scale}
-                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                          onClick={(e) => handleLayerClick(layer, e)}
-                        />
-                      );
-                    }
-
-                    if (layer.type === 'shape') {
-                      const renderShape = () => {
-                        if (layer.shape === 'circle') {
-                          const radius = Math.min(scaledWidth, scaledHeight) / 2;
-                          return (
-                            <>
-                              {isSelected && (
-                                <Circle
-                                  x={radius}
-                                  y={radius}
-                                  radius={radius + 2}
-                                  stroke="rgba(79, 70, 229, 0.9)"
-                                  strokeWidth={2}
-                                  fill="transparent"
-                                />
-                              )}
-                              <Circle
-                                x={radius}
-                                y={radius}
-                                radius={radius}
-                                fill={layer.fillColor}
-                              />
-                            </>
-                          );
-                        } else if (layer.shape === 'ellipse') {
-                          return (
-                            <>
-                              {isSelected && (
-                                <Ellipse
-                                  x={scaledWidth / 2}
-                                  y={scaledHeight / 2}
-                                  radiusX={scaledWidth / 2 + 2}
-                                  radiusY={scaledHeight / 2 + 2}
-                                  stroke="rgba(79, 70, 229, 0.9)"
-                                  strokeWidth={2}
-                                  fill="transparent"
-                                />
-                              )}
-                              <Ellipse
-                                x={scaledWidth / 2}
-                                y={scaledHeight / 2}
-                                radiusX={scaledWidth / 2}
-                                radiusY={scaledHeight / 2}
-                                fill={layer.fillColor}
-                              />
-                            </>
-                          );
-                        } else if (layer.shape === 'rectangle') {
-                          return (
-                            <>
-                              {isSelected && (
-                                <Rect
-                                  x={-2}
-                                  y={-2}
-                                  width={scaledWidth + 4}
-                                  height={scaledHeight + 4}
-                                  stroke="rgba(79, 70, 229, 0.9)"
-                                  strokeWidth={2}
-                                  fill="transparent"
-                                  cornerRadius={(layer.borderRadius * scale) + 2}
-                                />
-                              )}
-                              <Rect
-                                x={0}
-                                y={0}
-                                width={scaledWidth}
-                                height={scaledHeight}
-                                fill={layer.fillColor}
-                                cornerRadius={layer.borderRadius * scale}
-                              />
-                            </>
-                          );
-                        } else {
-                          // Custom shapes using Line
-                          const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
-                          if (points.length === 0) return null;
-                          
-                          return (
-                            <>
-                              {isSelected && (
-                                <Line
-                                  points={points.map((p, i) => {
-                                    if (i % 2 === 0) return p - 2;
-                                    return p - 2;
-                                  })}
-                                  closed
-                                  stroke="rgba(79, 70, 229, 0.9)"
-                                  strokeWidth={2}
-                                  fill="transparent"
-                                />
-                              )}
-                              <Line
-                                points={points}
-                                closed
-                                fill={layer.fillColor}
-                                stroke={layer.fillColor}
-                              />
-                            </>
-                          );
-                        }
-                      };
-
-                      // Adjust position for circle (centered)
-                      const groupX = layer.shape === 'circle' ? scaledX + Math.min(scaledWidth, scaledHeight) / 2 : scaledX;
-                      const groupY = layer.shape === 'circle' ? scaledY + Math.min(scaledWidth, scaledHeight) / 2 : scaledY;
-
-                      return (
-                        <Group
-                          key={layer.id}
-                          x={groupX}
-                          y={groupY}
-                          draggable
-                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                          onClick={(e) => handleLayerClick(layer, e)}
-                          onTap={(e) => handleLayerClick(layer, e)}
-                    >
-                          {renderShape()}
-                        </Group>
-                      );
-                    }
-
-                    return null;
-                  })}
                 </Layer>
+                {activeSlide?.layers.map((layer) => {
+                  if (!layer.visible) return null;
+
+                  const isSelected = layer.id === selectedLayerId;
+                  const scaledX = layer.x * scale;
+                  const scaledY = layer.y * scale;
+                  const scaledWidth = layer.width * scale;
+                  const scaledHeight = layer.height * scale;
+
+                  let renderedLayer = null;
+
+                  if (layer.type === 'text') {
+                    renderedLayer = (
+                      <TextLayer
+                        layer={layer}
+                        scaledX={scaledX}
+                        scaledY={scaledY}
+                        scaledWidth={scaledWidth}
+                        scaledHeight={scaledHeight}
+                        isSelected={isSelected}
+                        scale={scale}
+                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                        onClick={(e) => handleLayerClick(layer, e)}
+                      />
+                    );
+                  } else if (layer.type === 'image') {
+                    renderedLayer = (
+                      <ImageLayer
+                        layer={layer}
+                        scaledX={scaledX}
+                        scaledY={scaledY}
+                        scaledWidth={scaledWidth}
+                        scaledHeight={scaledHeight}
+                        isSelected={isSelected}
+                        scale={scale}
+                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                        onClick={(e) => handleLayerClick(layer, e)}
+                      />
+                    );
+                  } else if (layer.type === 'shape') {
+                    renderedLayer = (
+                      <ShapeLayer
+                        layer={layer}
+                        scaledX={scaledX}
+                        scaledY={scaledY}
+                        scaledWidth={scaledWidth}
+                        scaledHeight={scaledHeight}
+                        isSelected={isSelected}
+                        scale={scale}
+                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                        onClick={(e) => handleLayerClick(layer, e)}
+                      />
+                    );
+                  }
+
+                  if (!renderedLayer) return null;
+
+                  return (
+                    <ElementLayer key={layer.id} effects={layer.effects} scale={scale}>
+                      {renderedLayer}
+                    </ElementLayer>
+                  );
+                })}
               </Stage>
             </div>
           </div>
@@ -1781,6 +1868,20 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                     </label>
                   </>
                 )}
+
+                <div
+                  style={{
+                    border: '1px solid rgba(148, 163, 184, 0.35)',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#ffffff',
+                  }}
+                >
+                  <LayerEffectsPanel
+                    effects={selectedLayer.effects}
+                    onChange={(effects) => handleLayerChange({ effects })}
+                  />
+                </div>
               </div>
             ) : (
               <div
@@ -1851,9 +1952,9 @@ const PresentationWorkspace = ({ layout, onBack }) => {
 
         {/* Toggle buttons for sidebars */}
         {!leftSidebarVisible && (
-          <button
+              <button
             onClick={() => setLeftSidebarVisible(true)}
-            style={{
+                style={{
               position: 'absolute',
               left: 0,
               top: '50%',
@@ -1864,9 +1965,9 @@ const PresentationWorkspace = ({ layout, onBack }) => {
               padding: '12px 6px',
               cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(15, 23, 42, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
               zIndex: 10,
             }}
             title="Show slides panel"
@@ -1887,19 +1988,19 @@ const PresentationWorkspace = ({ layout, onBack }) => {
               border: '1px solid rgba(15, 23, 42, 0.1)',
               borderRadius: '12px 0 0 12px',
               padding: '12px 6px',
-              cursor: 'pointer',
+                  cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(15, 23, 42, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 10,
-            }}
+                }}
             title="Show tools panel"
-          >
+              >
             <ChevronLeft size={18} color="#475569" />
-          </button>
+              </button>
         )}
-      </div>
+            </div>
 
       {/* Preview Modal */}
       <PreviewModal
@@ -1917,7 +2018,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
         slides={slides}
         layout={layout}
       />
-    </div>
+          </div>
     </>
   );
 };

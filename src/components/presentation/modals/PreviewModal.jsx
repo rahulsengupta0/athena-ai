@@ -2,6 +2,155 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getShapePoints } from '../utils/shapeUtils';
+import { applyLayerEffectsToNode } from '../utils/effectUtils';
+
+const useKonvaEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
+  useEffect(() => {
+    const node = nodeRef?.current;
+    if (!node) return;
+    applyLayerEffectsToNode(node, effects, scaleFactor);
+  }, [nodeRef, effects, scaleFactor, ...dependencies]);
+};
+
+const useLayerBlur = (layerRef, blurValue = 0, scaleFactor = 1) => {
+  useEffect(() => {
+    const layerNode = layerRef?.current;
+    if (!layerNode) return;
+    const canvasElement = layerNode.getCanvas()?._canvas;
+    if (!canvasElement) return;
+    const blurPx = Math.max(0, (blurValue || 0) * scaleFactor);
+    canvasElement.style.filter = blurPx > 0 ? `blur(${blurPx}px)` : 'none';
+    return () => {
+      canvasElement.style.filter = 'none';
+    };
+  }, [layerRef, blurValue, scaleFactor]);
+};
+
+const PreviewElementLayer = ({ layer, scale, children }) => {
+  const layerRef = useRef(null);
+  const blurValue = layer.effects?.blur || 0;
+  useLayerBlur(layerRef, blurValue, scale);
+  return <Layer ref={layerRef}>{children}</Layer>;
+};
+
+const PreviewTextLayer = ({ layer, x, y, width, height, scale }) => {
+  const textRef = useRef(null);
+  useKonvaEffects(textRef, layer.effects, scale);
+
+  return (
+    <Group x={x} y={y}>
+      <Text
+        ref={textRef}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        text={layer.text}
+        fontSize={layer.fontSize * scale}
+        fontFamily={layer.fontFamily}
+        fontStyle={layer.fontStyle || 'normal'}
+        fontWeight={layer.fontWeight || 'normal'}
+        fill={layer.color}
+        align={layer.textAlign}
+        verticalAlign="middle"
+        padding={12 * scale}
+        wrap="word"
+      />
+    </Group>
+  );
+};
+
+const PreviewImageLayer = ({ layer, x, y, width, height, scale }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      setImageLoaded(true);
+      if (imageRef.current) {
+        imageRef.current.image(img);
+      }
+    };
+    img.onerror = () => {
+      setImageLoaded(false);
+    };
+    img.src = layer.src;
+  }, [layer.src]);
+
+  useKonvaEffects(imageRef, layer.effects, scale, [imageLoaded]);
+
+  return (
+    <Group x={x} y={y}>
+      <KonvaImage
+        ref={imageRef}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        image={null}
+        opacity={imageLoaded ? 1 : 0}
+      />
+      {!imageLoaded && (
+        <Rect x={0} y={0} width={width} height={height} fill="#f1f5f9" stroke="#cbd5e1" strokeWidth={1} />
+      )}
+    </Group>
+  );
+};
+
+const PreviewShapeLayer = ({ layer, x, y, width, height, scale }) => {
+  const shapeRef = useRef(null);
+  useKonvaEffects(shapeRef, layer.effects, scale);
+
+  const circleRadius = Math.min(width, height) / 2;
+  const groupX = layer.shape === 'circle' ? x + circleRadius : x;
+  const groupY = layer.shape === 'circle' ? y + circleRadius : y;
+
+  const renderShape = () => {
+    if (layer.shape === 'circle') {
+      return <Circle ref={shapeRef} x={circleRadius} y={circleRadius} radius={circleRadius} fill={layer.fillColor} />;
+    }
+
+    if (layer.shape === 'ellipse') {
+      return (
+        <Ellipse
+          ref={shapeRef}
+          x={width / 2}
+          y={height / 2}
+          radiusX={width / 2}
+          radiusY={height / 2}
+          fill={layer.fillColor}
+        />
+      );
+    }
+
+    if (layer.shape === 'rectangle') {
+      return (
+        <Rect
+          ref={shapeRef}
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={layer.fillColor}
+          cornerRadius={layer.borderRadius * scale}
+        />
+      );
+    }
+
+    const points = getShapePoints(layer.shape, width, height);
+    if (points.length === 0) return null;
+
+    return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
+  };
+
+  return (
+    <Group x={groupX} y={groupY}>
+      {renderShape()}
+    </Group>
+  );
+};
 
 const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(startSlideIndex);
@@ -58,7 +207,6 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
     return (
       <Stage width={previewWidth} height={previewHeight}>
         <Layer>
-          {/* Background */}
           <Rect
             x={0}
             y={0}
@@ -66,150 +214,60 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
             height={layout.height * previewScale}
             fill={slide.background || '#ffffff'}
           />
-          
-          {/* Layers */}
-          {slide.layers.map((layer) => {
-            if (!layer.visible) return null;
-
-            const previewX = layer.x * previewScale;
-            const previewY = layer.y * previewScale;
-            const previewWidth_scaled = layer.width * previewScale;
-            const previewHeight_scaled = layer.height * previewScale;
-
-            if (layer.type === 'text') {
-              return (
-                <Group key={layer.id} x={previewX} y={previewY}>
-                  <Text
-                    x={0}
-                    y={0}
-                    width={previewWidth_scaled}
-                    height={previewHeight_scaled}
-                    text={layer.text}
-                    fontSize={layer.fontSize * previewScale}
-                    fontFamily={layer.fontFamily}
-                    fontStyle={layer.fontStyle || 'normal'}
-                    fontWeight={layer.fontWeight || 'normal'}
-                    fill={layer.color}
-                    align={layer.textAlign}
-                    verticalAlign="middle"
-                    padding={12 * previewScale}
-                    wrap="word"
-                  />
-                </Group>
-              );
-            }
-
-            if (layer.type === 'image') {
-              const ImagePreview = ({ layer }) => {
-                const [imageLoaded, setImageLoaded] = useState(false);
-                const imageRef = useRef(null);
-
-                useEffect(() => {
-                  const img = new window.Image();
-                  img.crossOrigin = 'anonymous';
-                  img.onload = () => {
-                    setImageLoaded(true);
-                    if (imageRef.current) {
-                      imageRef.current.image(img);
-                    }
-                  };
-                  img.src = layer.src;
-                }, [layer.src]);
-
-                return (
-                  <Group key={layer.id} x={previewX} y={previewY}>
-                    <KonvaImage
-                      ref={imageRef}
-                      x={0}
-                      y={0}
-                      width={previewWidth_scaled}
-                      height={previewHeight_scaled}
-                      image={null}
-                      opacity={imageLoaded ? 1 : 0}
-                    />
-                    {!imageLoaded && (
-                      <Rect
-                        x={0}
-                        y={0}
-                        width={previewWidth_scaled}
-                        height={previewHeight_scaled}
-                        fill="#f1f5f9"
-                        stroke="#cbd5e1"
-                        strokeWidth={1}
-                      />
-                    )}
-                  </Group>
-                );
-              };
-
-              return <ImagePreview key={layer.id} layer={layer} />;
-            }
-
-            if (layer.type === 'shape') {
-              const renderPreviewShape = () => {
-                if (layer.shape === 'circle') {
-                  const radius = Math.min(previewWidth_scaled, previewHeight_scaled) / 2;
-                  return (
-                    <Circle
-                      x={radius}
-                      y={radius}
-                      radius={radius}
-                      fill={layer.fillColor}
-                    />
-                  );
-                } else if (layer.shape === 'ellipse') {
-                  return (
-                    <Ellipse
-                      x={previewWidth_scaled / 2}
-                      y={previewHeight_scaled / 2}
-                      radiusX={previewWidth_scaled / 2}
-                      radiusY={previewHeight_scaled / 2}
-                      fill={layer.fillColor}
-                    />
-                  );
-                } else if (layer.shape === 'rectangle') {
-                  return (
-                    <Rect
-                      x={0}
-                      y={0}
-                      width={previewWidth_scaled}
-                      height={previewHeight_scaled}
-                      fill={layer.fillColor}
-                      cornerRadius={layer.borderRadius * previewScale}
-                    />
-                  );
-                } else {
-                  const points = getShapePoints(layer.shape, previewWidth_scaled, previewHeight_scaled);
-                  if (points.length === 0) return null;
-                  return (
-                    <Line
-                      points={points}
-                      closed
-                      fill={layer.fillColor}
-                      stroke={layer.fillColor}
-                    />
-                  );
-                }
-              };
-
-              // Adjust position for circle (centered)
-              const groupX = layer.shape === 'circle' 
-                ? previewX + Math.min(previewWidth_scaled, previewHeight_scaled) / 2
-                : previewX;
-              const groupY = layer.shape === 'circle' 
-                ? previewY + Math.min(previewWidth_scaled, previewHeight_scaled) / 2
-                : previewY;
-
-              return (
-                <Group key={layer.id} x={groupX} y={groupY}>
-                  {renderPreviewShape()}
-                </Group>
-              );
-            }
-
-            return null;
-          })}
         </Layer>
+        {slide.layers.map((layer) => {
+          if (!layer.visible) return null;
+
+          const previewX = layer.x * previewScale;
+          const previewY = layer.y * previewScale;
+          const previewWidthScaled = layer.width * previewScale;
+          const previewHeightScaled = layer.height * previewScale;
+
+          let renderedLayer = null;
+
+          if (layer.type === 'text') {
+            renderedLayer = (
+              <PreviewTextLayer
+                layer={layer}
+                x={previewX}
+                y={previewY}
+                width={previewWidthScaled}
+                height={previewHeightScaled}
+                scale={previewScale}
+              />
+            );
+          } else if (layer.type === 'image') {
+            renderedLayer = (
+              <PreviewImageLayer
+                layer={layer}
+                x={previewX}
+                y={previewY}
+                width={previewWidthScaled}
+                height={previewHeightScaled}
+                scale={previewScale}
+              />
+            );
+          } else if (layer.type === 'shape') {
+            renderedLayer = (
+              <PreviewShapeLayer
+                layer={layer}
+                x={previewX}
+                y={previewY}
+                width={previewWidthScaled}
+                height={previewHeightScaled}
+                scale={previewScale}
+              />
+            );
+          }
+
+          if (!renderedLayer) return null;
+
+          return (
+            <PreviewElementLayer key={layer.id} layer={layer} scale={previewScale}>
+              {renderedLayer}
+            </PreviewElementLayer>
+          );
+        })}
       </Stage>
     );
   };
