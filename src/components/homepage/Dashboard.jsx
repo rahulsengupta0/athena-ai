@@ -36,13 +36,15 @@ const navTabs = [
 ];
 
 const uploadToS3 = async (base64Image) => {
-  const token = localStorage.getItem('token'); // Or get from context/auth provider
-  // Convert base64 to Blob (for FormData upload)
+  const token = localStorage.getItem('token');
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const blob = await (await fetch(base64Image)).blob();
   const formData = new FormData();
   formData.append('file', blob, 'generated-logo.png');
 
-  const response = await fetch('http://localhost:5000/api/upload', {
+  const response = await fetch(`${API_BASE_URL}/upload`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` },
     body: formData,
@@ -52,9 +54,11 @@ const uploadToS3 = async (base64Image) => {
     alert('Failed to upload to S3');
     return;
   }
+
   await response.json();
   alert('Image stored in S3!');
 };
+
 
 
 const downloadButtonStyle = {
@@ -121,45 +125,57 @@ const Dashboard = () => {
     });
   };
 
-  const sendAiChat = async () => {
-    if (!aiInput.trim()) return;
-    const userMsg = { type: 'user', content: aiInput };
-    setAiMessages((prev) => [...prev, userMsg]);
-    const current = aiInput;
-    setAiInput("");
-    setAiLoading(true);
-    try {
-      const resp = await fetch("http://localhost:5000/api/inference/generate", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: current })
-      });
-      const data = await resp.json();
-      const aiResp = data.choices?.[0]?.message?.content || 'No response';
-      setAiMessages((prev) => [...prev, { type: 'ai', content: aiResp }]);
-    } catch (e) {
-      setAiMessages((prev) => [...prev, { type: 'ai', content: 'Error: ' + e.message }]);
-    } finally {
-      setAiLoading(false);
-    }
-  };
+const sendAiChat = async () => {
+  if (!aiInput.trim()) return;
+
+  const userMsg = { type: 'user', content: aiInput };
+  setAiMessages((prev) => [...prev, userMsg]);
+
+  const current = aiInput;
+  setAiInput("");
+  setAiLoading(true);
+
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    const resp = await fetch(`${API_BASE_URL}/inference/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: current })
+    });
+
+    const data = await resp.json();
+    const aiResp = data?.choices?.[0]?.message?.content || 'No response';
+
+    setAiMessages((prev) => [...prev, { type: 'ai', content: aiResp }]);
+  } catch (e) {
+    setAiMessages((prev) => [...prev, { type: 'ai', content: 'Error: ' + e.message }]);
+  } finally {
+    setAiLoading(false);
+  }
+};
 
 const handleGenerateLogo = async () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   setLoading(true);
   setOutputText("");
   setGeneratedImage(null);
+
   try {
-    const response = await fetch("http://localhost:5000/api/generate-logo", {
+    const response = await fetch(`${API_BASE_URL}/generate-logo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: inputText }),
     });
+
     if (!response.ok) {
       const errorData = await response.json();
       setOutputText("Error: " + (errorData.error || "Unknown error"));
       setLoading(false);
       return;
     }
+
     const data = await response.json();
 
     if (data.imageBase64) {
@@ -174,92 +190,125 @@ const handleGenerateLogo = async () => {
   }
 };
 
+const handleCreateClick = async () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  const handleCreateClick = async () => {
-    if (!inputText.trim() || !selectedButton) return;
+  if (!inputText.trim() || !selectedButton) return;
 
-    if (isCodeMode) {
-      // Add user message to chat
-      const userMessage = { type: "user", content: inputText };
-      setCodeMessages((prev) => [...prev, userMessage]);
-      const currentInput = inputText;
-      setInputText("");
-      setLoading(true);
+  // =========================
+  // CODE MODE CHAT
+  // =========================
+  if (isCodeMode) {
+    const userMessage = { type: "user", content: inputText };
+    setCodeMessages((prev) => [...prev, userMessage]);
 
-      try {
-        const response = await fetch("http://localhost:5000/api/inference/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: currentInput }),
-        });
-        const data = await response.json();
-        const aiResponse = data.choices?.[0]?.message?.content || "No response";
-        setCodeMessages((prev) => [...prev, { type: "ai", content: aiResponse }]);
-      } catch (error) {
-        setCodeMessages((prev) => [...prev, { type: "ai", content: "Error: " + error.message }]);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    setOutputText("");
-    setGeneratedImage(null);
-    setGeneratedVideo(null);
+    const currentInput = inputText;
+    setInputText("");
+    setLoading(true);
 
     try {
-      if (selectedButton === "design") {
-        await handleGenerateLogo();
-      } else if (selectedButton === "create-image") {
-        setLoading(true);
-        const response = await fetch("http://localhost:5000/api/image/generate-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: inputText }),
-        });
-        const data = await response.json();
-        const imageB64 = data.data?.[0]?.b64_json || "";
-        if (imageB64.length > 50) {
-          setGeneratedImage(`data:image/png;base64,${imageB64}`);
-        } else {
-          setOutputText("No image generated");
-        }
-        setLoading(false);
-      } else if (selectedButton === "create-video") {
-  setVideoLoading(true);
-  const response = await fetch("http://localhost:5000/api/video/generate-video", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: inputText }),
-  });
-  const data = await response.json();
-  if (data.videoBase64) {
-  const videoUrl = `data:${data.mimeType || "video/mp4"};base64,${data.videoBase64}`;
-  setGeneratedVideo(videoUrl);
-} else if (data.videoUrl) {
-  // For future: if backend sends a direct video URL
-  setGeneratedVideo(data.videoUrl);
-} else {
-  setOutputText("No video generated");
-}
+      const response = await fetch(`${API_BASE_URL}/inference/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: currentInput }),
+      });
 
-  setVideoLoading(false);
-}
- else {
-        setLoading(true);
-        const response = await fetch("http://localhost:5000/api/inference/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: inputText }),
-        });
-        const data = await response.json();
-        setOutputText(data.choices?.[0]?.message?.content || "No response");
-        setLoading(false);
-      }
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content || "No response";
+
+      setCodeMessages((prev) => [...prev, { type: "ai", content: aiResponse }]);
     } catch (error) {
-      setOutputText("Error: " + error.message);
+      setCodeMessages((prev) => [
+        ...prev,
+        { type: "ai", content: "Error: " + error.message },
+      ]);
+    } finally {
       setLoading(false);
+    }
+
+    return;
+  }
+
+  // =========================
+  // NORMAL GENERATION MODES
+  // =========================
+  setOutputText("");
+  setGeneratedImage(null);
+  setGeneratedVideo(null);
+
+  try {
+    // LOGO DESIGN
+    if (selectedButton === "design") {
+      await handleGenerateLogo();
+    }
+
+    // IMAGE GENERATION
+    else if (selectedButton === "create-image") {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/image/generate-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+
+      const data = await response.json();
+      const imageB64 = data.data?.[0]?.b64_json || "";
+
+      if (imageB64.length > 50) {
+        setGeneratedImage(`data:image/png;base64,${imageB64}`);
+      } else {
+        setOutputText("No image generated");
+      }
+
+      setLoading(false);
+    }
+
+    // VIDEO GENERATION
+    else if (selectedButton === "create-video") {
+      setVideoLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/video/generate-video`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+
+      const data = await response.json();
+
+      if (data.videoBase64) {
+        const videoUrl = `data:${
+          data.mimeType || "video/mp4"
+        };base64,${data.videoBase64}`;
+        setGeneratedVideo(videoUrl);
+      } else if (data.videoUrl) {
+        setGeneratedVideo(data.videoUrl);
+      } else {
+        setOutputText("No video generated");
+      }
+
       setVideoLoading(false);
+    }
+
+    // NORMAL TEXT INFERENCE
+    else {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/inference/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: inputText }),
+      });
+
+      const data = await response.json();
+      setOutputText(data.choices?.[0]?.message?.content || "No response");
+
+      setLoading(false);
+    }
+  } catch (error) {
+    setOutputText("Error: " + error.message);
+    setLoading(false);
+    setVideoLoading(false);
   }
 };
 

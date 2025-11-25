@@ -32,12 +32,16 @@ const handleGenerate = async () => {
   if (!prompt.trim()) return;
   setIsLoading(true);
   setImageUrl('');
+
   try {
-    const response = await fetch('http://localhost:5000/api/ai-image/generate', {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    const response = await fetch(`${API_BASE_URL}/ai-image/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, style, ratio, quality }),
     });
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Error:', errorData.error);
@@ -45,6 +49,7 @@ const handleGenerate = async () => {
       setIsLoading(false);
       return;
     }
+
     const data = await response.json();
     setImageUrl(data.imageUrl || '');
   } catch (error) {
@@ -54,6 +59,7 @@ const handleGenerate = async () => {
     setIsLoading(false);
   }
 };
+
 
 
 

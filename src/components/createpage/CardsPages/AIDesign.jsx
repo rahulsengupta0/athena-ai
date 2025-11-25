@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-
+import api from "../../../utils/api";
 const TABS = [
   { key: "logo", label: "Logo Design" },
   { key: "social", label: "Social Media" },
@@ -58,31 +58,31 @@ export const AIDesign = () => {
   const [error, setError] = useState(null);
 
   const selectedSize = useMemo(() => SIZES.find((s) => s.key === activeSize), [activeSize]);
-  const uploadGeneratedImage = async (base64Image) => {
+const uploadGeneratedImage = async (base64Image) => {
   try {
-    const token = localStorage.getItem('token'); // get token from storage
+    const token = localStorage.getItem("token");
+
     const response = await fetch(base64Image);
     const blob = await response.blob();
     const file = new File([blob], "generated-image.png", { type: blob.type });
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("featureFolder", "ai design generation");
-    const res = await fetch("http://localhost:5000/api/upload", {
-      method: "POST",
+
+    const res = await api.post("/upload", formData, {
       headers: {
-        "Authorization": `Bearer ${token}`, // send the token here!
+        "Authorization": `Bearer ${token}`,
       },
-      body: formData,
-      // credentials: "include", // Remove this if not using cookies/session
     });
-    if (!res.ok) throw new Error("Upload failed");
-    const data = await res.json();
-    return data.fileUrl;
+
+    return res.data.fileUrl;
   } catch (error) {
     console.error("Upload error:", error);
     setError("Upload failed: " + error.message);
   }
 };
+
 
 const handleGenerateLogo = async () => {
   if (!prompt.trim()) return;
@@ -92,20 +92,8 @@ const handleGenerateLogo = async () => {
   setError(null);
 
   try {
-    const response = await fetch("http://localhost:5000/api/generate-logo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      setError("Error: " + (errorData.error || "Unknown error"));
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await response.json();
+    const response = await api.post("/generate-logo", { prompt });
+    const data = response.data;
 
     if (!data.imageBase64 || data.imageBase64.length < 1000) {
       setError("Received invalid or too short base64 image data");
@@ -116,7 +104,6 @@ const handleGenerateLogo = async () => {
     const cleanBase64 = data.imageBase64.replace(/\s/g, "");
     const imgSrc = `data:${data.mimeType};base64,${cleanBase64}`;
 
-    // Upload generated image to your backend /api/upload with folder info
     await uploadGeneratedImage(imgSrc);
 
     setGeneratedImage(imgSrc);
@@ -131,6 +118,7 @@ const handleGenerateLogo = async () => {
     setIsLoading(false);
   }
 };
+
 
 
   const onGenerate = async () => {

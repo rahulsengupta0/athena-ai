@@ -93,11 +93,14 @@ const onGenerate = async () => {
   setIsLoading(true);
   setCode('');
   try {
-    const response = await fetch('http://localhost:5000/api/codegen/generate-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, language, framework }),
-    });
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const response = await fetch(`${API_BASE_URL}/codegen/generate-code`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ prompt, language, framework }),
+});
+
 
     if (!response.ok) {
       const errData = await response.json();

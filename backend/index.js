@@ -6,10 +6,18 @@ const cors = require('cors');
 const app = express();
 
 // app.use(cors());             // Enable CORS
-app.use(cors({
-  origin: "http://localhost:5173",  // Frontend origin
-  credentials: true,                // Allow credentials (cookies, auth headers)
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://YOUR_FRONTEND_DOMAIN.com",  // ADD THIS
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 
 app.use(express.json());     // JSON parsing
 
