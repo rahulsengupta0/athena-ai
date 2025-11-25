@@ -34,7 +34,9 @@ import BrandKitDetail from './pages/BrandKitDetail';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import AuthPage from './pages/AuthPage';
+import AdminDash from './pages/AdminDash';
 import BrandKitResult from './pages/BrandKitResult';
 import DocumentGenerator from './components/aigenerator/DocumentGenerator';
 import UiPhotoGenerator from './components/aigenerator/UiPhotoGenerator';
@@ -88,6 +90,14 @@ const AppContent = () => {
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
           <Route path="/docGenerator" element={<DocumentGenerator/>} />
           <Route path="/uiphoto" element={<UiPhotoGenerator/>} />
+          <Route
+            path="/admin-dash"
+            element={
+              <AdminRoute>
+                <AdminDash />
+              </AdminRoute>
+            }
+          />
 
         </Routes>
       </div>
@@ -103,17 +113,14 @@ function App() {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
-            {<Route
+            <Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <AppContent />
                 </ProtectedRoute>
               }
-            /> 
-            //<Route path="/*" element={<AppContent />} />
-
-            }
+            />
           </Routes>
         </Router>
       </SidebarProvider>

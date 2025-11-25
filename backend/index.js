@@ -71,6 +71,12 @@ app.use('/api/profile', profileRoutes);
 const teamRoutes = require('./routes/teamRoutes');
 app.use('/api/team', teamRoutes);
 
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
+const templateRoutes = require('./routes/templateRoutes');
+app.use('/api/templates', templateRoutes);
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
