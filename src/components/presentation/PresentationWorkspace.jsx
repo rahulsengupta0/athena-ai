@@ -24,11 +24,15 @@ import ZoomControls from './controls/ZoomControls';
 import UndoRedoControls from './controls/UndoRedoControls';
 import ImageUpload from './controls/ImageUpload';
 import LayerEffectsPanel from './effects/LayerEffectsPanel';
+import TextEnhanceControls from './ai/TextEnhanceControls';
+import ImageGenerateControls from './ai/ImageGenerateControls';
 
 import { getShapePoints } from './utils/shapeUtils';
 import { useHistory } from './utils/useHistory';
 import { applyLayerEffectsToNode } from './utils/effectUtils';
 import { normalizeImageEffects } from './utils/effectDefaults';
+import { createImageLayer } from './utils/imageUtils';
+import { getAutoSizedTextFrame } from './utils/textLayout';
 
 const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
   useEffect(() => {
@@ -854,6 +858,21 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     setSelectedLayerId(imageLayer.id);
     setSelectedTool('select');
   };
+
+const handleAddGeneratedImage = (imageData) => {
+  if (!layout) return;
+  const imageLayer = createImageLayer(imageData, undefined, layout);
+  handleImageUpload(imageLayer);
+};
+
+const handleApplyEnhancedText = (enhancedText) => {
+  if (!selectedLayer || selectedLayer.type !== 'text') return;
+  const framePatch = getAutoSizedTextFrame(selectedLayer, enhancedText, layout) || {};
+  handleLayerChange({
+    text: enhancedText,
+    ...framePatch,
+  });
+};
 
   const handleLayerDragEnd = (layer, e) => {
     // Get the Group node (parent) if dragging a child element
@@ -1833,6 +1852,11 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                         </button>
                       ))}
                     </div>
+
+                    <TextEnhanceControls
+                      layer={selectedLayer}
+                      onApply={handleApplyEnhancedText}
+                    />
                   </>
                 )}
 
@@ -1945,6 +1969,9 @@ const PresentationWorkspace = ({ layout, onBack }) => {
                 onImageUpload={handleImageUpload}
                 layout={layout}
               />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <ImageGenerateControls onImageReady={handleAddGeneratedImage} />
             </div>
           </div>
         </aside>
