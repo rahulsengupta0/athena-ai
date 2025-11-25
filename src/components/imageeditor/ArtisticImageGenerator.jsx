@@ -17,41 +17,43 @@ export default function ArtisticImageGenerator() {
   };
 
   const handleSubmit = async () => {
-    if (!prompt) {
-      alert('Please enter a creative prompt');
-      return;
+  if (!prompt) {
+    alert('Please enter a creative prompt');
+    return;
+  }
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  setLoading(true);
+
+  try {
+    const formData = new FormData();
+    if (imageFile) formData.append('file', imageFile);
+    formData.append('prompt', prompt);
+
+    const response = await fetch(`${API_BASE_URL}/apply-style`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Failed: ${errText}`);
     }
 
-    setLoading(true);
+    const data = await response.json();
 
-    try {
-      const formData = new FormData();
-      if (imageFile) formData.append('file', imageFile);
-      formData.append('prompt', prompt);
+    if (!data.image) throw new Error('No image returned from backend');
 
-      const response = await fetch('http://localhost:5000/api/apply-style', {
-        method: 'POST',
-        body: formData,
-      });
+    const imageUrl = `data:image/png;base64,${data.image}`;
+    setGeneratedImage(imageUrl);
+  } catch (error) {
+    console.error("Generation error:", error);
+    alert(error.message);
+  }
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed: ${errText}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.image) throw new Error('No image returned from backend');
-
-      const imageUrl = `data:image/png;base64,${data.image}`;
-      setGeneratedImage(imageUrl);
-    } catch (error) {
-      console.error("Generation error:", error);
-      alert(error.message);
-    }
-
-    setLoading(false);
-  };
+  setLoading(false);
+};
 
   const handleDownload = () => {
     if (!generatedImage) return;

@@ -14,45 +14,59 @@ const BrandKitModal = ({ isOpen, onClose }) => {
     posterDescription: ''
   });
 
-  const handleCreate = async () => {
-    if (creatingBrandKit) return;
-    if (!brandForm.name || !brandForm.logoDescription || !brandForm.bannerDescription || !brandForm.posterDescription) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    setCreatingBrandKit(true);
-    try {
-      const payload = {
-        name: brandForm.name,
-        tagline: brandForm.tagline,
-        primaryColor: brandForm.primaryColor,
-        secondaryColor: brandForm.secondaryColor,
-        logoDescription: brandForm.logoDescription,
-        bannerDescription: brandForm.bannerDescription,
-        posterDescription: brandForm.posterDescription,
-      };
-      const userToken = localStorage.getItem("token");
+const handleCreate = async () => {
+  if (creatingBrandKit) return;
 
-      const response = await fetch("http://localhost:5000/api/generate-brandkit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
+  if (
+    !brandForm.name ||
+    !brandForm.logoDescription ||
+    !brandForm.bannerDescription ||
+    !brandForm.posterDescription
+  ) {
+    alert('Please fill in all required fields');
+    return;
+  }
 
-      if (!response.ok) throw new Error("Failed to generate brand kit");
-      const data = await response.json();
-      navigate("/brand-kit-result", { state: data });
-      onClose();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to create brand kit: " + (e.message || "Unknown error"));
-    } finally {
-      setCreatingBrandKit(false);
-    }
-  };
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  setCreatingBrandKit(true);
+
+  try {
+    const payload = {
+      name: brandForm.name,
+      tagline: brandForm.tagline,
+      primaryColor: brandForm.primaryColor,
+      secondaryColor: brandForm.secondaryColor,
+      logoDescription: brandForm.logoDescription,
+      bannerDescription: brandForm.bannerDescription,
+      posterDescription: brandForm.posterDescription,
+    };
+
+    const userToken = localStorage.getItem("token");
+
+    const response = await fetch(`${API_BASE_URL}/generate-brandkit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error("Failed to generate brand kit");
+
+    const data = await response.json();
+    navigate("/brand-kit-result", { state: data });
+    onClose();
+
+  } catch (e) {
+    console.error(e);
+    alert("Failed to create brand kit: " + (e.message || "Unknown error"));
+  } finally {
+    setCreatingBrandKit(false);
+  }
+};
+
 
   if (!isOpen) return null;
 
