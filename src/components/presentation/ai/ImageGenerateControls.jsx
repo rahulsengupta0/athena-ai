@@ -19,7 +19,11 @@ const ImageGenerateControls = ({ onImageReady }) => {
     try {
       const dataUrl = await generatePresentationImage(prompt);
       const imageData = await loadImageFromSource(dataUrl);
-      onImageReady?.(imageData);
+      onImageReady?.(imageData, {
+        origin: 'ai',
+        prompt,
+        label: `AI: ${prompt.slice(0, 24)}${prompt.length > 24 ? '…' : ''}`,
+      });
       setPrompt('');
       setStatus({ type: 'success', message: 'Image added to canvas' });
     } catch (error) {
