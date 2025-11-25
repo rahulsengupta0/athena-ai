@@ -8,7 +8,7 @@ const app = express();
 // app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://YOUR_FRONTEND_DOMAIN.com",  // ADD THIS
+  "https://athena-ai-1-5pif.onrender.com",  // ADD THIS
 ];
 
 app.use(
