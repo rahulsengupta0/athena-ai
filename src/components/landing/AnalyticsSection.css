@@ -438,6 +438,64 @@
     }
   }
 
+  @media (max-width: 768px) {
+    .analytics-modern-layout {
+      gap: 24px;
+    }
+    
+    .analytics-stat-card {
+      padding: 20px;
+      border-radius: 16px;
+    }
+    
+    .stat-title {
+      font-size: 16px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+    }
+    
+    .analytics-chart-card {
+      padding: 22px;
+      border-radius: 16px;
+    }
+    
+    .chart-title {
+      font-size: 20px;
+    }
+    
+    .chart-subtitle {
+      font-size: 14px;
+    }
+    
+    .activity-feed-card {
+      padding: 20px;
+      border-radius: 16px;
+    }
+    
+    .activity-title {
+      font-size: 20px;
+    }
+    
+    .activity-subtitle {
+      font-size: 12px;
+    }
+    
+    .insight-card {
+      padding: 22px;
+      border-radius: 16px;
+    }
+    
+    .insight-title {
+      font-size: 17px;
+    }
+    
+    .insight-desc {
+      font-size: 13px;
+    }
+  }
+
   @media (max-width: 700px) {
     .stats-cards-row {
       grid-template-columns: 1fr;
@@ -477,6 +535,112 @@
     }
   }
 
+  @media (max-width: 576px) {
+    .analytics-modern-layout {
+      gap: 20px;
+    }
+    
+    .analytics-stat-card {
+      padding: 16px;
+      border-radius: 14px;
+    }
+    
+    .stat-title {
+      font-size: 15px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+    }
+    
+    .stat-trend {
+      font-size: 12px;
+    }
+    
+    .analytics-chart-card {
+      padding: 18px;
+      border-radius: 14px;
+    }
+    
+    .chart-title {
+      font-size: 18px;
+    }
+    
+    .chart-subtitle {
+      font-size: 13px;
+    }
+    
+    .chart-bar-row {
+      gap: 12px;
+    }
+    
+    .bar-label {
+      font-size: 12px;
+    }
+    
+    .bar-value {
+      font-size: 13px;
+    }
+    
+    .activity-feed-card {
+      padding: 16px;
+      border-radius: 14px;
+    }
+    
+    .activity-title {
+      font-size: 18px;
+    }
+    
+    .activity-subtitle {
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .activity-list {
+      gap: 10px;
+    }
+    
+    .activity-item {
+      padding: 10px;
+    }
+    
+    .activity-title-text {
+      font-size: 13px;
+    }
+    
+    .activity-quality {
+      font-size: 11px;
+      padding: 2px 8px;
+    }
+    
+    .activity-time {
+      font-size: 11px;
+    }
+    
+    .insight-card {
+      padding: 18px;
+      border-radius: 14px;
+    }
+    
+    .insight-icon-wrapper {
+      width: 44px;
+      height: 44px;
+    }
+    
+    .insight-title {
+      font-size: 16px;
+    }
+    
+    .insight-desc {
+      font-size: 12px;
+    }
+    
+    .insight-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+    }
+  }
+
   @media (max-width: 480px) {
     .chart-bar-row {
       flex-direction: column;
@@ -489,6 +653,68 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 6px;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    .analytics-modern-layout {
+      gap: 16px;
+    }
+    
+    .analytics-stat-card {
+      padding: 14px;
+      border-radius: 12px;
+    }
+    
+    .stat-title {
+      font-size: 14px;
+    }
+    
+    .stat-value {
+      font-size: 22px;
+    }
+    
+    .analytics-chart-card {
+      padding: 16px;
+      border-radius: 12px;
+    }
+    
+    .chart-title {
+      font-size: 16px;
+    }
+    
+    .chart-subtitle {
+      font-size: 12px;
+    }
+    
+    .activity-feed-card {
+      padding: 14px;
+      border-radius: 12px;
+    }
+    
+    .activity-title {
+      font-size: 16px;
+    }
+    
+    .activity-item {
+      padding: 8px;
+    }
+    
+    .activity-title-text {
+      font-size: 12px;
+    }
+    
+    .insight-card {
+      padding: 16px;
+      border-radius: 12px;
+    }
+    
+    .insight-title {
+      font-size: 15px;
+    }
+    
+    .insight-desc {
+      font-size: 11px;
     }
   }
 }

@@ -274,6 +274,83 @@
     justify-content:center
   }
 }
+
+@media (max-width: 576px) {
+  .hero-title {
+    font-size: 32px;
+    line-height: 1.1;
+  }
+  
+  .hero-lead {
+    font-size: 16px;
+  }
+  
+  .hero-ctas {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .hero-features {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hf-item {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .mockup-card {
+    border-radius: 18px;
+  }
+  
+  .mockup-topbar {
+    margin-bottom: 8px;
+  }
+  
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .hero-lead {
+    font-size: 15px;
+  }
+  
+  .mockup-card {
+    padding: 10px;
+  }
+  
+  .widget {
+    min-height: 70px;
+    padding: 8px;
+  }
+  
+  .w-title {
+    font-size: 11px;
+  }
+  
+  .widget.code pre {
+    font-size: 11px;
+  }
+  
+  .ico-small {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
 .hero{
   position:relative; 
   overflow:hidden

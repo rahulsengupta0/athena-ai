@@ -379,6 +379,76 @@
     }
   }
 
+  @media (max-width: 576px) {
+    .favorites-modern-layout {
+      gap: 24px;
+    }
+    
+    .featured-favorite {
+      border-radius: 18px;
+    }
+    
+    .featured-badge {
+      top: 12px;
+      right: 12px;
+      padding: 4px 12px;
+      font-size: 11px;
+    }
+    
+    .featured-preview {
+      aspect-ratio: 3 / 2;
+    }
+    
+    .preview-icon {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .featured-info {
+      padding: 16px;
+    }
+    
+    .featured-title {
+      font-size: 20px;
+    }
+    
+    .featured-desc {
+      font-size: 13px;
+    }
+    
+    .favorites-masonry-grid {
+      gap: 10px;
+    }
+    
+    .favorite-tile {
+      border-radius: 14px;
+    }
+    
+    .tile-star-icon {
+      width: 24px;
+      height: 24px;
+      top: 8px;
+      right: 8px;
+    }
+    
+    .favorites-grid-header h4 {
+      font-size: 20px;
+    }
+    
+    .btn-view-all {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    
+    .stat-number {
+      font-size: 30px;
+    }
+    
+    .stat-text {
+      font-size: 12px;
+    }
+  }
+
   @media (max-width: 480px) {
     .favorites-masonry-grid {
       grid-template-columns: 1fr;
@@ -386,6 +456,76 @@
 
     .favorite-tile:nth-child(n) {
       grid-row: span 1;
+    }
+    
+    .featured-favorite {
+      border-radius: 16px;
+    }
+    
+    .featured-badge {
+      top: 10px;
+      right: 10px;
+      padding: 3px 10px;
+    }
+    
+    .preview-icon {
+      width: 50px;
+      height: 50px;
+    }
+    
+    .featured-info {
+      padding: 14px;
+    }
+    
+    .featured-title {
+      font-size: 18px;
+    }
+    
+    .featured-desc {
+      font-size: 12px;
+    }
+    
+    .favorites-stats-bar {
+      padding: 20px;
+    }
+    
+    .stat-number {
+      font-size: 26px;
+    }
+    
+    .stat-text {
+      font-size: 11px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .featured-info {
+      padding: 12px;
+    }
+    
+    .featured-title {
+      font-size: 16px;
+    }
+    
+    .featured-desc {
+      font-size: 11px;
+    }
+    
+    .meta-item {
+      font-size: 12px;
+    }
+    
+    .tile-title {
+      font-size: 12px;
+      padding: 10px 12px;
+    }
+    
+    .stat-number {
+      font-size: 22px;
+    }
+    
+    .favorites-stats-bar {
+      padding: 16px;
     }
   }
 }
