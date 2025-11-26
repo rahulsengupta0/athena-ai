@@ -1,17 +1,3 @@
-  const handleInsertLibraryImage = (image) => {
-    if (!layout || !image?.src) return;
-    const imageLayer = createImageLayer(image, undefined, layout);
-    handleImageUpload(imageLayer);
-  };
-
-  const handleApplyLibraryImageToShape = (image) => {
-    if (!image?.src || !selectedLayer || selectedLayer.type !== 'shape') return;
-    handleLayerChange({
-      fillType: 'image',
-      fillImageSrc: image.src,
-    });
-  };
-
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
 import {
@@ -83,48 +69,6 @@ const ElementLayer = ({ effects, scale, children }) => {
   );
 };
 
-const useShapeImageFill = (shapeRef, fillType, imageSrc, fallbackFill, dims, fit = 'cover') => {
-  useEffect(() => {
-    const shape = shapeRef?.current;
-    if (!shape) return;
-
-    const resetFill = () => {
-      shape.fillPatternImage(null);
-      shape.fill(fallbackFill);
-      shape.getLayer()?.batchDraw();
-    };
-
-    if (fillType !== 'image' || !imageSrc) {
-      resetFill();
-      return;
-    }
-
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const scaleX = dims.width / img.width;
-      const scaleY = dims.height / img.height;
-      const scale = fit === 'contain' ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
-      const drawWidth = img.width * scale;
-      const drawHeight = img.height * scale;
-      const offsetX = (dims.width - drawWidth) / 2;
-      const offsetY = (dims.height - drawHeight) / 2;
-
-      shape.fillPatternImage(img);
-      shape.fillPatternScale({ x: scale, y: scale });
-      shape.fillPatternRepeat('no-repeat');
-      shape.fillPatternOffset({ x: -offsetX, y: -offsetY });
-      shape.fill('#ffffff');
-      shape.getLayer()?.batchDraw();
-    };
-    img.onerror = resetFill;
-    img.src = imageSrc;
-
-    return () => {
-      resetFill();
-    };
-  }, [shapeRef, fillType, imageSrc, fallbackFill, dims.width, dims.height, fit]);
-};
 
 // Image component for rendering images on canvas
 const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSelected, scale, onDragEnd, onClick }) => {
@@ -252,6 +196,31 @@ const TextLayer = ({
   );
 };
 
+// Helper to create clip function for shapes (similar to CSS clipPath)
+const getShapeClipFunc = (shape, width, height) => {
+  return (ctx) => {
+    ctx.beginPath();
+    if (shape === 'circle') {
+      const radius = Math.min(width, height) / 2;
+      ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+    } else if (shape === 'ellipse') {
+      ctx.ellipse(width / 2, height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
+    } else if (shape === 'rectangle') {
+      ctx.rect(0, 0, width, height);
+    } else {
+      // For custom shapes, use the points
+      const points = getShapePoints(shape, width, height);
+      if (points.length > 0) {
+        ctx.moveTo(points[0], points[1]);
+        for (let i = 2; i < points.length; i += 2) {
+          ctx.lineTo(points[i], points[i + 1]);
+        }
+        ctx.closePath();
+      }
+    }
+  };
+};
+
 const ShapeLayer = ({
   layer,
   scaledX,
@@ -264,50 +233,179 @@ const ShapeLayer = ({
   onClick,
 }) => {
   const shapeRef = useRef(null);
-  useLayerEffects(shapeRef, layer.effects, scale);
-  useShapeImageFill(
-    shapeRef,
-    layer.fillType || 'color',
-    layer.fillImageSrc,
-    layer.fillColor,
-    { width: scaledWidth, height: scaledHeight },
-    layer.fillImageFit || 'cover',
-  );
+  const imageRef = useRef(null);
+  const [imageData, setImageData] = useState(null);
+  
+  // Load image for image fill (CSS-like approach)
+  useEffect(() => {
+    if (layer.fillType === 'image' && layer.fillImageSrc) {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setImageData({ img, width: img.width, height: img.height });
+        if (imageRef.current) {
+          imageRef.current.image(img);
+          imageRef.current.getLayer()?.batchDraw();
+        }
+      };
+      img.onerror = () => setImageData(null);
+      img.src = layer.fillImageSrc;
+    } else {
+      setImageData(null);
+    }
+  }, [layer.fillType, layer.fillImageSrc]);
+  
+  // Determine which ref to use for effects based on fill type
+  const hasImageFill = layer.fillType === 'image' && layer.fillImageSrc && imageData;
+  const effectsTargetRef = hasImageFill ? imageRef : shapeRef;
+  
+  // Apply effects to the appropriate target (image or shape)
+  useLayerEffects(effectsTargetRef, layer.effects, scale, hasImageFill ? [imageData] : []);
+  
+  // Calculate image dimensions for cover/contain (same logic as CSS background-size)
+  const imageDims = useMemo(() => {
+    if (!imageData || !layer.fillImageSrc || layer.fillType !== 'image') {
+      return null;
+    }
+    
+    const { width: imgWidth, height: imgHeight } = imageData;
+    const fit = layer.fillImageFit || 'cover';
+    
+    // Calculate scale (same logic as CSS background-size: cover/contain)
+    const scaleX = scaledWidth / imgWidth;
+    const scaleY = scaledHeight / imgHeight;
+    const scale = fit === 'contain' ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
+    
+    const drawWidth = imgWidth * scale;
+    const drawHeight = imgHeight * scale;
+    
+    // Center the image (same as CSS background-position: center)
+    const offsetX = (scaledWidth - drawWidth) / 2;
+    const offsetY = (scaledHeight - drawHeight) / 2;
+    
+    return { width: drawWidth, height: drawHeight, x: offsetX, y: offsetY };
+  }, [imageData, scaledWidth, scaledHeight, layer.fillImageFit, layer.fillType, layer.fillImageSrc]);
 
   const renderShape = () => {
-    if (layer.shape === 'circle') {
-      const radius = Math.min(scaledWidth, scaledHeight) / 2;
+    const hasImageFillRender = layer.fillType === 'image' && layer.fillImageSrc && imageDims;
+    const clipFunc = hasImageFillRender ? getShapeClipFunc(layer.shape, scaledWidth, scaledHeight) : null;
+    
+    // Render selection outline
+    const renderSelection = () => {
+      if (!isSelected) return null;
+      
+      if (layer.shape === 'circle') {
+        const radius = Math.min(scaledWidth, scaledHeight) / 2;
+        return (
+          <Circle
+            x={radius}
+            y={radius}
+            radius={radius + 2}
+            stroke="rgba(79, 70, 229, 0.9)"
+            strokeWidth={2}
+            fill="transparent"
+          />
+        );
+      }
+      
+      if (layer.shape === 'ellipse') {
+        return (
+          <Ellipse
+            x={scaledWidth / 2}
+            y={scaledHeight / 2}
+            radiusX={scaledWidth / 2 + 2}
+            radiusY={scaledHeight / 2 + 2}
+            stroke="rgba(79, 70, 229, 0.9)"
+            strokeWidth={2}
+            fill="transparent"
+          />
+        );
+      }
+      
+      if (layer.shape === 'rectangle') {
+        return (
+          <Rect
+            x={-2}
+            y={-2}
+            width={scaledWidth + 4}
+            height={scaledHeight + 4}
+            stroke="rgba(79, 70, 229, 0.9)"
+            strokeWidth={2}
+            fill="transparent"
+            cornerRadius={layer.borderRadius * scale + 2}
+          />
+        );
+      }
+      
+      const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+      if (points.length === 0) return null;
       return (
-        <>
-          {isSelected && (
-            <Circle
-              x={radius}
-              y={radius}
-              radius={radius + 2}
-              stroke="rgba(79, 70, 229, 0.9)"
-              strokeWidth={2}
-              fill="transparent"
-            />
-          )}
-          <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill={layer.fillColor} />
-        </>
+        <Line
+          points={points.map((p) => p - 2)}
+          closed
+          stroke="rgba(79, 70, 229, 0.9)"
+          strokeWidth={2}
+          fill="transparent"
+        />
       );
-    }
-
-    if (layer.shape === 'ellipse') {
-      return (
-        <>
-          {isSelected && (
-            <Ellipse
-              x={scaledWidth / 2}
-              y={scaledHeight / 2}
-              radiusX={scaledWidth / 2 + 2}
-              radiusY={scaledHeight / 2 + 2}
-              stroke="rgba(79, 70, 229, 0.9)"
-              strokeWidth={2}
-              fill="transparent"
+    };
+    
+    // Render shape with image fill or color fill
+    const renderShapeContent = () => {
+      if (hasImageFillRender) {
+        // Render image fill with clipping (CSS-like approach)
+        return (
+          <Group clipFunc={clipFunc}>
+            <KonvaImage
+              ref={imageRef}
+              x={imageDims.x}
+              y={imageDims.y}
+              width={imageDims.width}
+              height={imageDims.height}
             />
-          )}
+            {/* Render shape outline for effects */}
+            {layer.shape === 'circle' && (() => {
+              const radius = Math.min(scaledWidth, scaledHeight) / 2;
+              return <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill="transparent" />;
+            })()}
+            {layer.shape === 'ellipse' && (
+              <Ellipse
+                ref={shapeRef}
+                x={scaledWidth / 2}
+                y={scaledHeight / 2}
+                radiusX={scaledWidth / 2}
+                radiusY={scaledHeight / 2}
+                fill="transparent"
+              />
+            )}
+            {layer.shape === 'rectangle' && (
+              <Rect
+                ref={shapeRef}
+                x={0}
+                y={0}
+                width={scaledWidth}
+                height={scaledHeight}
+                fill="transparent"
+                cornerRadius={layer.borderRadius * scale}
+              />
+            )}
+            {!['circle', 'ellipse', 'rectangle'].includes(layer.shape) && (() => {
+              const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+              if (points.length === 0) return null;
+              return <Line ref={shapeRef} points={points} closed fill="transparent" stroke="transparent" />;
+            })()}
+          </Group>
+        );
+      }
+      
+      // Render color fill (normal rendering)
+      if (layer.shape === 'circle') {
+        const radius = Math.min(scaledWidth, scaledHeight) / 2;
+        return <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill={layer.fillColor} />;
+      }
+      
+      if (layer.shape === 'ellipse') {
+        return (
           <Ellipse
             ref={shapeRef}
             x={scaledWidth / 2}
@@ -316,25 +414,11 @@ const ShapeLayer = ({
             radiusY={scaledHeight / 2}
             fill={layer.fillColor}
           />
-        </>
-      );
-    }
-
-    if (layer.shape === 'rectangle') {
-      return (
-        <>
-          {isSelected && (
-            <Rect
-              x={-2}
-              y={-2}
-              width={scaledWidth + 4}
-              height={scaledHeight + 4}
-              stroke="rgba(79, 70, 229, 0.9)"
-              strokeWidth={2}
-              fill="transparent"
-              cornerRadius={layer.borderRadius * scale + 2}
-            />
-          )}
+        );
+      }
+      
+      if (layer.shape === 'rectangle') {
+        return (
           <Rect
             ref={shapeRef}
             x={0}
@@ -344,25 +428,18 @@ const ShapeLayer = ({
             fill={layer.fillColor}
             cornerRadius={layer.borderRadius * scale}
           />
-        </>
-      );
-    }
-
-    const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
-    if (points.length === 0) return null;
-
+        );
+      }
+      
+      const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+      if (points.length === 0) return null;
+      return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
+    };
+    
     return (
       <>
-        {isSelected && (
-          <Line
-            points={points.map((p) => p - 2)}
-            closed
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        )}
-        <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />
+        {renderSelection()}
+        {renderShapeContent()}
       </>
     );
   };
@@ -484,8 +561,6 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const zoomTargetRef = useRef({ scrollLeft: null, scrollTop: null });
   const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const hasPannedRef = useRef(false);
-  const lastGeneratedImageRef = useRef(null);
-  
   const IMAGE_LIBRARY_STORAGE_KEY = 'presentation-image-library';
 
   // History management hook
@@ -977,18 +1052,29 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   registerImageInLibrary(imageLayer, { label: imageLayer.name || 'Image', origin: 'upload' });
   };
 
+  const handleInsertLibraryImage = (image) => {
+    if (!layout || !image?.src) return;
+    const imageLayer = createImageLayer(image, undefined, layout);
+    handleImageUpload(imageLayer);
+  };
+
+  const handleApplyLibraryImageToShape = (image) => {
+    if (!image?.src || !selectedLayer || selectedLayer.type !== 'shape') return;
+    handleLayerChange({
+      fillType: 'image',
+      fillImageSrc: image.src,
+    });
+  };
+
 const handleAddGeneratedImage = (imageData, meta = {}) => {
   if (!layout) return;
-  const entry = registerImageInLibrary(imageData, {
+  // Always register in library first
+  registerImageInLibrary(imageData, {
     origin: meta.origin || 'ai',
     label: meta.label || 'AI Image',
     prompt: meta.prompt,
   });
-  if (entry) {
-    lastGeneratedImageRef.current = entry;
-  } else {
-    lastGeneratedImageRef.current = imageData;
-  }
+  // If shape is selected, fill it; otherwise add to canvas
   if (selectedLayer && selectedLayer.type === 'shape') {
     handleLayerChange({
       fillType: 'image',
@@ -996,6 +1082,7 @@ const handleAddGeneratedImage = (imageData, meta = {}) => {
     });
     return;
   }
+  // Add to canvas as new image layer
   const imageLayer = createImageLayer(imageData, undefined, layout);
   handleImageUpload(imageLayer);
 };
@@ -2028,7 +2115,6 @@ const handleApplyEnhancedText = (enhancedText) => {
                     <ShapeImageFillControls
                       layer={selectedLayer}
                       onChange={handleLayerChange}
-                      latestGeneratedImage={lastGeneratedImageRef.current}
                       imageLibrary={imageLibrary}
                       onStoreImage={(image) =>
                         registerImageInLibrary(image, { origin: 'upload', label: 'Shape upload' })

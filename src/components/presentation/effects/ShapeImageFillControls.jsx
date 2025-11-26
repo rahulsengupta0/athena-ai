@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 const ShapeImageFillControls = ({
   layer,
   onChange,
-  latestGeneratedImage,
   imageLibrary = [],
   onStoreImage,
 }) => {
@@ -50,14 +49,6 @@ const ShapeImageFillControls = ({
       img.src = result;
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleUseGenerated = () => {
-    if (!latestGeneratedImage?.src) return;
-    onChange({
-      fillType: 'image',
-      fillImageSrc: latestGeneratedImage.src,
-    });
   };
 
   const handleFitChange = (event) => {
@@ -110,45 +101,27 @@ const ShapeImageFillControls = ({
 
       {mode === 'image' && (
         <>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                flex: 1,
-                border: '1px solid rgba(148, 163, 184, 0.35)',
-                borderRadius: 12,
-                padding: '8px 12px',
-                background: '#fff',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Upload
-            </button>
-            <button
-              onClick={handleUseGenerated}
-              disabled={!latestGeneratedImage?.src}
-              style={{
-                flex: 1,
-                border: 'none',
-                borderRadius: 12,
-                padding: '8px 12px',
-                background: latestGeneratedImage?.src ? '#0ea5e9' : 'rgba(15, 23, 42, 0.08)',
-                color: latestGeneratedImage?.src ? '#fff' : '#94a3b8',
-                fontWeight: 600,
-                cursor: latestGeneratedImage?.src ? 'pointer' : 'not-allowed',
-              }}
-            >
-              Use last AI image
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleUploadFile}
-            />
-          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: '100%',
+              border: '1px solid rgba(148, 163, 184, 0.35)',
+              borderRadius: 12,
+              padding: '8px 12px',
+              background: '#fff',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Upload
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleUploadFile}
+          />
 
           {imageLibrary.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
