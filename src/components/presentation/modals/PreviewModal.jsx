@@ -47,14 +47,14 @@ const PreviewTextLayer = ({ layer, x, y, width, height, scale }) => {
         height={height}
         text={layer.text}
         fontSize={layer.fontSize * scale}
-        fontFamily={layer.fontFamily}
-        fontStyle={layer.fontStyle || 'normal'}
-        fontWeight={layer.fontWeight || 'normal'}
+        fontFamily={layer.fontFamily || 'Poppins'}
+        font={`${layer.fontStyle === 'italic' ? 'italic ' : ''}${layer.fontWeight === 'bold' || layer.fontWeight === '700' || layer.fontWeight === 700 ? 'bold ' : ''}${layer.fontSize * scale}px ${layer.fontFamily || 'Poppins'}`}
         fill={layer.color}
-        align={layer.textAlign}
+        align={layer.textAlign || 'left'}
         verticalAlign="middle"
         padding={12 * scale}
         wrap="word"
+        textDecoration={layer.textDecoration || 'none'}
       />
     </Group>
   );

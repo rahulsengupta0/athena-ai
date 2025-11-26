@@ -18,17 +18,22 @@ export const getAutoSizedTextFrame = (layer, text, layout) => {
   const baseWidth = layer.width || maxWidth;
   const width = Math.min(Math.max(baseWidth, minWidth), maxWidth);
 
+  const fontStyle = layer.fontStyle === 'italic' ? 'italic ' : '';
+  const fontWeight = layer.fontWeight === 'bold' || layer.fontWeight === '700' || layer.fontWeight === 700 ? 'bold ' : '';
+  const fontSize = layer.fontSize;
+  const fontFamily = layer.fontFamily || 'Poppins';
+  const fontString = `${fontStyle}${fontWeight}${fontSize}px ${fontFamily}`;
+  
   const tempText = new Konva.Text({
     text,
     width,
-    fontSize: layer.fontSize,
-    fontFamily: layer.fontFamily,
-    fontStyle: layer.fontStyle || 'normal',
-    fontVariant: layer.fontVariant,
-    fontWeight: layer.fontWeight || 'normal',
+    fontSize: fontSize,
+    fontFamily: fontFamily,
+    font: fontString,
     align: layer.textAlign || 'left',
     wrap: 'word',
     padding,
+    textDecoration: layer.textDecoration || 'none',
   });
 
   const textHeight = tempText.height();

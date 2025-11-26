@@ -58,21 +58,27 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
     }
 
     if (layerData.type === 'text') {
+      const fontStyle = layerData.fontStyle === 'italic' ? 'italic ' : '';
+      const fontWeight = layerData.fontWeight === 'bold' || layerData.fontWeight === '700' || layerData.fontWeight === 700 ? 'bold ' : '';
+      const fontSize = layerData.fontSize * scale;
+      const fontFamily = layerData.fontFamily || 'Poppins';
+      const fontString = `${fontStyle}${fontWeight}${fontSize}px ${fontFamily}`;
+      
       const text = new Konva.Text({
         x,
         y,
         width: w,
         height: h,
         text: layerData.text,
-        fontSize: layerData.fontSize * scale,
-        fontFamily: layerData.fontFamily,
-        fontStyle: layerData.fontStyle || 'normal',
-        fontWeight: layerData.fontWeight || 'normal',
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+        font: fontString,
         fill: layerData.color,
-        align: layerData.textAlign,
+        align: layerData.textAlign || 'left',
         verticalAlign: 'middle',
         padding: 12 * scale,
         wrap: 'word',
+        textDecoration: layerData.textDecoration || 'none',
       });
       elementLayer.add(text);
       applyLayerEffectsToNode(text, layerData.effects, scale);
