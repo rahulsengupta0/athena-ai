@@ -28,6 +28,9 @@ import TextEnhanceControls from './ai/TextEnhanceControls';
 import ImageGenerateControls from './ai/ImageGenerateControls';
 import ShapeImageFillControls from './effects/ShapeImageFillControls';
 import ImageLibrary from './controls/ImageLibrary';
+import FontFamilySelector from './controls/FontFamilySelector';
+import FontStyleControls from './controls/FontStyleControls';
+import TextAlignControls from './controls/TextAlignControls';
 
 import { getShapePoints } from './utils/shapeUtils';
 import { useHistory } from './utils/useHistory';
@@ -183,14 +186,14 @@ const TextLayer = ({
         height={scaledHeight}
         text={layer.text}
         fontSize={layer.fontSize * scale}
-        fontFamily={layer.fontFamily}
-        fontStyle={layer.fontStyle || 'normal'}
-        fontWeight={layer.fontWeight || 'normal'}
+        fontFamily={layer.fontFamily || 'Poppins'}
+        font={`${layer.fontStyle === 'italic' ? 'italic ' : ''}${layer.fontWeight === 'bold' || layer.fontWeight === '700' || layer.fontWeight === 700 ? 'bold ' : ''}${layer.fontSize * scale}px ${layer.fontFamily || 'Poppins'}`}
         fill={layer.color}
-        align={layer.textAlign}
+        align={layer.textAlign || 'left'}
         verticalAlign="middle"
         padding={12 * scale}
         wrap="word"
+        textDecoration={layer.textDecoration || 'none'}
       />
     </Group>
   );
@@ -481,8 +484,10 @@ const createLayer = (definition, coordinates) => {
       name: definition.label || 'Text',
       text: preset.text,
       fontSize: preset.fontSize,
-      fontWeight: preset.fontWeight,
-      fontFamily: 'Poppins, sans-serif',
+      fontWeight: preset.fontWeight || 'normal',
+      fontFamily: 'Poppins',
+      fontStyle: 'normal',
+      textDecoration: 'none',
       color: '#0f172a',
       width: preset.width,
       height: preset.height,
@@ -2008,7 +2013,15 @@ const handleApplyEnhancedText = (enhancedText) => {
                       <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>Content</span>
                       <textarea
                         value={selectedLayer.text}
-                        onChange={(event) => handleLayerChange({ text: event.target.value })}
+                        onChange={(event) => {
+                          const newText = event.target.value;
+                          // Auto-resize text box when text changes
+                          const framePatch = getAutoSizedTextFrame(selectedLayer, newText, layout) || {};
+                          handleLayerChange({
+                            text: newText,
+                            ...framePatch,
+                          });
+                        }}
                         rows={3}
                         style={{
                           borderRadius: 14,
@@ -2020,6 +2033,23 @@ const handleApplyEnhancedText = (enhancedText) => {
                         }}
                       />
                     </label>
+                    
+                    <FontFamilySelector
+                      value={selectedLayer.fontFamily}
+                      onChange={(fontFamily) => {
+                        handleLayerChange({ fontFamily });
+                        // Recalculate size when font changes
+                        const framePatch = getAutoSizedTextFrame(
+                          { ...selectedLayer, fontFamily },
+                          selectedLayer.text,
+                          layout
+                        ) || {};
+                        if (framePatch.width || framePatch.height) {
+                          handleLayerChange({ fontFamily, ...framePatch });
+                        }
+                      }}
+                    />
+                    
                     <div style={{ display: 'flex', gap: 12 }}>
                       <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Font size</span>
@@ -2028,7 +2058,19 @@ const handleApplyEnhancedText = (enhancedText) => {
                           min={8}
                           max={120}
                           value={selectedLayer.fontSize}
-                          onChange={(event) => handleLayerChange({ fontSize: Number(event.target.value) })}
+                          onChange={(event) => {
+                            const newFontSize = Number(event.target.value);
+                            handleLayerChange({ fontSize: newFontSize });
+                            // Recalculate size when font size changes
+                            const framePatch = getAutoSizedTextFrame(
+                              { ...selectedLayer, fontSize: newFontSize },
+                              selectedLayer.text,
+                              layout
+                            ) || {};
+                            if (framePatch.width || framePatch.height) {
+                              handleLayerChange({ fontSize: newFontSize, ...framePatch });
+                            }
+                          }}
                           style={{
                             borderRadius: 12,
                             border: '1px solid rgba(148, 163, 184, 0.35)',
@@ -2052,28 +2094,26 @@ const handleApplyEnhancedText = (enhancedText) => {
                         />
                       </label>
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {['left', 'center', 'right'].map((align) => (
-                        <button
-                          key={align}
-                          onClick={() => handleLayerChange({ textAlign: align })}
-                          style={{
-                            flex: 1,
-                            border: '1px solid rgba(148, 163, 184, 0.35)',
-                            background:
-                              selectedLayer.textAlign === align ? 'rgba(79, 70, 229, 0.08)' : '#ffffff',
-                            borderRadius: 12,
-                            padding: '8px 0',
-                            fontWeight: 600,
-                            color: '#1e293b',
-                            cursor: 'pointer',
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {align}
-                        </button>
-                      ))}
-                    </div>
+                    
+                    <FontStyleControls
+                      fontWeight={selectedLayer.fontWeight}
+                      fontStyle={selectedLayer.fontStyle}
+                      textDecoration={selectedLayer.textDecoration}
+                      onChange={(patch) => {
+                        handleLayerChange(patch);
+                        // Recalculate size when font style changes
+                        const updatedLayer = { ...selectedLayer, ...patch };
+                        const framePatch = getAutoSizedTextFrame(updatedLayer, selectedLayer.text, layout) || {};
+                        if (framePatch.width || framePatch.height) {
+                          handleLayerChange({ ...patch, ...framePatch });
+                        }
+                      }}
+                    />
+                    
+                    <TextAlignControls
+                      value={selectedLayer.textAlign || 'left'}
+                      onChange={(textAlign) => handleLayerChange({ textAlign })}
+                    />
 
                     <TextEnhanceControls
                       layer={selectedLayer}
