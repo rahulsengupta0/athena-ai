@@ -6,7 +6,7 @@ import "./ProjectsSection.css";
 
 const ProjectsSection = () => {
   return (
-    <section className="projects section" id="projects">
+    <section className="projects section" id="projects" style={{ overflow: 'hidden', boxSizing: 'border-box' }}>
       <Reveal className="center">
         <div className="kicker">Project Workspace</div>
         <h2 className="h2">Organize & Track Projects</h2>

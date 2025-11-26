@@ -44,3 +44,52 @@
     padding: 16px 
   } 
 }
+
+@media (max-width: 576px) {
+  .create-grid {
+    gap: 14px;
+  }
+  
+  .create-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+  
+  .cc-ico {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .cc-title {
+    font-size: 16px;
+  }
+  
+  .cc-desc {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .create-grid {
+    gap: 12px;
+  }
+  
+  .create-card {
+    padding: 12px;
+  }
+  
+  .cc-ico {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .cc-title {
+    font-size: 15px;
+  }
+  
+  .cc-desc {
+    font-size: 12px;
+  }
+}
