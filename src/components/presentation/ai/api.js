@@ -62,3 +62,5 @@ export const generatePresentationImage = async (prompt) => {
   return `data:image/png;base64,${base64}`;
 };
 
+
+
