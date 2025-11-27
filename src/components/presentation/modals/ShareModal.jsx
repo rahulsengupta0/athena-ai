@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import Konva from 'konva';
 import { getShapePoints } from '../utils/shapeUtils';
 import { applyLayerEffectsToNode } from '../utils/effectUtils';
+import { getKonvaFontStyle } from '../utils/fontUtils';
 
 // Function to render a slide to an image
 const renderSlideToImage = async (slide, layout, scale = 1) => {
@@ -58,12 +59,10 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
     }
 
     if (layerData.type === 'text') {
-      const fontStyle = layerData.fontStyle === 'italic' ? 'italic ' : '';
-      const fontWeight = layerData.fontWeight === 'bold' || layerData.fontWeight === '700' || layerData.fontWeight === 700 ? 'bold ' : '';
       const fontSize = layerData.fontSize * scale;
       const fontFamily = layerData.fontFamily || 'Poppins';
-      const fontString = `${fontStyle}${fontWeight}${fontSize}px ${fontFamily}`;
-      
+      const konvaFontStyle = getKonvaFontStyle(layerData.fontStyle, layerData.fontWeight);
+
       const text = new Konva.Text({
         x,
         y,
@@ -72,7 +71,7 @@ const renderSlideToImage = async (slide, layout, scale = 1) => {
         text: layerData.text,
         fontSize: fontSize,
         fontFamily: fontFamily,
-        font: fontString,
+        fontStyle: konvaFontStyle,
         fill: layerData.color,
         align: layerData.textAlign || 'left',
         verticalAlign: 'middle',
