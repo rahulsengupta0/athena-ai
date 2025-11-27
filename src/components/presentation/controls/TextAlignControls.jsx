@@ -64,3 +64,4 @@ const TextAlignControls = ({ value, onChange }) => {
 
 export default TextAlignControls;
 
+

@@ -3,6 +3,7 @@ import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaI
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getShapePoints } from '../utils/shapeUtils';
 import { applyLayerEffectsToNode } from '../utils/effectUtils';
+import { getKonvaFontStyle } from '../utils/fontUtils';
 
 const useKonvaEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
   useEffect(() => {
@@ -48,7 +49,7 @@ const PreviewTextLayer = ({ layer, x, y, width, height, scale }) => {
         text={layer.text}
         fontSize={layer.fontSize * scale}
         fontFamily={layer.fontFamily || 'Poppins'}
-        font={`${layer.fontStyle === 'italic' ? 'italic ' : ''}${layer.fontWeight === 'bold' || layer.fontWeight === '700' || layer.fontWeight === 700 ? 'bold ' : ''}${layer.fontSize * scale}px ${layer.fontFamily || 'Poppins'}`}
+        fontStyle={getKonvaFontStyle(layer.fontStyle, layer.fontWeight)}
         fill={layer.color}
         align={layer.textAlign || 'left'}
         verticalAlign="middle"

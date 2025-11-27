@@ -38,6 +38,7 @@ import { applyLayerEffectsToNode } from './utils/effectUtils';
 import { normalizeImageEffects } from './utils/effectDefaults';
 import { createImageLayer } from './utils/imageUtils';
 import { getAutoSizedTextFrame } from './utils/textLayout';
+import { getKonvaFontStyle } from './utils/fontUtils';
 
 const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
   useEffect(() => {
@@ -187,7 +188,7 @@ const TextLayer = ({
         text={layer.text}
         fontSize={layer.fontSize * scale}
         fontFamily={layer.fontFamily || 'Poppins'}
-        font={`${layer.fontStyle === 'italic' ? 'italic ' : ''}${layer.fontWeight === 'bold' || layer.fontWeight === '700' || layer.fontWeight === 700 ? 'bold ' : ''}${layer.fontSize * scale}px ${layer.fontFamily || 'Poppins'}`}
+        fontStyle={getKonvaFontStyle(layer.fontStyle, layer.fontWeight)}
         fill={layer.color}
         align={layer.textAlign || 'left'}
         verticalAlign="middle"
