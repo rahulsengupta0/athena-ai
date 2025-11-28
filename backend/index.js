@@ -8,16 +8,16 @@ const app = express();
 // app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://athena-ai-1-5pif.onrender.com",  // ADD THIS
+  //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 
 
 app.use(express.json());     // JSON parsing
