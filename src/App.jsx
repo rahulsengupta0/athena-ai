@@ -31,6 +31,7 @@ import ImageEditor from './components/imageeditor/ImageEditor';
 import CanvaClone from './pages/CanvaClone';
 import Brandkit from './pages/Brandkit';
 import BrandKitDetail from './pages/BrandKitDetail';
+import Presentation from './pages/Presentation';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -40,6 +41,7 @@ import AdminDash from './pages/AdminDash';
 import BrandKitResult from './pages/BrandKitResult';
 import DocumentGenerator from './components/aigenerator/DocumentGenerator';
 import UiPhotoGenerator from './components/aigenerator/UiPhotoGenerator';
+
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -98,6 +100,7 @@ const AppContent = () => {
               </AdminRoute>
             }
           />
+          <Route path="/presentation" element={<Presentation />} />
 
         </Routes>
       </div>
