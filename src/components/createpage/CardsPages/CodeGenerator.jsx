@@ -95,7 +95,7 @@ const onGenerate = async () => {
   try {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const response = await fetch(`${API_BASE_URL}/codegen/generate-code`, {
+const response = await fetch(`${API_BASE_URL}/api/codegen/generate-code`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ prompt, language, framework }),

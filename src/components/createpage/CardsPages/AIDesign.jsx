@@ -92,7 +92,7 @@ const handleGenerateLogo = async () => {
   setError(null);
 
   try {
-    const response = await api.post("/generate-logo", { prompt });
+    const response = await api.post("/api/generate-logo", { prompt });
     const data = response.data;
 
     if (!data.imageBase64 || data.imageBase64.length < 1000) {
