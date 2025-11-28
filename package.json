@@ -24,6 +24,8 @@
     "openai": "^6.9.0",
     "pdfkit": "^0.17.2",
     "pptxgenjs": "^4.0.1",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.554.0",
     "react": "^19.1.1",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.1",

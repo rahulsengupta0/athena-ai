@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX, FiShield } from 'react-icons/fi';
+import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX, FiShield ,FiLayout  } from 'react-icons/fi';
 import { useSidebar } from '../contexts/SidebarContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -21,6 +21,15 @@ const NAV_ITEMS = [
     sublabel: "New",
     sublabelClass: "new",
     path: "/create"
+  },
+  {
+    label: "Presentation",
+    key: "presentation",
+    icon: <FiLayout size={18} />,
+    section: "Navigation",
+    sublabel: "Beta",
+    sublabelClass: "beta",
+    path: "/presentation"
   },
   {
     label: "Projects",
