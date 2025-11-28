@@ -1,7 +1,5 @@
 {
-  "build": {
-    "env": {
-      "NODE_VERSION": "20"
-    }
+  "env": {
+    "ROLLUP_USE_NATIVE": "false"
   }
 }
