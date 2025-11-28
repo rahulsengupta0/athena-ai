@@ -58,7 +58,7 @@ const handleGenerate = async () => {
   try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const response = await fetch(`${API_BASE_URL}/content/generate-content`, {
+    const response = await fetch(`${API_BASE_URL}/api/content/generate-content`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: brief }),

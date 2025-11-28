@@ -46,7 +46,7 @@ const uploadToS3 = async (base64Image) => {
   const formData = new FormData();
   formData.append('file', blob, 'generated-logo.png');
 
-  const response = await fetch(`${API_BASE_URL}/upload`, {
+  const response = await fetch(`${API_BASE_URL}/api/upload`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` },
     body: formData,
@@ -140,7 +140,7 @@ const sendAiChat = async () => {
   try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const resp = await fetch(`${API_BASE_URL}/inference/generate`, {
+    const resp = await fetch(`${API_BASE_URL}/api/inference/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: current })
@@ -165,7 +165,7 @@ const handleGenerateLogo = async () => {
   setGeneratedImage(null);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/generate-logo`, {
+    const response = await fetch(`${API_BASE_URL}/api/generate-logo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: inputText }),
@@ -209,7 +209,7 @@ const handleCreateClick = async () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/inference/generate`, {
+      const response = await fetch(`${API_BASE_URL}/api/inference/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: currentInput }),
@@ -248,7 +248,7 @@ const handleCreateClick = async () => {
     else if (selectedButton === "create-image") {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/image/generate-image`, {
+      const response = await fetch(`${API_BASE_URL}/api/image/generate-image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: inputText }),
@@ -270,7 +270,7 @@ const handleCreateClick = async () => {
     else if (selectedButton === "create-video") {
       setVideoLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/video/generate-video`, {
+      const response = await fetch(`${API_BASE_URL}/api/video/generate-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: inputText }),
@@ -296,7 +296,7 @@ const handleCreateClick = async () => {
     else {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/inference/generate`, {
+      const response = await fetch(`${API_BASE_URL}/api/inference/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: inputText }),
