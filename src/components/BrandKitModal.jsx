@@ -44,7 +44,7 @@ const handleCreate = async () => {
 
     const userToken = localStorage.getItem("token");
 
-    const response = await fetch(`${API_BASE_URL}/generate-brandkit`, {
+    const response = await fetch(`${API_BASE_URL}/api/generate-brandkit`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
