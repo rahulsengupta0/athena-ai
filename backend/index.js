@@ -37,6 +37,7 @@ const profileRoutes = require('./routes/profileRoutes');
 const deepseekRoutes = require('./routes/deepseekRoutes');
 const emailRoutes = require('./routes/emailRoutes');
 const phoneSupport = require("./routes/phoneSupport");
+const ppRoutes = require('./routes/pptroutes');
 
 
 
@@ -57,6 +58,7 @@ app.use('/api/deepseek', deepseekRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/phone', phoneSupport.router);
 app.use('/api', brandKitRoutes);
+app.use('/api/pp', ppRoutes);
 
 
 

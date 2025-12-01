@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import PromptSection from './PromptSection';
 import EditorSection from './EditorSection';
-import { generatePresentation, exportPresentation } from '../../services/gammaApi';
+import { generatePresentation, exportPresentation } from './presentationService';
 import './PresentationStudio.css';
 
 const PresentationStudio = () => {
