@@ -1,9 +1,8 @@
-// Gamma API integration service
-const GAMMA_API_BASE_URL = 'https://gamma.app/api';
-const GAMMA_API_KEY = import.meta.env.VITE_GAMMA_API_KEY || 'your-gamma-api-key';
+// Frontend service for Presentation Studio that communicates with our backend
+const API_BASE_URL = '/api/pp';
 
 /**
- * Generate a presentation using Gamma API
+ * Generate a presentation using our backend proxy
  * @param {Object} params - Presentation generation parameters
  * @param {string} params.prompt - The topic or description for the presentation
  * @param {string} params.tone - The tone of the presentation (Professional, Friendly, etc.)
@@ -15,27 +14,17 @@ const GAMMA_API_KEY = import.meta.env.VITE_GAMMA_API_KEY || 'your-gamma-api-key'
  */
 export const generatePresentation = async (params) => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations/generate`, {
+    const response = await fetch(`${API_BASE_URL}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
       },
-      body: JSON.stringify({
-        prompt: params.prompt,
-        options: {
-          tone: params.tone,
-          length: parseInt(params.length),
-          media_style: params.mediaStyle,
-          use_brand_style: params.useBrandStyle,
-          outline: params.outlineText
-        }
-      })
+      body: JSON.stringify(params)
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -53,16 +42,16 @@ export const generatePresentation = async (params) => {
  */
 export const getPresentation = async (presentationId) => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations/${presentationId}`, {
+    const response = await fetch(`${API_BASE_URL}/${presentationId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
+        'Content-Type': 'application/json',
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -81,18 +70,17 @@ export const getPresentation = async (presentationId) => {
  */
 export const updatePresentation = async (presentationId, updates) => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations/${presentationId}`, {
+    const response = await fetch(`${API_BASE_URL}/${presentationId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
       },
       body: JSON.stringify(updates)
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -110,19 +98,20 @@ export const updatePresentation = async (presentationId, updates) => {
  */
 export const deletePresentation = async (presentationId) => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations/${presentationId}`, {
+    const response = await fetch(`${API_BASE_URL}/${presentationId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
+        'Content-Type': 'application/json',
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    return true;
+    const data = await response.json();
+    return data.success;
   } catch (error) {
     console.error('Error deleting presentation:', error);
     throw error;
@@ -135,16 +124,16 @@ export const deletePresentation = async (presentationId) => {
  */
 export const listPresentations = async () => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations`, {
+    const response = await fetch(`${API_BASE_URL}/`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
+        'Content-Type': 'application/json',
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -163,18 +152,17 @@ export const listPresentations = async () => {
  */
 export const exportPresentation = async (presentationId, format) => {
   try {
-    const response = await fetch(`${GAMMA_API_BASE_URL}/presentations/${presentationId}/export`, {
+    const response = await fetch(`${API_BASE_URL}/${presentationId}/export`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GAMMA_API_KEY}`,
-        'X-API-Key': GAMMA_API_KEY
       },
       body: JSON.stringify({ format })
     });
 
     if (!response.ok) {
-      throw new Error(`Gamma API error: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -184,4 +172,3 @@ export const exportPresentation = async (presentationId, format) => {
     throw error;
   }
 };
-

@@ -13,6 +13,7 @@
   "dependencies": {
     "@huggingface/inference": "^4.8.0",
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "docx": "^9.5.1",
