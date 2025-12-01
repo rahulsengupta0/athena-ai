@@ -54,11 +54,10 @@ router.post('/chat', async (req, res) => {
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'tngtech/deepseek-r1t2-chimera:free',
+        model: 'deepseek/deepseek-r1:free',
         messages: [
           systemPrompt,
-          ...(history || []),
-          { role: 'user', content: message },
+          ...(history || []), // history ALREADY includes the message
         ],
       },
       {

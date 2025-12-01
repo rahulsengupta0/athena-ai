@@ -17,7 +17,6 @@ app.use(express.json());
 // ✅ Import routes
 const uploadRoutes = require('./routes/upload');
 const brandKitRoutes = require('./routes/brandKit');
-app.use('/api', brandKitRoutes);
 
 // In backend/app.js or backend/server.js
 const generateDocument = require('./routes/generateDocument');
@@ -43,7 +42,6 @@ const phoneSupport = require("./routes/phoneSupport");
 
 // ✅ Mount routes
 app.use('/api/upload', uploadRoutes);
-app.use('/api', brandKitRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api', applyStyleRoutes);
@@ -58,6 +56,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/deepseek', deepseekRoutes); 
 app.use('/api/email', emailRoutes);
 app.use('/api/phone', phoneSupport.router);
+app.use('/api', brandKitRoutes);
 
 
 
