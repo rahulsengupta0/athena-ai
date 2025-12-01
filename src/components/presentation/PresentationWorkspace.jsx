@@ -28,6 +28,8 @@ import TextEnhanceControls from './ai/TextEnhanceControls';
 import ImageGenerateControls from './ai/ImageGenerateControls';
 import ShapeImageFillControls from './effects/ShapeImageFillControls';
 import ImageLibrary from './controls/ImageLibrary';
+import ResizeHandles from './canvas/ResizeHandles';
+import LayerActionBar from './canvas/LayerActionBar';
 import FontFamilySelector from './controls/FontFamilySelector';
 import FontStyleControls from './controls/FontStyleControls';
 import TextAlignControls from './controls/TextAlignControls';
@@ -39,6 +41,7 @@ import { normalizeImageEffects } from './utils/effectDefaults';
 import { createImageLayer } from './utils/imageUtils';
 import { getAutoSizedTextFrame } from './utils/textLayout';
 import { getKonvaFontStyle } from './utils/fontUtils';
+import { enhancePresentationText } from './ai/api';
 
 const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
   useEffect(() => {
@@ -62,20 +65,49 @@ const useLayerBlur = (layerRef, blurValue = 0, scaleFactor = 1) => {
   }, [layerRef, blurValue, scaleFactor]);
 };
 
-const ElementLayer = ({ effects, scale, children }) => {
+const ElementLayer = ({
+  effects,
+  scale,
+  children,
+  showSelection = false,
+  selectionTargetRef = null,
+  onResize = null,
+  selectionVersion = 0,
+}) => {
   const layerRef = useRef(null);
   const blurValue = effects?.blur || 0;
   useLayerBlur(layerRef, blurValue, scale);
   return (
     <Layer ref={layerRef}>
       {children}
+      {showSelection && selectionTargetRef ? (
+        <ResizeHandles
+          isVisible={showSelection}
+          targetRef={selectionTargetRef}
+          scale={scale}
+          onResize={onResize}
+          selectionKey={selectionVersion}
+        />
+      ) : null}
     </Layer>
   );
 };
 
 
 // Image component for rendering images on canvas
-const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSelected, scale, onDragEnd, onClick }) => {
+const ImageLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imageRef = useRef(null);
 
@@ -98,6 +130,7 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
 
   return (
     <Group
+      ref={ref}
       x={scaledX}
       y={scaledY}
       draggable
@@ -105,18 +138,6 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
       onClick={onClick}
       onTap={onClick}
     >
-      {/* Selection border */}
-      {isSelected && (
-        <Rect
-          x={-2}
-          y={-2}
-          width={scaledWidth + 4}
-          height={scaledHeight + 4}
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-        />
-      )}
       <KonvaImage
         ref={imageRef}
         x={0}
@@ -142,24 +163,28 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
       )}
     </Group>
   );
-};
+});
+ImageLayer.displayName = 'ImageLayer';
 
-const TextLayer = ({
-  layer,
-  scaledX,
-  scaledY,
-  scaledWidth,
-  scaledHeight,
-  isSelected,
-  scale,
-  onDragEnd,
-  onClick,
-}) => {
+const TextLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const textRef = useRef(null);
   useLayerEffects(textRef, layer.effects, scale);
 
   return (
     <Group
+      ref={ref}
       x={scaledX}
       y={scaledY}
       draggable
@@ -167,18 +192,6 @@ const TextLayer = ({
       onClick={onClick}
       onTap={onClick}
     >
-      {isSelected && (
-        <Rect
-          x={-2}
-          y={-2}
-          width={scaledWidth + 4}
-          height={scaledHeight + 4}
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-          cornerRadius={12}
-        />
-      )}
       <Text
         ref={textRef}
         x={0}
@@ -198,7 +211,8 @@ const TextLayer = ({
       />
     </Group>
   );
-};
+});
+TextLayer.displayName = 'TextLayer';
 
 // Helper to create clip function for shapes (similar to CSS clipPath)
 const getShapeClipFunc = (shape, width, height) => {
@@ -225,17 +239,19 @@ const getShapeClipFunc = (shape, width, height) => {
   };
 };
 
-const ShapeLayer = ({
-  layer,
-  scaledX,
-  scaledY,
-  scaledWidth,
-  scaledHeight,
-  isSelected,
-  scale,
-  onDragEnd,
-  onClick,
-}) => {
+const ShapeLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const shapeRef = useRef(null);
   const imageRef = useRef(null);
   const [imageData, setImageData] = useState(null);
@@ -293,66 +309,6 @@ const ShapeLayer = ({
   const renderShape = () => {
     const hasImageFillRender = layer.fillType === 'image' && layer.fillImageSrc && imageDims;
     const clipFunc = hasImageFillRender ? getShapeClipFunc(layer.shape, scaledWidth, scaledHeight) : null;
-    
-    // Render selection outline
-    const renderSelection = () => {
-      if (!isSelected) return null;
-      
-      if (layer.shape === 'circle') {
-        const radius = Math.min(scaledWidth, scaledHeight) / 2;
-        return (
-          <Circle
-            x={radius}
-            y={radius}
-            radius={radius + 2}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        );
-      }
-      
-      if (layer.shape === 'ellipse') {
-        return (
-          <Ellipse
-            x={scaledWidth / 2}
-            y={scaledHeight / 2}
-            radiusX={scaledWidth / 2 + 2}
-            radiusY={scaledHeight / 2 + 2}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        );
-      }
-      
-      if (layer.shape === 'rectangle') {
-        return (
-          <Rect
-            x={-2}
-            y={-2}
-            width={scaledWidth + 4}
-            height={scaledHeight + 4}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-            cornerRadius={layer.borderRadius * scale + 2}
-          />
-        );
-      }
-      
-      const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
-      if (points.length === 0) return null;
-      return (
-        <Line
-          points={points.map((p) => p - 2)}
-          closed
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-        />
-      );
-    };
     
     // Render shape with image fill or color fill
     const renderShapeContent = () => {
@@ -440,23 +396,14 @@ const ShapeLayer = ({
       return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
     };
     
-    return (
-      <>
-        {renderSelection()}
-        {renderShapeContent()}
-      </>
-    );
+    return renderShapeContent();
   };
-
-  const circleOffset = Math.min(scaledWidth, scaledHeight) / 2;
-  const isCircle = layer.shape === 'circle';
-  const groupX = isCircle ? scaledX + circleOffset : scaledX;
-  const groupY = isCircle ? scaledY + circleOffset : scaledY;
 
   return (
     <Group
-      x={groupX}
-      y={groupY}
+      ref={ref}
+      x={scaledX}
+      y={scaledY}
       draggable
       onDragEnd={onDragEnd}
       onClick={onClick}
@@ -465,7 +412,8 @@ const ShapeLayer = ({
       {renderShape()}
     </Group>
   );
-};
+});
+ShapeLayer.displayName = 'ShapeLayer';
 
 const createLayer = (definition, coordinates) => {
   const preset = definition.preset;
@@ -562,11 +510,23 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [zoom, setZoom] = useState(initialZoom);
   const [isPanning, setIsPanning] = useState(false);
   const [imageLibrary, setImageLibrary] = useState([]);
+  const [enhancingLayerId, setEnhancingLayerId] = useState(null);
+  const [uploadingLayerId, setUploadingLayerId] = useState(null);
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
+  const stageWrapperRef = useRef(null);
   const zoomTargetRef = useRef({ scrollLeft: null, scrollTop: null });
   const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const hasPannedRef = useRef(false);
+  const layerNodeRefs = useRef({});
+  const inspectorRef = useRef(null);
+  const getLayerNodeRef = (layerId) => {
+    if (!layerNodeRefs.current[layerId]) {
+      layerNodeRefs.current[layerId] = React.createRef();
+    }
+    return layerNodeRefs.current[layerId];
+  };
+
   const IMAGE_LIBRARY_STORAGE_KEY = 'presentation-image-library';
 
   // History management hook
@@ -694,10 +654,31 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   );
 
   useEffect(() => {
+    if (!activeSlide) return;
+    const ids = new Set(activeSlide.layers.map((layer) => layer.id));
+    Object.keys(layerNodeRefs.current).forEach((layerId) => {
+      if (!ids.has(layerId)) {
+        delete layerNodeRefs.current[layerId];
+      }
+    });
+  }, [activeSlide]);
+
+  useEffect(() => {
     if (!activeSlide && slides.length > 0) {
       setActiveSlideId(slides[0].id);
     }
   }, [activeSlide, slides]);
+
+  useEffect(() => {
+    if (!activeSlide) return;
+    const ids = new Set(activeSlide.layers.map((layer) => layer.id));
+    if (enhancingLayerId && !ids.has(enhancingLayerId)) {
+      setEnhancingLayerId(null);
+    }
+    if (uploadingLayerId && !ids.has(uploadingLayerId)) {
+      setUploadingLayerId(null);
+    }
+  }, [activeSlide, enhancingLayerId, uploadingLayerId]);
 
   // Undo/Redo handlers
   const onUndo = () => {
@@ -1114,13 +1095,6 @@ const handleApplyEnhancedText = (enhancedText) => {
     let newX = node.x() / scale;
     let newY = node.y() / scale;
     
-    // For circles, the Group position is centered, so we need to adjust
-    if (layer.type === 'shape' && layer.shape === 'circle') {
-      const radius = Math.min(layer.width, layer.height) / 2;
-      newX = newX - radius;
-      newY = newY - radius;
-    }
-    
     // Clamp to canvas bounds
     newX = Math.max(0, Math.min(layout.width - layer.width, newX));
     newY = Math.max(0, Math.min(layout.height - layer.height, newY));
@@ -1148,6 +1122,67 @@ const handleApplyEnhancedText = (enhancedText) => {
     node.position({ x: newX * scale, y: newY * scale });
     };
 
+  const handleLayerResize = (layerId, node) => {
+    if (!node || !activeSlide) return;
+    const layer = activeSlide.layers.find((l) => l.id === layerId);
+    if (!layer) return;
+
+    const rect = node.getClientRect({ skipStroke: false });
+    const rawWidth = node.width();
+    const rawHeight = node.height();
+    const scaleX = node.scaleX() || 1;
+    const scaleY = node.scaleY() || 1;
+
+    const widthSource = rawWidth ? rawWidth * scaleX : rect.width;
+    const heightSource = rawHeight ? rawHeight * scaleY : rect.height;
+
+    const scaledWidth = Math.max(12, widthSource);
+    const scaledHeight = Math.max(12, heightSource);
+
+    // Reset scaling so future drags/resizes start from 1
+    node.scaleX(1);
+    node.scaleY(1);
+
+    let newWidth = scaledWidth / scale;
+    let newHeight = scaledHeight / scale;
+    let newX = node.x() / scale;
+    let newY = node.y() / scale;
+
+    if (layer.type === 'shape' && layer.shape === 'circle') {
+      const size = Math.max(newWidth, newHeight);
+      newWidth = size;
+      newHeight = size;
+    }
+
+    const maxWidth = layout.width;
+    const maxHeight = layout.height;
+
+    newWidth = Math.max(8, Math.min(maxWidth, newWidth));
+    newHeight = Math.max(8, Math.min(maxHeight, newHeight));
+    newX = Math.max(0, Math.min(maxWidth - newWidth, newX));
+    newY = Math.max(0, Math.min(maxHeight - newHeight, newY));
+
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        layers: slide.layers.map((l) =>
+          l.id === layerId
+            ? {
+                ...l,
+                width: newWidth,
+                height: newHeight,
+                x: newX,
+                y: newY,
+              }
+            : l,
+        ),
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+  };
+
   const handleLayerClick = (layer, e) => {
     e.cancelBubble = true;
     setSelectedLayerId(layer.id);
@@ -1157,6 +1192,27 @@ const handleApplyEnhancedText = (enhancedText) => {
     if (!activeSlide) return null;
     return activeSlide.layers.find((layer) => layer.id === selectedLayerId) || null;
   }, [activeSlide, selectedLayerId]);
+
+  const updateLayerById = (layerId, updater) => {
+    if (!layerId) return;
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        layers: slide.layers.map((layer) => {
+          if (layer.id !== layerId) return layer;
+          const patch = typeof updater === 'function' ? updater(layer) : updater;
+          if (!patch) return layer;
+          return {
+            ...layer,
+            ...patch,
+          };
+        }),
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+  };
 
   const handleLayerChange = (patch) => {
     if (!selectedLayer) return;
@@ -1178,6 +1234,122 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
   };
 
+  const handleLayerEditButton = (layer) => {
+    if (!layer) return;
+    setSelectedLayerId(layer.id);
+    setRightSidebarVisible(true);
+    inspectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (layer.type === 'text' && typeof window !== 'undefined') {
+      const nextText = window.prompt('Edit text content', layer.text || '');
+      if (typeof nextText === 'string' && nextText !== layer.text) {
+        const framePatch = getAutoSizedTextFrame(layer, nextText, layout) || {};
+        updateLayerById(layer.id, {
+          text: nextText,
+          ...framePatch,
+        });
+      }
+    }
+  };
+
+  const handleLayerEnhance = async (layer) => {
+    if (!layer || enhancingLayerId === layer.id) return;
+    if (layer.type === 'text') {
+      if (!layer.text?.trim()) return;
+      setEnhancingLayerId(layer.id);
+      try {
+        const enhanced = await enhancePresentationText({
+          text: layer.text,
+          isHeading: (layer.fontSize || 16) >= 32,
+        });
+        const framePatch = getAutoSizedTextFrame(layer, enhanced, layout) || {};
+        updateLayerById(layer.id, {
+          text: enhanced,
+          ...framePatch,
+        });
+      } catch (error) {
+        console.error('Failed to enhance text', error);
+      } finally {
+        setEnhancingLayerId(null);
+      }
+      return;
+    }
+
+    if (layer.type === 'image') {
+      setEnhancingLayerId(layer.id);
+      try {
+        updateLayerById(layer.id, (currentLayer) => {
+          const currentEffects = normalizeImageEffects(currentLayer.effects);
+          const nextBrightness = Math.min(1, (currentEffects.brightness || 0) + 0.2);
+          return {
+            effects: {
+              ...currentEffects,
+              brightness: Number(nextBrightness.toFixed(2)),
+            },
+          };
+        });
+      } finally {
+        setEnhancingLayerId(null);
+      }
+    }
+  };
+
+  const handleLayerImageUpload = (layer) => {
+    if (!layer || layer.type !== 'image') return;
+    if (typeof window === 'undefined') return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+
+    const cleanup = () => {
+      input.remove();
+    };
+
+    input.onchange = (event) => {
+      const file = event.target?.files?.[0];
+      if (!file) {
+        cleanup();
+        return;
+      }
+      setUploadingLayerId(layer.id);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== 'string') {
+          setUploadingLayerId(null);
+          cleanup();
+          return;
+        }
+        const img = new window.Image();
+        img.onload = () => {
+          updateLayerById(layer.id, {
+            src: result,
+          });
+          registerImageInLibrary(
+            { src: result, width: img.width, height: img.height },
+            { label: layer.name || 'Image', origin: 'upload' },
+          );
+          setUploadingLayerId(null);
+          cleanup();
+        };
+        img.onerror = () => {
+          setUploadingLayerId(null);
+          cleanup();
+        };
+        img.src = result;
+      };
+      reader.onerror = () => {
+        setUploadingLayerId(null);
+        cleanup();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    document.body.appendChild(input);
+    input.click();
+  };
+
   const handleRemoveLayer = (layerId) => {
     updateActiveSlide((slide) => {
       const updatedSlide = {
@@ -1190,6 +1362,12 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
     if (selectedLayerId === layerId) {
       setSelectedLayerId(null);
+    }
+    if (enhancingLayerId === layerId) {
+      setEnhancingLayerId(null);
+    }
+    if (uploadingLayerId === layerId) {
+      setUploadingLayerId(null);
     }
   };
 
@@ -1748,6 +1926,7 @@ const handleApplyEnhancedText = (enhancedText) => {
             className="custom-scrollbar"
           >
             <div
+              ref={stageWrapperRef}
               style={{
                 width: canvasRenderWidth,
                 height: canvasRenderHeight,
@@ -1805,9 +1984,9 @@ const handleApplyEnhancedText = (enhancedText) => {
                   />
                 </Layer>
                 {activeSlide?.layers.map((layer) => {
+                  const layerRef = getLayerNodeRef(layer.id);
                   if (!layer.visible) return null;
 
-                  const isSelected = layer.id === selectedLayerId;
                   const scaledX = layer.x * scale;
                   const scaledY = layer.y * scale;
                   const scaledWidth = layer.width * scale;
@@ -1818,12 +1997,12 @@ const handleApplyEnhancedText = (enhancedText) => {
                   if (layer.type === 'text') {
                     renderedLayer = (
                       <TextLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
@@ -1832,12 +2011,12 @@ const handleApplyEnhancedText = (enhancedText) => {
                   } else if (layer.type === 'image') {
                     renderedLayer = (
                       <ImageLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
@@ -1846,12 +2025,12 @@ const handleApplyEnhancedText = (enhancedText) => {
                   } else if (layer.type === 'shape') {
                     renderedLayer = (
                       <ShapeLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
@@ -1861,13 +2040,37 @@ const handleApplyEnhancedText = (enhancedText) => {
 
                   if (!renderedLayer) return null;
 
+                  const isSelected = selectedLayerId === layer.id;
+                  const selectionVersion = isSelected
+                    ? `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${scale}`
+                    : 0;
+
                   return (
-                    <ElementLayer key={layer.id} effects={layer.effects} scale={scale}>
+                    <ElementLayer
+                      key={layer.id}
+                      effects={layer.effects}
+                      scale={scale}
+                      showSelection={isSelected}
+                      selectionTargetRef={layerRef}
+                      onResize={(node) => handleLayerResize(layer.id, node)}
+                      selectionVersion={selectionVersion}
+                    >
                       {renderedLayer}
                     </ElementLayer>
                   );
                 })}
               </Stage>
+              <LayerActionBar
+                layer={selectedLayer}
+                scale={scale}
+                onDuplicate={(layer) => handleDuplicateLayer(layer.id)}
+                onEdit={handleLayerEditButton}
+                onDelete={(layer) => handleRemoveLayer(layer.id)}
+                onEnhance={handleLayerEnhance}
+                onUpload={handleLayerImageUpload}
+                enhancing={selectedLayer ? enhancingLayerId === selectedLayer.id : false}
+                uploading={selectedLayer ? uploadingLayerId === selectedLayer.id : false}
+              />
             </div>
           </div>
         </section>
@@ -1966,7 +2169,7 @@ const handleApplyEnhancedText = (enhancedText) => {
             }}
           />
 
-          <div>
+          <div ref={inspectorRef}>
             <span
               style={{
                 fontSize: '0.78rem',
