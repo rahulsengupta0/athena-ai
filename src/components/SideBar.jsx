@@ -45,6 +45,15 @@ const NAV_ITEMS = [
     path: "/ai-generator"
   },
   {
+    label: "Presentation Studio",
+    key: "presentationStudio",
+    icon: <FiGrid size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/presentation-studio"
+  },
+  {
     label: "Image Editor",
     key: "imageEditor",
     icon: <FiImage size={18} />,

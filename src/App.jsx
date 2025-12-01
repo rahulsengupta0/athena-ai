@@ -37,6 +37,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import BrandKitResult from './pages/BrandKitResult';
 import DocumentGenerator from './components/aigenerator/DocumentGenerator';
+import PresentationStudio from './components/presentationstudio/PresentationStudio';
 
 import LandingPage from './pages/LandingPage';
 
@@ -74,6 +75,8 @@ const AppContent = () => {
           <Route path="/projects/templates" element={<Templates />} />
           <Route path="/favorites" element={<Favourites />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
+          <Route path="/ai-generator/presentation-studio" element={<PresentationStudio />} />
+          <Route path="/presentation-studio" element={<PresentationStudio />} />
           <Route path="/image-editor" element={<ImageEdit />} />
           <Route path="/video-maker" element={<VideoMaker />} />
           <Route path="/analytics" element={<Analatics />} />
