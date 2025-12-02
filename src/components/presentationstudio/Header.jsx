@@ -26,10 +26,16 @@ const Header = ({
           <FiSave size={18} />
           <span>Save</span>
         </button>
-        <div className="presentation-studio-dropdown">
+        <div 
+          className="presentation-studio-dropdown"
+          onBlur={() => setIsDropdownOpen(false)}
+          tabIndex="0"
+        >
           <button 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className={`presentation-studio-button presentation-studio-button-secondary ${isExporting ? 'presentation-studio-button-disabled' : ''}`}
+            aria-haspopup="true"
+            aria-expanded={isDropdownOpen}
           >
             {isExporting ? (
               <FiRefreshCw className="presentation-studio-spinner" size={18} />

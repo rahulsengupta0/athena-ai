@@ -8,9 +8,22 @@
   backdrop-filter: blur(10px);
 }
 
+@media (max-width: 768px) {
+  .presentation-studio-creation-hub {
+    padding: 1.5rem;
+    border-radius: var(--ps-radius-lg);
+  }
+}
+
 .presentation-studio-creation-container {
   max-width: 52rem;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-creation-container {
+    max-width: 100%;
+  }
 }
 
 .presentation-studio-creation-header {
@@ -29,11 +42,23 @@
   color: transparent;
 }
 
+@media (max-width: 768px) {
+  .presentation-studio-creation-title {
+    font-size: 1.5rem;
+  }
+}
+
 .presentation-studio-creation-subtitle {
   font-size: 1.1rem;
   color: var(--ps-text-secondary);
   margin: 0;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-creation-subtitle {
+    font-size: 1rem;
+  }
 }
 
 /* Form Styles */
@@ -70,8 +95,21 @@
   box-shadow: var(--ps-shadow-sm);
 }
 
+@media (max-width: 768px) {
+  .presentation-studio-textarea {
+    min-height: 10rem;
+    padding: 1rem;
+  }
+}
+
 .presentation-studio-textarea-small {
   min-height: 8rem;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-textarea-small {
+    min-height: 6rem;
+  }
 }
 
 .presentation-studio-textarea:focus {
@@ -131,6 +169,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-options-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 /* Advanced Options */
@@ -196,6 +241,12 @@
   transition: var(--ps-transition);
 }
 
+@media (max-width: 768px) {
+  .presentation-studio-file-upload-label {
+    min-height: 10rem;
+  }
+}
+
 .presentation-studio-file-upload-label:hover {
   border-color: var(--ps-border-accent);
   background-color: var(--ps-bg-tertiary);
@@ -259,6 +310,15 @@
   color: white;
   box-shadow: var(--ps-shadow-accent);
   font-family: 'Inter', 'Poppins', Arial, sans-serif;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-generate-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
 }
 
 .presentation-studio-generate-button:hover:not(.presentation-studio-generate-button-disabled) {
@@ -315,5 +375,69 @@
   
   .presentation-studio-creation-hub {
     padding: 2.5rem;
+  }
+}
+
+/* Mobile Specific Styles */
+@media (max-width: 768px) {
+  .presentation-studio-form {
+    gap: 1.25rem;
+  }
+  
+  .presentation-studio-form-group {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-label {
+    font-size: 0.95rem;
+  }
+  
+  .presentation-studio-select {
+    padding: 1rem;
+  }
+  
+  .presentation-studio-checkbox-group {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-checkbox-label {
+    font-size: 0.95rem;
+  }
+  
+  .presentation-studio-advanced-toggle {
+    font-size: 0.95rem;
+  }
+  
+  .presentation-studio-generate-container {
+    padding-top: 1rem;
+  }
+  
+  .presentation-studio-progress-container {
+    padding-top: 1rem;
+  }
+}
+
+/* Very Small Screen Adjustments */
+@media (max-width: 480px) {
+  .presentation-studio-creation-hub {
+    padding: 1rem;
+  }
+  
+  .presentation-studio-textarea {
+    min-height: 8rem;
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-textarea-small {
+    min-height: 6rem;
+  }
+  
+  .presentation-studio-file-upload-label {
+    min-height: 8rem;
+  }
+  
+  .presentation-studio-generate-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 }
