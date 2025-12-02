@@ -1,30 +1,34 @@
-/* ===== Presentation Header | Athena Upgrade ===== */
+/* ===== Presentation Header | Athena Theme ===== */
 
 .presentation-studio-header {
-  background: #ffffff;
-  padding: 1.25rem 2rem;
-  border-radius: 1.25rem;
-  border: 1px solid #ece9ff;
+  background: var(--ps-bg-card);
+  padding: 1.5rem 2rem;
+  border-radius: var(--ps-radius-xl);
+  border: 1px solid var(--ps-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  box-shadow: 0px 6px 20px rgba(93, 14, 255, 0.08);
+  box-shadow: var(--ps-shadow-lg);
+  backdrop-filter: blur(10px);
 }
 
 /* Gradient Title */
 .presentation-studio-title {
-  background: linear-gradient(90deg, #5D0EFF, #FF3CAC);
+  background: linear-gradient(90deg, var(--ps-accent-primary), var(--ps-accent-secondary));
   -webkit-background-clip: text;
   color: transparent;
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .presentation-studio-subtitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
-  color: #7a7a8e;
+  color: var(--ps-text-secondary);
+  margin-top: 0.5rem;
 }
 
 /* Button Group */
@@ -37,40 +41,52 @@
 .presentation-studio-button {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.1rem;
-  font-size: 0.9rem;
-  border-radius: 0.7rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: var(--ps-radius-lg);
   cursor: pointer;
-  transition: 0.2s ease;
-  border: 1.8px solid #e5e0ff;
-  background: #ffffff;
-  color: #4B3EF9;
+  transition: var(--ps-transition);
+  border: 1px solid var(--ps-border);
+  background: var(--ps-bg-primary);
+  color: var(--ps-text-primary);
   font-weight: 600;
-  box-shadow: 0 2px 10px rgba(93, 14, 255, 0.08);
+  box-shadow: var(--ps-shadow-sm);
+  font-family: 'Inter', 'Poppins', Arial, sans-serif;
 }
 
 .presentation-studio-button:hover {
-  background: #f3f0ff;
-  border-color: #5D0EFF;
+  background: var(--ps-bg-secondary);
+  border-color: var(--ps-border-accent);
   transform: translateY(-2px);
+  box-shadow: var(--ps-shadow-md);
 }
 
 /* Primary Button */
 .presentation-studio-button-primary {
-  background: #5D0EFF;
+  background: var(--ps-accent-gradient);
   border: none;
   color: #ffffff;
+  box-shadow: var(--ps-shadow-accent);
 }
 
 .presentation-studio-button-primary:hover {
-  background: #6b4bff;
+  background: var(--ps-accent-gradient-hover);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(151, 96, 255, 0.25);
 }
 
 /* Disabled State */
 .presentation-studio-button-disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.presentation-studio-button-disabled:hover {
+  background: var(--ps-bg-primary) !important;
+  transform: none !important;
 }
 
 /* Dropdown */
@@ -81,30 +97,35 @@
 .presentation-studio-dropdown-menu {
   position: absolute;
   right: 0;
-  background: #ffffff;
-  border: 1px solid #e8ddff;
-  border-radius: 0.7rem;
-  margin-top: 0.4rem;
-  width: 160px;
+  background: var(--ps-bg-primary);
+  border: 1px solid var(--ps-border);
+  border-radius: var(--ps-radius-lg);
+  margin-top: 0.5rem;
+  width: 180px;
   overflow: hidden;
-  box-shadow: 0px 10px 28px rgba(93, 14, 255, 0.15);
-  animation: fadeIn 0.15s ease-out;
+  box-shadow: var(--ps-shadow-lg);
+  animation: fadeIn 0.2s cubic-bezier(0.24, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
+  z-index: 100;
 }
 
 .presentation-studio-dropdown-item {
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 500;
   border: none;
-  background: #ffffff;
+  background: var(--ps-bg-primary);
   cursor: pointer;
+  color: var(--ps-text-primary);
+  transition: var(--ps-transition);
+  font-family: 'Inter', 'Poppins', Arial, sans-serif;
 }
 
 .presentation-studio-dropdown-item:hover {
-  background: #f2eaff;
+  background: var(--ps-bg-secondary);
+  color: var(--ps-accent-primary);
 }
 
 /* Animation */
@@ -117,7 +138,17 @@
 @media (max-width: 768px) {
   .presentation-studio-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: flex-start;
+    padding: 1.25rem;
+  }
+  
+  .presentation-studio-title {
+    font-size: 1.75rem;
+  }
+  
+  .presentation-studio-header-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }

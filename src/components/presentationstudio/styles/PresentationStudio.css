@@ -1,14 +1,105 @@
+/* ===== Presentation Studio Root | Athena Theme ===== */
 @import './Header.css';
 @import './PromptSection.css';
 @import './EditorSection.css';
 
+:root {
+  /* Theme Colors - Matching Athena AI Theme */
+  --ps-accent-primary: #9760ff;     /* Purple */
+  --ps-accent-secondary: #a084ee;   /* Light Purple */
+  --ps-accent-tertiary: #8f5cf7;    /* Dark Purple */
+  --ps-accent-gradient: linear-gradient(135deg, var(--ps-accent-primary) 0%, var(--ps-accent-secondary) 50%, var(--ps-accent-tertiary) 100%);
+  --ps-accent-gradient-hover: linear-gradient(135deg, #8253e6 0%, #9275e0 50%, #7c4de0 100%);
+  
+  /* Background Colors */
+  --ps-bg-primary: #ffffff;
+  --ps-bg-secondary: #fbf9ff;
+  --ps-bg-tertiary: #f8f6ff;
+  --ps-bg-card: rgba(255, 255, 255, 0.95);
+  
+  /* Text Colors */
+  --ps-text-primary: #232241;
+  --ps-text-secondary: #6d6681;
+  --ps-text-muted: #7b7e8c;
+  
+  /* Borders & Shadows */
+  --ps-border: #ece9fc;
+  --ps-border-accent: rgba(151, 96, 255, 0.2);
+  --ps-shadow-sm: 0 1px 3px rgba(151, 96, 255, 0.08), 0 1px 2px rgba(151, 96, 255, 0.06);
+  --ps-shadow-md: 0 4px 12px rgba(151, 96, 255, 0.1), 0 2px 4px rgba(151, 96, 255, 0.06);
+  --ps-shadow-lg: 0 6px 22px rgba(151, 96, 255, 0.06);
+  --ps-shadow-accent: 0 8px 24px rgba(151, 96, 255, 0.18);
+  
+  /* Radii */
+  --ps-radius-sm: 8px;
+  --ps-radius-md: 12px;
+  --ps-radius-lg: 16px;
+  --ps-radius-xl: 20px;
+  --ps-radius-full: 9999px;
+  
+  /* Transitions */
+  --ps-transition: all 250ms cubic-bezier(0.24, 1, 0.32, 1);
+  --ps-transition-fast: all 150ms cubic-bezier(0.24, 1, 0.32, 1);
+  --ps-transition-slow: all 350ms cubic-bezier(0.24, 1, 0.32, 1);
+}
+
+/* Dark Theme Variables */
+.presentation-studio.dark {
+  --ps-bg-primary: #1a1a28;
+  --ps-bg-secondary: #232336;
+  --ps-bg-tertiary: #2d2d45;
+  --ps-bg-card: rgba(26, 26, 40, 0.95);
+  --ps-text-primary: #eaeaf3;
+  --ps-text-secondary: #a1a3b7;
+  --ps-text-muted: #64748b;
+  --ps-border: rgba(151, 96, 255, 0.15);
+  --ps-border-accent: rgba(151, 96, 255, 0.3);
+  --ps-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --ps-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --ps-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.25);
+  --ps-shadow-accent: 0 8px 24px rgba(151, 96, 255, 0.35);
+}
+
 .presentation-studio {
   min-height: 100vh;
-  background-color: #f9fafb;
+  background: linear-gradient(135deg, var(--ps-bg-secondary) 0%, var(--ps-bg-primary) 50%, var(--ps-bg-secondary) 100%);
   padding: 1rem;
+  font-family: 'Inter', 'Poppins', Arial, sans-serif;
+  color: var(--ps-text-primary);
+  position: relative;
+}
+
+.presentation-studio::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(151, 96, 255, 0.03) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .presentation-studio-container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
+}
+
+/* Scrollbar Styling */
+.presentation-studio ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.presentation-studio ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.presentation-studio ::-webkit-scrollbar-thumb {
+  background: var(--ps-border-accent);
+  border-radius: 4px;
+}
+
+.presentation-studio ::-webkit-scrollbar-thumb:hover {
+  background: var(--ps-accent-primary);
 }
