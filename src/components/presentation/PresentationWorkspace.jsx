@@ -517,6 +517,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [previewDropdownOpen, setPreviewDropdownOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState('manual');
   const [zoom, setZoom] = useState(initialZoom);
   const [isPanning, setIsPanning] = useState(false);
   const [imageLibrary, setImageLibrary] = useState([]);
@@ -535,6 +537,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const inspectorRef = useRef(null);
   const timingButtonRef = useRef(null);
   const timingPanelRef = useRef(null);
+  const previewButtonRef = useRef(null);
+  const previewDropdownRef = useRef(null);
   const getLayerNodeRef = (layerId) => {
     if (!layerNodeRefs.current[layerId]) {
       layerNodeRefs.current[layerId] = React.createRef();
@@ -1252,9 +1256,27 @@ const handleApplyEnhancedText = (enhancedText) => {
         setIsTimingPanelOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickAway);
-    return () => document.removeEventListener('mousedown', handleClickAway);
+    document.addEventListener('pointerdown', handleClickAway, true);
+    return () => document.removeEventListener('pointerdown', handleClickAway, true);
   }, [isTimingPanelOpen]);
+
+  useEffect(() => {
+    if (!previewDropdownOpen) return;
+    const handleClickAway = (event) => {
+      const buttonEl = previewButtonRef.current;
+      const dropdownEl = previewDropdownRef.current;
+      if (
+        buttonEl &&
+        dropdownEl &&
+        !buttonEl.contains(event.target) &&
+        !dropdownEl.contains(event.target)
+      ) {
+        setPreviewDropdownOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickAway, true);
+    return () => document.removeEventListener('pointerdown', handleClickAway, true);
+  }, [previewDropdownOpen]);
 
   const updateBoundsFromLayer = useCallback(
     (layer) => {
@@ -1322,16 +1344,6 @@ const handleApplyEnhancedText = (enhancedText) => {
     setSelectedLayerId(layer.id);
     setRightSidebarVisible(true);
     inspectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (layer.type === 'text' && typeof window !== 'undefined') {
-      const nextText = window.prompt('Edit text content', layer.text || '');
-      if (typeof nextText === 'string' && nextText !== layer.text) {
-        const framePatch = getAutoSizedTextFrame(layer, nextText, layout) || {};
-        updateLayerById(layer.id, {
-          text: nextText,
-          ...framePatch,
-        });
-      }
-    }
   };
 
   const handleLayerEnhance = async (layer) => {
@@ -1407,7 +1419,31 @@ const handleApplyEnhancedText = (enhancedText) => {
       return updatedSlides;
     });
     setTimingToast('Timing applied to all slides');
-    setTimeout(() => setTimingToast(null), 2500);
+    setTimeout(() => setTimingToast(null), 4000);
+  };
+
+  const openPreview = (mode) => {
+    setPreviewMode(mode);
+    setIsPreviewMode(true);
+    setPreviewDropdownOpen(false);
+
+    // Try to enter browser fullscreen for a true presentation feel
+    if (typeof document !== 'undefined') {
+      const root =
+        document.fullscreenElement ||
+        document.documentElement ||
+        document.body;
+      const requestFullscreen =
+        root.requestFullscreen ||
+        root.webkitRequestFullscreen ||
+        root.mozRequestFullScreen ||
+        root.msRequestFullscreen;
+      try {
+        requestFullscreen && requestFullscreen.call(root);
+      } catch {
+        // Ignore fullscreen errors (browser may block it)
+      }
+    }
   };
 
   const handleLayerImageUpload = (layer) => {
@@ -1757,21 +1793,85 @@ const handleApplyEnhancedText = (enhancedText) => {
               background: 'rgba(15, 23, 42, 0.1)',
             }}
           />
-          <button
-            onClick={() => setIsPreviewMode(true)}
-            style={{
-              border: '1px solid rgba(15, 23, 42, 0.1)',
-              background: 'rgba(15, 23, 42, 0.04)',
-              borderRadius: 10,
-              padding: '6px 14px',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              color: '#0f172a',
-              cursor: 'pointer',
-            }}
-          >
-            Preview
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button
+              ref={previewButtonRef}
+              onClick={() => setPreviewDropdownOpen((prev) => !prev)}
+              style={{
+                border: '1px solid rgba(15, 23, 42, 0.1)',
+                background: 'rgba(15, 23, 42, 0.04)',
+                borderRadius: 10,
+                padding: '6px 14px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                color: '#0f172a',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              Preview
+              <span style={{ fontSize: '0.7rem' }}>▾</span>
+            </button>
+            {previewDropdownOpen && (
+              <div
+                ref={previewDropdownRef}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 6px)',
+                  width: 240,
+                  borderRadius: 14,
+                  background: '#ffffff',
+                  border: '1px solid rgba(15, 23, 42, 0.08)',
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                  padding: '8px 0',
+                  zIndex: 50,
+                }}
+              >
+                <button
+                  onClick={() => openPreview('manual')}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>Present fullscreen</div>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                    Use ← → keys to move through slides.
+                  </p>
+                </button>
+                <div
+                  style={{
+                    height: 1,
+                    background: 'rgba(15, 23, 42, 0.06)',
+                    margin: '4px 0',
+                  }}
+                />
+                <button
+                  onClick={() => openPreview('autoplay')}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>Auto play</div>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                    Plays fullscreen using slide timings.
+                  </p>
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsShareModalOpen(true)}
             style={{
@@ -2752,6 +2852,8 @@ const handleApplyEnhancedText = (enhancedText) => {
         slides={slides}
         layout={layout}
         startSlideIndex={startSlideIndex}
+        mode={previewMode}
+        defaultDuration={DEFAULT_SLIDE_DURATION}
       />
 
       {/* Share Modal */}
