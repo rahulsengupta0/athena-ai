@@ -4,7 +4,7 @@ import Header from './Header';
 import PromptSection from './PromptSection';
 import EditorSection from './EditorSection';
 import { generatePresentation, exportPresentation } from './presentationService';
-import './PresentationStudio.css';
+import './styles/PresentationStudio.css';
 
 const PresentationStudio = () => {
   const navigate = useNavigate();
