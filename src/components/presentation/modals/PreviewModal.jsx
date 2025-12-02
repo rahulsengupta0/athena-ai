@@ -167,8 +167,8 @@ const PreviewModal = ({
   // Calculate preview scale to fit viewport
   const previewScale = useMemo(() => {
     if (!isOpen) return 1;
-    const viewportWidth = window.innerWidth - 160; // Account for padding and controls
-    const viewportHeight = window.innerHeight - 160;
+    const viewportWidth = window.innerWidth - 80; // Account for minimal padding and chrome
+    const viewportHeight = window.innerHeight - 120;
     return Math.min(viewportWidth / layout.width, viewportHeight / layout.height, 1);
   }, [isOpen, layout]);
 
@@ -305,18 +305,20 @@ const PreviewModal = ({
         bottom: 0,
         background: 'rgba(15, 23, 42, 0.95)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'stretch',
+        justifyContent: 'stretch',
         zIndex: 9999,
-        padding: '40px',
+        padding: '24px',
       }}
       onClick={onClose}
     >
       <div
         style={{
           position: 'relative',
+          width: '100%',
+          height: '100%',
           background: '#ffffff',
-          borderRadius: '8px',
+          borderRadius: '12px',
           boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           display: 'flex',
@@ -369,8 +371,9 @@ const PreviewModal = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '40px',
+            padding: '24px 40px',
             position: 'relative',
+            flex: 1,
           }}
         >
           {/* Previous button */}
