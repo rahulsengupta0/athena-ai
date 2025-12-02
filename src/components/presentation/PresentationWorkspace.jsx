@@ -1446,6 +1446,17 @@ const handleApplyEnhancedText = (enhancedText) => {
     }
   };
 
+  const handleClosePreview = () => {
+    setIsPreviewMode(false);
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      try {
+        document.exitFullscreen?.();
+      } catch {
+        // Ignore fullscreen errors
+      }
+    }
+  };
+
   const handleLayerImageUpload = (layer) => {
     if (!layer || layer.type !== 'image') return;
     if (typeof window === 'undefined') return;
@@ -2848,7 +2859,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       {/* Preview Modal */}
       <PreviewModal
         isOpen={isPreviewMode}
-        onClose={() => setIsPreviewMode(false)}
+        onClose={handleClosePreview}
         slides={slides}
         layout={layout}
         startSlideIndex={startSlideIndex}
