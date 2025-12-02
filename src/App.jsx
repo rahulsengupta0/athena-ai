@@ -41,6 +41,7 @@ import AdminDash from './pages/AdminDash';
 import BrandKitResult from './pages/BrandKitResult';
 import DocumentGenerator from './components/aigenerator/DocumentGenerator';
 import UiPhotoGenerator from './components/aigenerator/UiPhotoGenerator';
+import SmartCrop from './components/aigenerator/SmartCrop';
 
 
 const AppContent = () => {
@@ -92,6 +93,7 @@ const AppContent = () => {
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
           <Route path="/docGenerator" element={<DocumentGenerator/>} />
           <Route path="/uiphoto" element={<UiPhotoGenerator/>} />
+          <Route path="/smartcrop" element={<SmartCrop/>} />
           <Route
             path="/admin-dash"
             element={
