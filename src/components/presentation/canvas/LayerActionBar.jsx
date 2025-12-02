@@ -15,7 +15,7 @@ const iconButtonStyle = {
 
 const LayerActionBar = ({
   layer,
-  scale,
+  bounds,
   onDuplicate,
   onEdit,
   onDelete,
@@ -24,7 +24,7 @@ const LayerActionBar = ({
   enhancing,
   uploading,
 }) => {
-  if (!layer || !layer.visible) return null;
+  if (!layer || !layer.visible || !bounds) return null;
 
   const handleButtonClick = (event, callback) => {
     event.stopPropagation();
@@ -32,11 +32,8 @@ const LayerActionBar = ({
     callback?.();
   };
 
-  const scaledX = layer.x * scale;
-  const scaledY = layer.y * scale;
-  const scaledWidth = layer.width * scale;
-  const barLeft = scaledX + scaledWidth / 2;
-  const barTop = Math.max(8, scaledY - 44);
+  const barLeft = bounds.x + bounds.width / 2;
+  const barTop = Math.max(8, bounds.y - 44);
   const isImage = layer.type === 'image';
 
   return (

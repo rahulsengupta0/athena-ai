@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
 import {
   ChevronLeft,
@@ -12,6 +12,7 @@ import {
   PanelRight,
   ChevronRight,
   X,
+  Timer,
 } from 'lucide-react';
 import SelectionTool from './tools/SelectionTool';
 import TextTools from './tools/TextTools';
@@ -103,6 +104,7 @@ const ImageLayer = React.forwardRef((
     scaledWidth,
     scaledHeight,
     scale,
+    onDragMove,
     onDragEnd,
     onClick,
   },
@@ -134,6 +136,7 @@ const ImageLayer = React.forwardRef((
       x={scaledX}
       y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
@@ -174,6 +177,7 @@ const TextLayer = React.forwardRef((
     scaledWidth,
     scaledHeight,
     scale,
+    onDragMove,
     onDragEnd,
     onClick,
   },
@@ -188,6 +192,7 @@ const TextLayer = React.forwardRef((
       x={scaledX}
       y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
@@ -247,6 +252,7 @@ const ShapeLayer = React.forwardRef((
     scaledWidth,
     scaledHeight,
     scale,
+    onDragMove,
     onDragEnd,
     onClick,
   },
@@ -405,6 +411,7 @@ const ShapeLayer = React.forwardRef((
       x={scaledX}
       y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
@@ -480,6 +487,8 @@ const createLayer = (definition, coordinates) => {
   return base;
 };
 
+const DEFAULT_SLIDE_DURATION = 5;
+
 const PresentationWorkspace = ({ layout, onBack }) => {
   // Constants for canvas sizing
   const maxCanvasWidth = 980;
@@ -497,6 +506,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
       name: 'Slide 1',
       background: '#ffffff',
       layers: [],
+      animationDuration: DEFAULT_SLIDE_DURATION,
     },
   ]);
   const [activeSlideId, setActiveSlideId] = useState('slide-1');
@@ -512,6 +522,9 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [imageLibrary, setImageLibrary] = useState([]);
   const [enhancingLayerId, setEnhancingLayerId] = useState(null);
   const [uploadingLayerId, setUploadingLayerId] = useState(null);
+  const [selectionBounds, setSelectionBounds] = useState(null);
+  const [isTimingPanelOpen, setIsTimingPanelOpen] = useState(false);
+  const [timingToast, setTimingToast] = useState(null);
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const stageWrapperRef = useRef(null);
@@ -520,6 +533,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const hasPannedRef = useRef(false);
   const layerNodeRefs = useRef({});
   const inspectorRef = useRef(null);
+  const timingButtonRef = useRef(null);
+  const timingPanelRef = useRef(null);
   const getLayerNodeRef = (layerId) => {
     if (!layerNodeRefs.current[layerId]) {
       layerNodeRefs.current[layerId] = React.createRef();
@@ -1083,6 +1098,20 @@ const handleApplyEnhancedText = (enhancedText) => {
   });
 };
 
+  const handleLayerDragMove = (layer, e) => {
+    let node = e.target;
+    if (node.getType && node.getType() !== 'Group') {
+      node = node.getParent();
+    }
+    if (!node) return;
+    setSelectionBounds({
+      x: node.x(),
+      y: node.y(),
+      width: layer.width * scale,
+      height: layer.height * scale,
+    });
+  };
+
   const handleLayerDragEnd = (layer, e) => {
     // Get the Group node (parent) if dragging a child element
     let node = e.target;
@@ -1120,6 +1149,12 @@ const handleApplyEnhancedText = (enhancedText) => {
     // Reset node position to keep it in sync with the new coordinates
     // scale already includes zoom
     node.position({ x: newX * scale, y: newY * scale });
+    setSelectionBounds({
+      x: newX * scale,
+      y: newY * scale,
+      width: layer.width * scale,
+      height: layer.height * scale,
+    });
     };
 
   const handleLayerResize = (layerId, node) => {
@@ -1181,6 +1216,12 @@ const handleApplyEnhancedText = (enhancedText) => {
       saveToHistory(updatedSlides);
       return updatedSlide;
     });
+    setSelectionBounds({
+      x: newX * scale,
+      y: newY * scale,
+      width: newWidth * scale,
+      height: newHeight * scale,
+    });
   };
 
   const handleLayerClick = (layer, e) => {
@@ -1192,6 +1233,48 @@ const handleApplyEnhancedText = (enhancedText) => {
     if (!activeSlide) return null;
     return activeSlide.layers.find((layer) => layer.id === selectedLayerId) || null;
   }, [activeSlide, selectedLayerId]);
+  const slideDuration = activeSlide?.animationDuration ?? DEFAULT_SLIDE_DURATION;
+  useEffect(() => {
+    setIsTimingPanelOpen(false);
+  }, [activeSlideId]);
+
+  useEffect(() => {
+    if (!isTimingPanelOpen) return;
+    const handleClickAway = (event) => {
+      const buttonEl = timingButtonRef.current;
+      const panelEl = timingPanelRef.current;
+      if (
+        buttonEl &&
+        panelEl &&
+        !buttonEl.contains(event.target) &&
+        !panelEl.contains(event.target)
+      ) {
+        setIsTimingPanelOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickAway);
+    return () => document.removeEventListener('mousedown', handleClickAway);
+  }, [isTimingPanelOpen]);
+
+  const updateBoundsFromLayer = useCallback(
+    (layer) => {
+      if (!layer) {
+        setSelectionBounds(null);
+        return;
+      }
+      setSelectionBounds({
+        x: layer.x * scale,
+        y: layer.y * scale,
+        width: layer.width * scale,
+        height: layer.height * scale,
+      });
+    },
+    [scale],
+  );
+
+  useEffect(() => {
+    updateBoundsFromLayer(selectedLayer);
+  }, [selectedLayer, updateBoundsFromLayer]);
 
   const updateLayerById = (layerId, updater) => {
     if (!layerId) return;
@@ -1291,6 +1374,40 @@ const handleApplyEnhancedText = (enhancedText) => {
         setEnhancingLayerId(null);
       }
     }
+  };
+
+  const handleSlideTimingChange = (value) => {
+    if (!activeSlide) return;
+    const numeric = Number(value);
+    const clamped = Number.isFinite(numeric)
+      ? Math.max(1, Math.min(60, numeric))
+      : DEFAULT_SLIDE_DURATION;
+
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        animationDuration: clamped,
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+  };
+
+  const handleApplyTimingToAllSlides = () => {
+    if (!slides.length) return;
+    const duration = activeSlide?.animationDuration ?? DEFAULT_SLIDE_DURATION;
+    const clamped = Math.max(1, Math.min(60, duration));
+    setSlides((prevSlides) => {
+      const updatedSlides = prevSlides.map((slide) => ({
+        ...slide,
+        animationDuration: clamped,
+      }));
+      saveToHistory(updatedSlides);
+      return updatedSlides;
+    });
+    setTimingToast('Timing applied to all slides');
+    setTimeout(() => setTimingToast(null), 2500);
   };
 
   const handleLayerImageUpload = (layer) => {
@@ -1433,6 +1550,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       name: `Slide ${slides.length + 1}`,
       background: '#ffffff',
       layers: [],
+      animationDuration: DEFAULT_SLIDE_DURATION,
     };
     
     let updatedSlides;
@@ -1581,6 +1699,25 @@ const handleApplyEnhancedText = (enhancedText) => {
             >
               {layout.name}
             </div>
+
+            {timingToast && (
+              <div
+                style={{
+                  position: 'fixed',
+                  bottom: 28,
+                  right: 28,
+                  background: 'rgba(15, 23, 42, 0.92)',
+                  color: '#fff',
+                  padding: '10px 16px',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.35)',
+                  zIndex: 1000,
+                }}
+              >
+                {timingToast}
+              </div>
+            )}
             <div
               style={{
                 fontSize: '0.8rem',
@@ -1856,13 +1993,14 @@ const handleApplyEnhancedText = (enhancedText) => {
           <div
             style={{
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
-              gap: '8px',
+              gap: '12px',
               justifyContent: 'space-between',
               flexShrink: 0,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -1884,6 +2022,98 @@ const handleApplyEnhancedText = (enhancedText) => {
                 Tip: Choose a preset on the right, then click anywhere on the slide.
               </span>
             </div>
+
+            <div style={{ position: 'relative', flex: '0 1 auto' }}>
+              <button
+                ref={timingButtonRef}
+                onClick={() => setIsTimingPanelOpen((prev) => !prev)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  background: '#ffffff',
+                  border: '1px solid rgba(148, 163, 184, 0.18)',
+                  fontWeight: 600,
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  boxShadow: isTimingPanelOpen ? '0 10px 25px rgba(15, 23, 42, 0.12)' : 'none',
+                }}
+              >
+                <Timer size={16} color="#4f46e5" />
+                <span>{slideDuration}s</span>
+              </button>
+              {isTimingPanelOpen && (
+                <div
+                  ref={timingPanelRef}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 10px)',
+                    right: 0,
+                    width: 320,
+                    borderRadius: 16,
+                    background: '#ffffff',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    boxShadow: '0 18px 40px rgba(15, 23, 42, 0.2)',
+                    padding: '14px 16px',
+                    zIndex: 20,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>Slide animation timing</span>
+                    <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 600 }}>
+                      {slideDuration}s
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      type="range"
+                      min={1}
+                      max={60}
+                      value={slideDuration}
+                      onChange={(e) => handleSlideTimingChange(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      max={60}
+                      value={slideDuration}
+                      onChange={(e) => handleSlideTimingChange(e.target.value)}
+                      style={{
+                        width: 60,
+                        borderRadius: 10,
+                        border: '1px solid rgba(148, 163, 184, 0.5)',
+                        padding: '6px 8px',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleApplyTimingToAllSlides}
+                    style={{
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '8px 12px',
+                      background: '#4f46e5',
+                      color: '#fff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Apply to all slides
+                  </button>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', lineHeight: 1.5 }}>
+                    Determines how long this slide stays visible when animations auto-play.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div
               style={{
                 display: 'inline-flex',
@@ -2004,6 +2234,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -2018,6 +2249,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -2032,6 +2264,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -2062,7 +2295,7 @@ const handleApplyEnhancedText = (enhancedText) => {
               </Stage>
               <LayerActionBar
                 layer={selectedLayer}
-                scale={scale}
+                bounds={selectionBounds}
                 onDuplicate={(layer) => handleDuplicateLayer(layer.id)}
                 onEdit={handleLayerEditButton}
                 onDelete={(layer) => handleRemoveLayer(layer.id)}
@@ -2169,20 +2402,20 @@ const handleApplyEnhancedText = (enhancedText) => {
             }}
           />
 
-          <div ref={inspectorRef}>
-            <span
-              style={{
-                fontSize: '0.78rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.12em',
-                color: '#94a3b8',
-                fontWeight: 700,
-              }}
-            >
-              Inspector
-            </span>
+        <div ref={inspectorRef}>
+          <span
+            style={{
+              fontSize: '0.78rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: '#94a3b8',
+              fontWeight: 700,
+            }}
+          >
+            Inspector
+          </span>
 
-            {selectedLayer ? (
+          {selectedLayer ? (
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div
                   style={{
