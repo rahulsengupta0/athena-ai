@@ -39,10 +39,16 @@ const EditorSection = ({
             >
               + Add Slide
             </button>
-            <div className="presentation-studio-templates-dropdown">
+            <div 
+              className="presentation-studio-templates-dropdown"
+              onBlur={() => setIsTemplatesOpen(false)}
+              tabIndex="0"
+            >
               <button 
                 onClick={() => setIsTemplatesOpen(!isTemplatesOpen)}
                 className="presentation-studio-thumbnails-button"
+                aria-haspopup="true"
+                aria-expanded={isTemplatesOpen}
               >
                 Templates
               </button>

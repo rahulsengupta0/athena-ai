@@ -67,6 +67,24 @@
   font-family: 'Inter', 'Poppins', Arial, sans-serif;
   color: var(--ps-text-primary);
   position: relative;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .presentation-studio {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-container {
+    max-width: 100%;
+  }
+  
+  .presentation-studio::before {
+    height: 150px;
+  }
 }
 
 .presentation-studio::before {
@@ -83,6 +101,12 @@
 .presentation-studio-container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .presentation-studio-container {
+    max-width: 100%;
+  }
 }
 
 /* Scrollbar Styling */
@@ -102,4 +126,39 @@
 
 .presentation-studio ::-webkit-scrollbar-thumb:hover {
   background: var(--ps-accent-primary);
+}
+
+/* Touch Targets for Mobile */
+@media (hover: none) and (pointer: coarse) {
+  .presentation-studio * {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .presentation-studio-button,
+  .presentation-studio-thumbnails-button,
+  .presentation-studio-templates-item,
+  .presentation-studio-dropdown-item,
+  .presentation-studio-slide-action-button,
+  .presentation-studio-ai-action-button,
+  .presentation-studio-theme-button,
+  .presentation-studio-layout-button {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Font Size Adjustment for Small Screens */
+@media (max-width: 480px) {
+  .presentation-studio {
+    font-size: 14px;
+  }
+  
+  .presentation-studio-title {
+    font-size: 1.3rem;
+  }
+  
+  .presentation-studio-creation-title {
+    font-size: 1.25rem;
+  }
 }
