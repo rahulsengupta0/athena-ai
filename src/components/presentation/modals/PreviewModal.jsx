@@ -153,7 +153,15 @@ const PreviewShapeLayer = ({ layer, x, y, width, height, scale }) => {
   );
 };
 
-const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) => {
+const PreviewModal = ({
+  isOpen,
+  onClose,
+  slides,
+  layout,
+  startSlideIndex = 0,
+  mode = 'manual',
+  defaultDuration = 5,
+}) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(startSlideIndex);
 
   // Calculate preview scale to fit viewport
@@ -169,7 +177,7 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
 
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation (always enabled to allow manual override)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -201,6 +209,18 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
   const handleNext = () => {
     setCurrentSlideIndex((prev) => (prev < slides.length - 1 ? prev + 1 : 0));
   };
+
+  // Auto play logic
+  useEffect(() => {
+    if (!isOpen || mode !== 'autoplay' || slides.length === 0) return;
+    const durationSeconds =
+      slides[currentSlideIndex]?.animationDuration ?? defaultDuration;
+    const timer = window.setTimeout(
+      () => setCurrentSlideIndex((prev) => (prev < slides.length - 1 ? prev + 1 : 0)),
+      Math.max(1, durationSeconds) * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [isOpen, mode, currentSlideIndex, slides, defaultDuration]);
 
   const renderSlide = (slide) => {
     if (!slide) return null;
