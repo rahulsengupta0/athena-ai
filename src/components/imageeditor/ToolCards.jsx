@@ -161,10 +161,12 @@ export default function ToolCards() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#7442cc')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#906BFF')}
                 onClick={() => {
-                  if (tool.key === 'remove') navigate('/bgremove');
-                  else if (tool.key === 'enhance') navigate('/artisticiamge');
-                  else if (tool.key === 'color') navigate('/imageeditor');
-                }}
+  if (tool.key === 'remove') navigate('/bgremove');
+  else if (tool.key === 'enhance') navigate('/artisticiamge');
+  else if (tool.key === 'color') navigate('/imageeditor');
+  else if (tool.key === 'crop') navigate('/smartcrop');
+}}
+
               >
                 Try Now
               </button>
