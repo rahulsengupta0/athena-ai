@@ -91,6 +91,7 @@ class ApiService {
   async changePassword(passwordData) {
     return this.request('/api/password', {
       method: 'PUT',
+      headers: getAuthHeaders(),
       body: JSON.stringify(passwordData),
     });
   }
@@ -349,6 +350,13 @@ class ApiService {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(templateData),
+    });
+  }
+
+  // List all created templates (from S3) for the Templates page
+  async getTemplates() {
+    return this.request('/api/templates', {
+      headers: getAuthHeaders(),
     });
   }
 }

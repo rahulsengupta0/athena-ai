@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -316,6 +317,9 @@ const styles = {
 };
 
 function SmartCrop() {
+  const location = useLocation();
+  const passedImageUrl = location.state?.imageUrl || null;
+
   const [imgSrc, setImgSrc] = useState();
   const [aspect, setAspect] = useState();
   const [crop, setCrop] = useState();
@@ -330,6 +334,14 @@ function SmartCrop() {
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
   const previewCanvasRef = useRef(null);
+
+  // If an image URL is passed from Recents, use it as the crop source
+  useEffect(() => {
+    if (passedImageUrl && !imgSrc) {
+      setImgSrc(passedImageUrl);
+      setFileName("Image from Recents");
+    }
+  }, [passedImageUrl, imgSrc]);
 
   const onSelectFile = (e) => {
     if (!e.target.files?.length) return;

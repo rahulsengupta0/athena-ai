@@ -88,9 +88,44 @@ const Settingintro = () => {
     }
   };
 
-  const handleUpdatePassword = () => {
-    console.log('Updating password:', passwordData);
-    // Add password update logic here
+  const handleUpdatePassword = async () => {
+    // Validate passwords
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      alert('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('New password and confirm password do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      await api.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword
+      });
+      
+      // Clear password fields on success
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      alert('Password changed successfully!');
+      console.log('Password updated successfully');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      const errorMessage = error.message || 'Failed to update password. Please try again.';
+      alert(errorMessage);
+    }
   };
 
   const avatarOptions = [

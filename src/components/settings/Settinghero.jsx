@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Settinghero.css';
+import api from '../../services/api';
 
 const Settinghero = () => {
   const [website, setWebsite] = useState('https://alexthompson.design');
@@ -37,9 +38,44 @@ const Settinghero = () => {
     // Add save logic here
   };
 
-  const handleUpdatePassword = () => {
-    console.log('Updating password:', passwords);
-    // Add password update logic here
+  const handleUpdatePassword = async () => {
+    // Validate passwords
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+      alert('Please fill in all password fields');
+      return;
+    }
+
+    if (passwords.new !== passwords.confirm) {
+      alert('New password and confirm password do not match');
+      return;
+    }
+
+    if (passwords.new.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      await api.changePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
+        confirmPassword: passwords.confirm
+      });
+      
+      // Clear password fields on success
+      setPasswords({
+        current: '',
+        new: '',
+        confirm: ''
+      });
+      
+      alert('Password changed successfully!');
+      console.log('Password updated successfully');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      const errorMessage = error.message || 'Failed to update password. Please try again.';
+      alert(errorMessage);
+    }
   };
 
   return (

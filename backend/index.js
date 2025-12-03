@@ -69,6 +69,9 @@ app.use('/api/user-data', userDataRoutes);
 const profileRoutes = require('./routes/profileRoutes');
 app.use('/api/profile', profileRoutes);
 
+const passwordRoutes = require('./routes/passwordRoutes');
+app.use('/api/password', passwordRoutes);
+
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
 
