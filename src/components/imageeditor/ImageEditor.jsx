@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { Slider, Button, Upload, message, Row, Col, Card, Space, Collapse } from 'antd';
 import { 
@@ -15,6 +16,9 @@ import {
 const { Panel } = Collapse;
 
 const ImageEditor = () => {
+  const location = useLocation();
+  const passedImageUrl = location.state?.imageUrl || null;
+
   // State management
   const [image, setImage] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -42,6 +46,14 @@ const ImageEditor = () => {
 
   const fileInputRef = useRef();
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  // If an image URL is passed from Recents, auto-load it into the editor
+  useEffect(() => {
+    if (passedImageUrl && !image) {
+      setImage(passedImageUrl);
+      resetAll();
+    }
+  }, [passedImageUrl, image]);
 
   // Handle image upload
   const handleImageUpload = (event) => {

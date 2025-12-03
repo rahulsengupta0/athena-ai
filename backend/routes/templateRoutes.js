@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { requireAdmin } = require('../middlewares/admin');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} = require('@aws-sdk/client-s3');
 const path = require('path');
 
 // Initialize S3 Client with AWS SDK v3
@@ -118,6 +123,62 @@ router.post('/upload-template-json', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Template JSON upload error:', error);
     res.status(500).json({ msg: 'Failed to upload template JSON', error: error.message });
+  }
+});
+
+// Public GET: list all template JSON files from S3 so the frontend Templates
+// page can show created templates under the templates section.
+router.get('/', async (req, res) => {
+  try {
+    const bucket = process.env.AWS_S3_BUCKET;
+    const region = process.env.AWS_REGION;
+
+    const listCommand = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: 'templates/json/',
+    });
+
+    const listResponse = await s3Client.send(listCommand);
+    const objects = listResponse.Contents || [];
+
+    if (!objects.length) {
+      return res.json([]);
+    }
+
+    const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com/`;
+
+    const templates = await Promise.all(
+      objects.map(async (obj) => {
+        const key = obj.Key;
+        if (!key || !key.endsWith('.json')) return null;
+
+        const getCommand = new GetObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        });
+
+        const getResponse = await s3Client.send(getCommand);
+        const bodyString = await getResponse.Body.transformToString();
+        const data = JSON.parse(bodyString);
+
+        return {
+          id: data.id,
+          name: data.name,
+          category: data.category || 'Business',
+          description:
+            data.description ||
+            'Custom business promotional template created in Template Creator.',
+          thumbnailUrl: data.thumbnail,
+          jsonUrl: `${baseUrl}${key}`,
+        };
+      })
+    );
+
+    const filtered = templates.filter(Boolean);
+    res.json(filtered);
+  } catch (error) {
+    console.error('List templates error:', error);
+    res.status(500).json({ msg: 'Failed to list templates', error: error.message });
   }
 });
 

@@ -1,10 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 function BackgroundRemover() {
+  const location = useLocation();
+  const passedImageUrl = location.state?.imageUrl || null;
+
   const [original, setOriginal] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState("");
+
+  // If an image URL is passed from Recents, auto-load it as the original preview
+  useEffect(() => {
+    if (!passedImageUrl || original) return;
+    setOriginal(passedImageUrl);
+    setFileName("Image from Recents");
+    setResult(null);
+  }, [passedImageUrl, original]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
