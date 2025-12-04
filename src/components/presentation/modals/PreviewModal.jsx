@@ -317,7 +317,7 @@ const PreviewModal = ({
           position: 'relative',
           width: '100%',
           height: '100%',
-          background: '#ffffff',
+          background: currentSlide?.background || '#ffffff',
           borderRadius: '12px',
           boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
@@ -334,7 +334,7 @@ const PreviewModal = ({
             justifyContent: 'space-between',
             padding: '16px 20px',
             borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
-            background: '#ffffff',
+            background: currentSlide?.background || '#ffffff',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -371,7 +371,7 @@ const PreviewModal = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '24px 40px',
+            padding: 0,
             position: 'relative',
             flex: 1,
           }}
@@ -450,7 +450,7 @@ const PreviewModal = ({
               gap: '8px',
               padding: '16px 20px',
               borderTop: '1px solid rgba(15, 23, 42, 0.1)',
-              background: '#f8fafc',
+              background: currentSlide?.background || '#f8fafc',
             }}
           >
             {slides.map((_, index) => (
