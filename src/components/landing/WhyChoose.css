@@ -1,0 +1,691 @@
+/* ========================================
+   Why Choose Section - Competitive Advantages
+   Inspired by Notion, Linear, Figma
+   ======================================== */
+
+@layer components {
+  /* ========================================
+     Main Advantages Grid
+     ======================================== */
+  .why-advantages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(18px, 3vw, 24px);
+    max-width: var(--max-width);
+    margin: 32px auto 40px;
+  }
+
+  /* Advantage Card (Notion-inspired) */
+  .advantage-card {
+    padding: clamp(24px, 4vw, 32px);
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .advantage-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--accent1),
+      var(--accent2)
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .advantage-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(91, 110, 245, 0.15);
+    border-color: rgba(91, 110, 245, 0.3);
+  }
+
+  .advantage-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Icon Wrapper */
+  .advantage-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .advantage-card:hover .advantage-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* Content */
+  .advantage-content {
+    flex: 1;
+  }
+
+  .advantage-title {
+    font-size: clamp(18px, 2.5vw, 22px);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+  }
+
+  .advantage-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Stat Badge */
+  .advantage-stat {
+    align-self: flex-start;
+    padding: 6px 14px;
+    background: rgba(91, 110, 245, 0.08);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(91, 110, 245, 0.15);
+    transition: all 0.3s ease;
+  }
+
+  .advantage-card:hover .advantage-stat {
+    background: rgba(91, 110, 245, 0.15);
+    border-color: rgba(91, 110, 245, 0.25);
+    transform: translateX(4px);
+  }
+
+  /* ========================================
+     Bottom Layout (Comparison + Stats)
+     ======================================== */
+  .why-bottom-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(24px, 4vw, 32px);
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  /* ========================================
+     Comparison Card (Linear-inspired)
+     ======================================== */
+  .comparison-card {
+    padding: clamp(24px, 4vw, 32px);
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+  }
+
+  .comparison-card:hover {
+    box-shadow: 0 16px 48px rgba(91, 110, 245, 0.12);
+  }
+
+  /* Header */
+  .comparison-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .comparison-icon {
+    color: var(--accent1);
+    padding: 8px;
+    background: rgba(91, 110, 245, 0.1);
+    border-radius: 10px;
+  }
+
+  .comparison-title {
+    font-size: clamp(18px, 2.5vw, 22px);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* Comparison List */
+  .comparison-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .comparison-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(34, 197, 94, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .comparison-item:hover {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.2);
+    transform: translateX(4px);
+  }
+
+  .check-icon-wrapper {
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .comparison-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .star-highlight {
+    color: #fbbf24;
+    flex-shrink: 0;
+  }
+
+  /* Comparison Note */
+  .comparison-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: linear-gradient(
+      135deg,
+      rgba(91, 110, 245, 0.08),
+      rgba(192, 107, 255, 0.08)
+    );
+    border-radius: 12px;
+    border: 1px solid rgba(91, 110, 245, 0.15);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .comparison-note svg {
+    color: var(--accent1);
+    flex-shrink: 0;
+  }
+
+  /* ========================================
+     Stats Showcase Card (Figma-inspired)
+     ======================================== */
+  .stats-showcase-card {
+    padding: clamp(24px, 4vw, 32px);
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Animated gradient background */
+  .stats-showcase-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle,
+      rgba(91, 110, 245, 0.05),
+      transparent 70%
+    );
+    animation: rotate 15s linear infinite;
+  }
+
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Header */
+  .stats-showcase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stats-showcase-header h4 {
+    font-size: clamp(18px, 2.5vw, 22px);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* Growth Badge */
+  .growth-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    color: #22c55e;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* Stats Grid */
+  .stats-showcase-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat-showcase-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stat-showcase-value {
+    font-size: clamp(32px, 5vw, 42px);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .stat-showcase-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Animated Progress Bar */
+  .stat-showcase-bar {
+    height: 8px;
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Shimmer effect on bars */
+  .stat-showcase-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* Footer */
+  .stats-showcase-footer {
+    padding: 12px;
+    background: rgba(91, 110, 245, 0.05);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ========================================
+     Responsive Design
+     ======================================== */
+  @media (max-width: 980px) {
+    .why-advantages-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .why-bottom-layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .why-choose-section {
+      padding: 40px 0;
+    }
+    
+    .why-choose-header {
+      margin-bottom: 32px;
+    }
+    
+    .why-choose-title {
+      font-size: 30px;
+    }
+    
+    .why-choose-subtitle {
+      font-size: 16px;
+    }
+    
+    .why-advantages-grid {
+      gap: 14px;
+    }
+    
+    .advantage-card {
+      padding: 22px;
+      border-radius: 16px;
+    }
+    
+    .advantage-title {
+      font-size: 18px;
+    }
+    
+    .advantage-desc {
+      font-size: 14px;
+    }
+    
+    .why-bottom-layout {
+      gap: 20px;
+    }
+    
+    .comparison-card,
+    .stats-showcase-card {
+      padding: 22px;
+      border-radius: 16px;
+    }
+    
+    .comparison-title,
+    .stats-showcase-title {
+      font-size: 20px;
+    }
+    
+    .comparison-subtitle,
+    .stats-showcase-subtitle {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .why-advantages-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .advantage-card {
+      padding: 20px;
+    }
+
+    .advantage-icon-wrapper {
+      width: 56px;
+      height: 56px;
+    }
+
+    .comparison-card,
+    .stats-showcase-card {
+      padding: 20px;
+    }
+
+    .comparison-list {
+      gap: 12px;
+    }
+
+    .comparison-item {
+      padding: 12px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .why-choose-section {
+      padding: 35px 0;
+    }
+    
+    .why-choose-header {
+      margin-bottom: 28px;
+    }
+    
+    .why-choose-title {
+      font-size: 26px;
+    }
+    
+    .why-choose-subtitle {
+      font-size: 15px;
+    }
+    
+    .advantage-card {
+      padding: 18px;
+      border-radius: 14px;
+    }
+    
+    .advantage-icon-wrapper {
+      width: 52px;
+      height: 52px;
+    }
+    
+    .advantage-title {
+      font-size: 17px;
+    }
+    
+    .advantage-desc {
+      font-size: 13px;
+    }
+    
+    .why-bottom-layout {
+      gap: 18px;
+    }
+    
+    .comparison-card,
+    .stats-showcase-card {
+      padding: 18px;
+      border-radius: 14px;
+    }
+    
+    .comparison-title,
+    .stats-showcase-title {
+      font-size: 18px;
+    }
+    
+    .comparison-subtitle,
+    .stats-showcase-subtitle {
+      font-size: 13px;
+    }
+    
+    .comparison-list {
+      gap: 10px;
+    }
+    
+    .comparison-item {
+      padding: 10px;
+    }
+    
+    .comparison-label {
+      font-size: 13px;
+    }
+    
+    .comparison-note {
+      font-size: 12px;
+      padding: 12px;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .stat-item {
+      padding: 16px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .advantage-card {
+      padding: 18px;
+    }
+
+    .stats-showcase-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .growth-badge {
+      align-self: flex-start;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    
+    .stat-item {
+      padding: 14px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    .why-choose-section {
+      padding: 30px 0;
+    }
+    
+    .why-choose-header {
+      margin-bottom: 24px;
+    }
+    
+    .why-choose-title {
+      font-size: 22px;
+    }
+    
+    .why-choose-subtitle {
+      font-size: 14px;
+    }
+    
+    .advantage-card {
+      padding: 16px;
+      border-radius: 12px;
+    }
+    
+    .advantage-icon-wrapper {
+      width: 48px;
+      height: 48px;
+    }
+    
+    .advantage-title {
+      font-size: 16px;
+    }
+    
+    .advantage-desc {
+      font-size: 12px;
+    }
+    
+    .why-bottom-layout {
+      gap: 16px;
+    }
+    
+    .comparison-card,
+    .stats-showcase-card {
+      padding: 16px;
+      border-radius: 12px;
+    }
+    
+    .comparison-title,
+    .stats-showcase-title {
+      font-size: 16px;
+    }
+    
+    .comparison-item {
+      padding: 8px;
+    }
+    
+    .comparison-label {
+      font-size: 12px;
+    }
+    
+    .comparison-note {
+      font-size: 11px;
+      padding: 10px;
+    }
+    
+    .stat-item {
+      padding: 12px;
+    }
+    
+    .stat-value {
+      font-size: 22px;
+    }
+  }
+}
+
+/* Dark Mode Enhancements */
+.landing-page.dark .comparison-item {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.landing-page.dark .comparison-item:hover {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.landing-page.dark .comparison-note {
+  background: linear-gradient(
+    135deg,
+    rgba(91, 110, 245, 0.12),
+    rgba(192, 107, 255, 0.12)
+  );
+}
+
+.landing-page.dark .stats-showcase-footer {
+  background: rgba(91, 110, 245, 0.08);
+}

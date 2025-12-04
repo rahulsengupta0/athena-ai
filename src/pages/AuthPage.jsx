@@ -34,7 +34,7 @@ const AuthPage = () => {
 
       const res = await axios.post(url, formData);
       login(res.data.token);
-      navigate('/');
+      navigate('/home');
     } catch (err) {
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
