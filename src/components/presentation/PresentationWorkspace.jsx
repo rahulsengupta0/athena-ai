@@ -1128,10 +1128,6 @@ const handleApplyEnhancedText = (enhancedText) => {
     let newX = node.x() / scale;
     let newY = node.y() / scale;
     
-    // Clamp to canvas bounds
-    newX = Math.max(0, Math.min(layout.width - layer.width, newX));
-    newY = Math.max(0, Math.min(layout.height - layer.height, newY));
-
     updateActiveSlide((slide) => {
       const updatedSlide = {
         ...slide,
