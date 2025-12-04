@@ -71,11 +71,13 @@ const styles = {
     marginBottom: 18,
     position: 'relative',
     overflow: 'hidden',
+    transition: 'transform 0.3s ease',
   },
   playIcon: {
     color: '#906BFF',
     fontSize: 61,
     opacity: 0.52,
+    transition: 'transform 0.3s ease',
   },
   timeBadge: {
     position: 'absolute',
@@ -107,64 +109,192 @@ const styles = {
   cardActionHover: {
     background: '#7442cc',
     filter: 'brightness(1.08)',
+    boxShadow: '0 0 12px rgba(116, 66, 204, 0.4)',
   },
 };
 
 const CATEGORYS = ['All Templates', 'Social Media', 'Business', 'YouTube', 'Music'];
-const templates = [
-  {
-    badge: 'Popular',
-    title: 'Social Media Story',
-    desc: 'Vertical video template for Instagram and TikTok',
-    seconds: '15s',
-  },
-  {
-    badge: 'Pro',
-    title: 'Product Showcase',
-    desc: 'Professional product demonstration template',
-    seconds: '30s',
-  },
-  {
-    badge: 'New',
-    title: 'YouTube Intro',
-    desc: 'Engaging intro template for YouTube videos',
-    seconds: '5s',
-  },
-];
+
+const templatesByCategory = {
+  'All Templates': [
+    {
+      badge: 'Popular',
+      title: 'Social Media Story',
+      desc: 'Vertical video template for Instagram and TikTok',
+      seconds: '15s',
+      gradient: 'linear-gradient(135deg, #F6F0FF 0%, #ECE5FF 100%)',
+    },
+    {
+      badge: 'Pro',
+      title: 'Product Showcase',
+      desc: 'Professional product demonstration template',
+      seconds: '30s',
+      gradient: '#f4f2fc',
+    },
+    {
+      badge: 'New',
+      title: 'YouTube Intro',
+      desc: 'Engaging intro template for YouTube videos',
+      seconds: '5s',
+      gradient: '#f4f2fc',
+    },
+  ],
+  'Social Media': [
+    {
+      badge: 'Popular',
+      title: 'Instagram Reel',
+      desc: 'Reel template for Instagram',
+      seconds: '10s',
+      gradient: 'linear-gradient(135deg, #F6F0FF 0%, #ECE5FF 100%)',
+    },
+    {
+      badge: 'Popular',
+      title: 'TikTok Trends',
+      desc: 'Trending TikTok template',
+      seconds: '8s',
+      gradient: '#f4f2fc',
+    },
+    {
+      badge: '',
+      title: 'Snap Story',
+      desc: 'Snapchat story template',
+      seconds: '12s',
+      gradient: '#ece5ff',
+    },
+  ],
+  'Business': [
+    {
+      badge: 'Pro',
+      title: 'Product Showcase',
+      desc: 'Professional product demonstration template',
+      seconds: '30s',
+      gradient: '#f4f2fc',
+    },
+    {
+      badge: 'Pro',
+      title: 'Business Pitch',
+      desc: 'Perfect for new business pitches',
+      seconds: '35s',
+      gradient: '#e4e3fc',
+    },
+    {
+      badge: '',
+      title: 'Team Intro',
+      desc: 'Introduce your team members',
+      seconds: '28s',
+      gradient: '#ebe6ff',
+    },
+  ],
+  'YouTube': [
+    {
+      badge: 'New',
+      title: 'YouTube Intro',
+      desc: 'Engaging intro template for YouTube videos',
+      seconds: '5s',
+      gradient: '#f4f2fc',
+    },
+    {
+      badge: 'New',
+      title: 'YouTube Quick Facts',
+      desc: 'Short video for quick info',
+      seconds: '7s',
+      gradient: '#ece5ff',
+    },
+    {
+      badge: '',
+      title: 'Subscribe Button',
+      desc: 'Custom animation for subscribe CTA',
+      seconds: '4s',
+      gradient: '#ebe6ff',
+    },
+  ],
+  'Music': [
+    {
+      badge: '',
+      title: 'Music Lyric Story',
+      desc: 'Lyrics with cool motion graphics',
+      seconds: '18s',
+      gradient: '#f4f2fc',
+    },
+    {
+      badge: 'Hot',
+      title: 'Artist Highlight',
+      desc: 'Spotlight on new artists',
+      seconds: '21s',
+      gradient: '#ece5ff',
+    },
+    {
+      badge: '',
+      title: 'Track Reveal',
+      desc: 'Reveal a new music track',
+      seconds: '14s',
+      gradient: '#ebe6ff',
+    },
+  ],
+};
 
 export default function TemplatesSection() {
-  const [cat, setCat] = useState(0);
+  const [cat, setCat] = useState('All Templates');
   const [hovered, setHovered] = useState(null);
 
   return (
     <>
       <div style={styles.categoryBar}>
-        {CATEGORYS.map((c, i) => (
+        {CATEGORYS.map((c) => (
           <button
             key={c}
-            style={cat === i ? { ...styles.catTab, ...styles.catTabActive } : styles.catTab}
-            onClick={() => setCat(i)}
-            disabled={i !== 0}
+            style={cat === c ? { ...styles.catTab, ...styles.catTabActive } : styles.catTab}
+            onClick={() => setCat(c)}
           >
             {c}
           </button>
         ))}
       </div>
       <div style={styles.grid}>
-        {templates.map((tpl, i) => (
+        {templatesByCategory[cat].map((tpl, i) => (
           <div
             key={tpl.title}
             style={{
               ...styles.card,
-              ...(hovered === i ? styles.cardHover : {})
+              ...(hovered === i ? styles.cardHover : {}),
             }}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
           >
             {tpl.badge && <span style={styles.badge}>{tpl.badge}</span>}
-            <div style={styles.playArea}>
-              <MdPlayCircleOutline style={styles.playIcon} />
-              <span style={styles.timeBadge}>{tpl.seconds}</span>
+            <div 
+              style={{
+                ...styles.playArea,
+                background: tpl.gradient,
+                transform: hovered === i ? 'scale(1.02)' : 'scale(1)',
+                position: 'relative',
+              }}
+            >
+              <MdPlayCircleOutline
+                style={{
+                  ...styles.playIcon,
+                  transform: hovered === i ? 'scale(1.15)' : 'scale(1)',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              />
+              <span style={{
+                ...styles.timeBadge,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg,#8A4DFF, #C29CFF)',
+                padding: '7px 0',
+                width: 32,
+                height: 32,
+                textAlign: 'center',
+                fontWeight: 700,
+                boxShadow: '0 0 8px #906bff44',
+                position: 'absolute',
+                left: 13,
+                bottom: 7,
+                opacity: 0.9,
+              }}>
+                {tpl.seconds}
+              </span>
             </div>
             <div style={styles.cardTitle}>{tpl.title}</div>
             <div style={styles.cardDesc}>{tpl.desc}</div>

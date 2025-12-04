@@ -11,7 +11,7 @@ const NAV_ITEMS = [
     key: "dashboard",
     icon: <FiGrid size={18} />,
     section: "Navigation",
-    path: "/"
+    path: "/home"
   },
   {
     label: "Create",
@@ -53,6 +53,15 @@ const NAV_ITEMS = [
     sublabel: "Pro",
     sublabelClass: "pro",
     path: "/ai-generator"
+  },
+  {
+    label: "Presentation Studio",
+    key: "presentationStudio",
+    icon: <FiGrid size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/presentation-studio"
   },
   {
     label: "Image Editor",

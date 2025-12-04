@@ -1,0 +1,220 @@
+/* Features.css */
+
+.features {
+  padding: 80px 0;
+}
+
+
+.muted {
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* slider + wrapper around track + arrows */
+.slider-wrapper {
+  position: relative;
+  margin-top: 60px;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.4);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.arrow:hover {
+  background: rgba(0,0,0,0.6);
+}
+
+.arrow.left {
+  left: 10px;
+}
+
+.arrow.right {
+  right: 10px
+}
+
+.arrow.left::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-left: 3px solid white;
+  border-bottom: 3px solid white;
+  transform: rotate(45deg);  /* Makes a left-pointing chevron */
+}
+
+.arrow.right::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-left: 3px solid white;
+  border-bottom: 3px solid white;
+  transform: rotate(-132deg);
+}
+
+
+
+.features-slider {
+  overflow: hidden;
+  cursor: grab;
+}
+
+.features-track {
+  display: flex;
+  gap: 2rem;
+  padding: 0 4rem; /* give some padding so cards don't touch edges directly */
+}
+
+.feature-card {
+  min-width: 360px;
+  height: 420px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 24px;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s;
+}
+
+.feature-card:hover {
+  transform: scale(1.03);
+}
+
+.feature-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: rgba(0,0,0,0.5);
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+.feature-overlay h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.feature-overlay p {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .feature-card {
+    min-width: 300px;
+    height: 360px;
+  }
+  .features-track {
+    padding: 0 2rem;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .feature-card {
+    min-width: 280px;
+    height: 320px;
+  }
+  
+  .feature-overlay h3 {
+    font-size: 20px;
+  }
+  
+  .feature-overlay p {
+    font-size: 14px;
+  }
+  
+  .features-slider {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  .features-slider::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .features-track {
+    padding: 0 1.5rem;
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .arrow {
+    display: none; /* hide arrows on small mobile if you want */
+  }
+  
+  .feature-card {
+    min-width: 260px;
+    height: 300px;
+  }
+  
+  .features {
+    padding: 60px 0;
+  }
+  
+  .features-track {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-card {
+    min-width: 240px;
+    height: 280px;
+  }
+  
+  .feature-overlay {
+    padding: 16px;
+  }
+  
+  .feature-overlay h3 {
+    font-size: 18px;
+  }
+  
+  .feature-overlay p {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  
+  .features {
+    padding: 50px 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .feature-card {
+    min-width: 220px;
+    height: 260px;
+  }
+  
+  .feature-overlay h3 {
+    font-size: 16px;
+  }
+  
+  .feature-overlay p {
+    font-size: 12px;
+  }
+}

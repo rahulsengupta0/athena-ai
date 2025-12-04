@@ -1,0 +1,154 @@
+/* ===== Presentation Header | Athena Theme ===== */
+
+.presentation-studio-header {
+  background: var(--ps-bg-card);
+  padding: 1.5rem 2rem;
+  border-radius: var(--ps-radius-xl);
+  border: 1px solid var(--ps-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  box-shadow: var(--ps-shadow-lg);
+  backdrop-filter: blur(10px);
+}
+
+/* Gradient Title */
+.presentation-studio-title {
+  background: linear-gradient(90deg, var(--ps-accent-primary), var(--ps-accent-secondary));
+  -webkit-background-clip: text;
+  color: transparent;
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.presentation-studio-subtitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ps-text-secondary);
+  margin-top: 0.5rem;
+}
+
+/* Button Group */
+.presentation-studio-header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Buttons */
+.presentation-studio-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: var(--ps-radius-lg);
+  cursor: pointer;
+  transition: var(--ps-transition);
+  border: 1px solid var(--ps-border);
+  background: var(--ps-bg-primary);
+  color: var(--ps-text-primary);
+  font-weight: 600;
+  box-shadow: var(--ps-shadow-sm);
+  font-family: 'Inter', 'Poppins', Arial, sans-serif;
+}
+
+.presentation-studio-button:hover {
+  background: var(--ps-bg-secondary);
+  border-color: var(--ps-border-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--ps-shadow-md);
+}
+
+/* Primary Button */
+.presentation-studio-button-primary {
+  background: var(--ps-accent-gradient);
+  border: none;
+  color: #ffffff;
+  box-shadow: var(--ps-shadow-accent);
+}
+
+.presentation-studio-button-primary:hover {
+  background: var(--ps-accent-gradient-hover);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(151, 96, 255, 0.25);
+}
+
+/* Disabled State */
+.presentation-studio-button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.presentation-studio-button-disabled:hover {
+  background: var(--ps-bg-primary) !important;
+  transform: none !important;
+}
+
+/* Dropdown */
+.presentation-studio-dropdown {
+  position: relative;
+}
+
+.presentation-studio-dropdown-menu {
+  position: absolute;
+  right: 0;
+  background: var(--ps-bg-primary);
+  border: 1px solid var(--ps-border);
+  border-radius: var(--ps-radius-lg);
+  margin-top: 0.5rem;
+  width: 180px;
+  overflow: hidden;
+  box-shadow: var(--ps-shadow-lg);
+  animation: fadeIn 0.2s cubic-bezier(0.24, 1, 0.32, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.presentation-studio-dropdown-item {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  background: var(--ps-bg-primary);
+  cursor: pointer;
+  color: var(--ps-text-primary);
+  transition: var(--ps-transition);
+  font-family: 'Inter', 'Poppins', Arial, sans-serif;
+}
+
+.presentation-studio-dropdown-item:hover {
+  background: var(--ps-bg-secondary);
+  color: var(--ps-accent-primary);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .presentation-studio-header {
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: flex-start;
+    padding: 1.25rem;
+  }
+  
+  .presentation-studio-title {
+    font-size: 1.75rem;
+  }
+  
+  .presentation-studio-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

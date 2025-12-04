@@ -1,0 +1,40 @@
+/* Testimonials.css */
+.test-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 18px; 
+  margin-top: 22px; 
+  max-width: var(--max-width); 
+  margin-left: auto; 
+  margin-right: auto 
+}
+.test-card{ 
+  padding: 20px; 
+  min-height: 150px; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: space-between 
+}
+.test-quote{ 
+  font-size: 15px; 
+  color: var(--text-muted) 
+}
+.test-author{ 
+  margin-top: 12px; 
+  font-weight: 700 
+}
+
+/* responsive */
+@media (max-width:1100px){ 
+  .test-grid{ 
+    grid-template-columns: repeat(2, 1fr) 
+  } 
+}
+@media (max-width:700px){ 
+  .test-grid{ 
+    grid-template-columns: 1fr 
+  } 
+  .test-card{ 
+    padding: 16px 
+  } 
+}
