@@ -37,7 +37,7 @@ const ChatModal = () => {
       ];
 
       // ✅ Send message to backend
-      const response = await axios.post("http://localhost:5000/api/deepseek/chat", {
+      const response = await axios.post("http://localhost:5000/api/chatbot/chat", {
         message: input,
         history: fullHistory,
       });
