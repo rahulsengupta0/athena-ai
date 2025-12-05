@@ -464,7 +464,7 @@ const Settingintro = () => {
             className="logout-btn"
             onClick={() => {
               logout();
-              navigate('/auth');
+              navigate('/');
             }}
           >
             Logout
