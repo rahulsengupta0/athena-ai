@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children }) => {
 
   // if no token or not authenticated → block
   if (!token || !isAuthenticated) {
-    return <Navigate to="/landing" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

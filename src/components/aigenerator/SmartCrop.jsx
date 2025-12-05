@@ -21,88 +21,118 @@ const RATIOS = [
 // CSS-in-JS styles object
 const styles = {
   smartPage: {
-    display: 'grid',
-    gridTemplateColumns: '320px 1fr',
-    height: '100vh',
-    maxWidth: '1400px',
-    margin: '0 auto',
-    background: 'white',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 'var(--app-sidebar-width, 48px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'stretch',
+    width: 'auto',
+    height: '100%',
+    margin: 0,
+    padding: '20px 24px',
+    background:
+      'radial-gradient(1400px 900px at 20% 15%, #0a0e1a 0%, #1a1f2e 40%, #0f1419 100%), ' +
+      'radial-gradient(1000px 700px at 80% 85%, rgba(16,185,129,0.12) 0%, transparent 50%), ' +
+      'radial-gradient(900px 600px at 20% 80%, rgba(236,72,153,0.1) 0%, transparent 50%)',
+    boxSizing: 'border-box',
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     overflow: 'hidden',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
   },
-  
-  smartSidebar: {
-    background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
-    padding: '32px 24px',
+
+  pageInner: {
+    width: '100%',
+    maxWidth: '1600px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
-    overflowY: 'auto'
+    gap: '20px',
+    height: '100%',
   },
-  
-  sidebarHeader: {
-    textAlign: 'center',
-    paddingBottom: '16px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+
+  bottomToolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '18px',
+    padding: '18px 28px',
+    background: 'linear-gradient(180deg, rgba(26,32,44,0.96) 0%, rgba(15,23,42,0.98) 100%)',
+    borderRadius: '20px',
+    border: '1px solid rgba(16,185,129,0.25)',
+    boxShadow: '0 -8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.15) inset',
+    backdropFilter: 'saturate(150%) blur(20px)',
+    flexWrap: 'wrap',
+    marginTop: 'auto',
   },
-  
-  sidebarTitle: {
-    margin: 0,
-    fontSize: '24px',
-    fontWeight: 700,
-    color: 'white',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  },
-  
+
   uploadSection: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
-    padding: '24px',
-    border: '2px dashed rgba(255, 255, 255, 0.1)',
-    transition: 'all 0.3s ease',
+    background:
+      'radial-gradient(circle at top left, rgba(16,185,129,0.15), transparent 55%), ' +
+      'linear-gradient(180deg, rgba(26,32,44,0.5) 0%, rgba(15,23,42,0.9) 100%)',
+    borderRadius: '14px',
+    padding: '12px 18px',
+    border: '1.5px dashed rgba(16,185,129,0.4)',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
     cursor: 'pointer',
-    position: 'relative'
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    minWidth: '220px',
   },
-  
+
   uploadSectionHover: {
-    borderColor: '#667eea',
-    background: 'rgba(102, 126, 234, 0.1)'
+    borderColor: '#10b981',
+    background: 'rgba(16,185,129,0.2)',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 16px rgba(16,185,129,0.3)',
   },
-  
+
   uploadContent: {
-    textAlign: 'center',
-    color: '#94a3b8'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    flex: 1,
+    minWidth: 0,
   },
-  
+
   uploadIcon: {
-    width: '48px',
-    height: '48px',
-    margin: '0 auto 12px',
-    background: 'rgba(255, 255, 255, 0.1)',
+    width: '36px',
+    height: '36px',
+    flexShrink: 0,
+    background:
+      'linear-gradient(135deg, rgba(16,185,129,0.6), rgba(34,211,238,0.7))',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px'
+    fontSize: '20px',
+    boxShadow: '0 2px 10px rgba(16,185,129,0.4)',
   },
-  
+
   uploadTitle: {
-    margin: '0 0 8px 0',
+    margin: 0,
     color: 'white',
-    fontSize: '16px',
-    fontWeight: 600
+    fontSize: '14px',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    lineHeight: '1.3',
   },
-  
+
   uploadSubtitle: {
     margin: 0,
-    fontSize: '14px',
-    opacity: 0.8
+    fontSize: '12px',
+    opacity: 0.75,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    lineHeight: '1.3',
   },
-  
+
   fileInput: {
     position: 'absolute',
     width: '100%',
@@ -112,207 +142,247 @@ const styles = {
     opacity: 0,
     cursor: 'pointer'
   },
-  
+
+  toolbarDivider: {
+    width: '1px',
+    height: '32px',
+    background: 'rgba(16,185,129,0.25)',
+    margin: '0 6px',
+  },
+
   ratioSection: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
-    padding: '20px'
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flex: 1,
+    minWidth: 0,
   },
-  
+
   sectionTitle: {
-    color: 'white',
-    fontSize: '14px',
+    color: 'rgba(209,213,219,0.95)',
+    fontSize: '12px',
     fontWeight: 600,
-    margin: '0 0 16px 0',
+    margin: '0 10px 0 0',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    opacity: 0.9
+    letterSpacing: '0.8px',
+    whiteSpace: 'nowrap',
   },
-  
+
   ratioGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '10px'
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
   },
-  
+
   ratioBtn: {
-    padding: '12px 8px',
-    borderRadius: '12px',
-    border: '2px solid transparent',
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: '#cbd5e1',
-    fontSize: '14px',
+    padding: '9px 14px',
+    borderRadius: '11px',
+    border: '1.5px solid rgba(16,185,129,0.3)',
+    background:
+      'radial-gradient(circle at top, rgba(30,41,59,0.8), rgba(15,23,42,0.95))',
+    color: '#e5e7eb',
+    fontSize: '13px',
     fontWeight: 500,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    textAlign: 'center'
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    textAlign: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+    whiteSpace: 'nowrap',
   },
-  
+
   ratioBtnHover: {
-    background: 'rgba(255, 255, 255, 0.15)',
+    background: 'linear-gradient(180deg, rgba(16,185,129,0.25) 0%, rgba(34,211,238,0.25) 100%)',
     color: 'white',
-    borderColor: 'rgba(255, 255, 255, 0.2)'
+    borderColor: 'rgba(16,185,129,0.5)',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
   },
-  
+
   ratioBtnActive: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #10b981 0%, #22d3ee 50%, #ec4899 100%)',
     color: 'white',
     borderColor: 'transparent',
-    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-    transform: 'translateY(-1px)'
+    boxShadow: '0 8px 20px rgba(16,185,129,0.5), 0 0 0 1px rgba(16,185,129,0.3) inset',
+    transform: 'translateY(-1px)',
   },
-  
+
   smartCropBtn: {
-    padding: '16px',
-    borderRadius: '16px',
+    padding: '11px 20px',
+    borderRadius: '13px',
     border: 'none',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #10b981 0%, #22d3ee 50%, #ec4899 100%)',
     color: 'white',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
-    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+    gap: '9px',
+    boxShadow: '0 8px 20px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.2) inset',
+    whiteSpace: 'nowrap',
   },
-  
+
   smartCropBtnHover: {
     transform: 'translateY(-2px)',
-    boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)'
+    boxShadow: '0 12px 28px rgba(16,185,129,0.45), 0 0 0 1px rgba(16,185,129,0.3) inset',
   },
-  
+
   smartCropBtnDisabled: {
     opacity: 0.5,
     cursor: 'not-allowed',
     transform: 'none !important'
   },
-  
+
   smartCropBtnIcon: {
     fontSize: '20px'
   },
-  
-  actionsRow: {
-    marginTop: 'auto',
+
+  editorToolbar: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
     display: 'flex',
-    gap: '12px',
-    paddingTop: '24px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+    gap: '10px',
+    zIndex: 10,
   },
-  
-  primaryBtn: {
-    flex: 1,
-    padding: '14px',
+
+  iconBtn: {
+    width: '44px',
+    height: '44px',
     borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    cursor: 'pointer',
     border: 'none',
-    transition: 'all 0.3s ease',
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+    cursor: 'pointer',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    padding: 0,
   },
-  
+
+  primaryBtn: {
+    background: 'linear-gradient(135deg, #10b981 0%, #22d3ee 100%)',
+    color: 'white',
+    boxShadow: '0 8px 20px rgba(16,185,129,0.4), 0 0 0 1px rgba(16,185,129,0.2) inset',
+  },
+
   primaryBtnHover: {
     transform: 'translateY(-2px)',
-    boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)'
+    boxShadow: '0 12px 24px rgba(16,185,129,0.5), 0 0 0 1px rgba(16,185,129,0.3) inset',
   },
-  
+
   primaryBtnDisabled: {
     opacity: 0.5,
     cursor: 'not-allowed',
     transform: 'none !important'
   },
-  
+
   secondaryBtn: {
-    flex: 1,
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    border: '2px solid rgba(255, 255, 255, 0.1)',
-    transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: '#94a3b8'
+    background:
+      'linear-gradient(180deg, rgba(26,32,44,0.9) 0%, rgba(15,23,42,0.75) 100%)',
+    color: '#d1d5db',
+    border: '1.5px solid rgba(16,185,129,0.3)',
   },
-  
+
   secondaryBtnHover: {
-    background: 'rgba(255, 255, 255, 0.15)',
+    background:
+      'linear-gradient(180deg, rgba(16,185,129,0.25) 0%, rgba(34,211,238,0.35) 100%)',
     color: 'white',
-    borderColor: 'rgba(255, 255, 255, 0.2)'
+    borderColor: 'rgba(16,185,129,0.5)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 16px rgba(16,185,129,0.25)',
   },
-  
+
+  editorCard: {
+    position: 'relative',
+    borderRadius: '20px',
+    padding: '20px',
+    background:
+      'radial-gradient(circle at top left, rgba(16,185,129,0.15), transparent 55%), ' +
+      'linear-gradient(145deg, rgba(26,32,44,0.96), rgba(15,23,42,0.98))',
+    border: '1px solid rgba(16,185,129,0.3)',
+    boxShadow: '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.1) inset',
+    overflow: 'hidden',
+    flex: 1,
+    minHeight: 0,
+  },
+
   smartEditor: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(45deg, #0f172a 0%, #1e293b 100%)',
-    overflow: 'hidden'
+    width: '100%',
+    height: '100%',
   },
-  
+
   cropContainer: {
-    maxWidth: '90%',
-    maxHeight: '90%',
-    padding: '20px',
-    background: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: '20px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)'
+    maxWidth: '100%',
+    maxHeight: '100%',
+    padding: '16px',
+    background:
+      'radial-gradient(circle at top, rgba(26,32,44,0.96), rgba(15,23,42,0.98))',
+    borderRadius: '16px',
+    border: '1px solid rgba(16,185,129,0.25)',
+    backdropFilter: 'blur(12px)',
   },
-  
+
   cropArea: {
     maxWidth: '100%',
     maxHeight: '80vh'
   },
-  
+
   cropImage: {
     maxWidth: '100%',
     maxHeight: '75vh',
     objectFit: 'contain',
-    borderRadius: '8px',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+    borderRadius: '12px',
+    boxShadow: '0 28px 70px rgba(0, 0, 0, 0.38)'
   },
-  
+
   placeholder: {
     textAlign: 'center',
-    color: '#94a3b8',
-    fontSize: '18px',
-    padding: '48px',
-    border: '2px dashed rgba(255, 255, 255, 0.1)',
-    borderRadius: '20px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    maxWidth: '400px',
+    color: '#e5e7eb',
+    fontSize: '16px',
+    padding: '60px 40px',
+    border: '1px dashed rgba(16,185,129, 0.4)',
+    borderRadius: '16px',
+    background:
+      'radial-gradient(circle at top left, rgba(16,185,129,0.15), transparent 55%), ' +
+      'linear-gradient(180deg, rgba(26,32,44,0.92) 0%, rgba(15,23,42,0.98) 100%)',
+    maxWidth: '500px',
     margin: 'auto'
   },
-  
+
   placeholderIcon: {
     fontSize: '48px',
     marginBottom: '16px',
     opacity: 0.5
   },
-  
+
   previewSection: {
     position: 'absolute',
-    bottom: '24px',
-    right: '24px',
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '12px',
-    padding: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.2)'
+    bottom: '20px',
+    right: '20px',
+    background: 'linear-gradient(180deg, rgba(26,32,44,0.95) 0%, rgba(15,23,42,0.98) 100%)',
+    backdropFilter: 'blur(12px)',
+    borderRadius: '16px',
+    padding: '14px',
+    border: '1px solid rgba(16,185,129, 0.3)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
   },
-  
+
   previewCanvas: {
     width: '120px',
     height: '120px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     objectFit: 'cover',
-    display: 'block'
+    display: 'block',
+    boxShadow: '0 10px 28px rgba(0,0,0,0.38)'
   }
 };
 
@@ -330,10 +400,12 @@ function SmartCrop() {
   const [hoveredPrimary, setHoveredPrimary] = useState(false);
   const [hoveredSecondary, setHoveredSecondary] = useState(false);
   const [hoveredRatio, setHoveredRatio] = useState(null);
+  const [isPreviewHovered, setIsPreviewHovered] = useState(false);
   
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
   const previewCanvasRef = useRef(null);
+  const overlayCanvasRef = useRef(null);
 
   // If an image URL is passed from Recents, use it as the crop source
   useEffect(() => {
@@ -351,15 +423,6 @@ function SmartCrop() {
     reader.addEventListener("load", () => setImgSrc(reader.result));
     reader.readAsDataURL(file);
   };
-
-  useEffect(() => {
-    if (imgSrc) {
-      setShowPreview(true);
-      updatePreview();
-    } else {
-      setShowPreview(false);
-    }
-  }, [crop, imgSrc]);
 
   const onImageLoad = (e) => {
     if (!aspect) return;
@@ -388,20 +451,26 @@ function SmartCrop() {
     setCrop(nextCrop);
   };
 
+  const getPixelCrop = (img, currentCrop) => {
+    if (!currentCrop) return null;
+    if (currentCrop.unit === 'px') return currentCrop;
+    const rect = img.getBoundingClientRect();
+    return convertToPixelCrop(currentCrop, rect.width, rect.height);
+  };
+
   const updateCanvas = () => {
     if (!imgRef.current || !canvasRef.current || !crop) return;
 
     const img = imgRef.current;
     const canvas = canvasRef.current;
+    const pixelCrop = getPixelCrop(img, crop);
+    if (!pixelCrop) return;
+    const rect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
 
-    const pixelCrop = convertToPixelCrop(
-      crop,
-      img.naturalWidth,
-      img.naturalHeight
-    );
-
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
+    canvas.width = Math.round(pixelCrop.width * scaleX);
+    canvas.height = Math.round(pixelCrop.height * scaleY);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -411,14 +480,14 @@ function SmartCrop() {
 
     ctx.drawImage(
       img,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
+      Math.round(pixelCrop.x * scaleX),
+      Math.round(pixelCrop.y * scaleY),
+      Math.round(pixelCrop.width * scaleX),
+      Math.round(pixelCrop.height * scaleY),
       0,
       0,
-      pixelCrop.width,
-      pixelCrop.height
+      canvas.width,
+      canvas.height
     );
   };
 
@@ -428,11 +497,11 @@ function SmartCrop() {
     const img = imgRef.current;
     const canvas = previewCanvasRef.current;
 
-    const pixelCrop = convertToPixelCrop(
-      crop,
-      img.naturalWidth,
-      img.naturalHeight
-    );
+    const pixelCrop = getPixelCrop(img, crop);
+    if (!pixelCrop) return;
+    const rect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
 
     canvas.width = 120;
     canvas.height = 120;
@@ -445,21 +514,60 @@ function SmartCrop() {
 
     ctx.drawImage(
       img,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
+      Math.round(pixelCrop.x * scaleX),
+      Math.round(pixelCrop.y * scaleY),
+      Math.round(pixelCrop.width * scaleX),
+      Math.round(pixelCrop.height * scaleY),
       0,
       0,
       120,
       120
     );
+
+    if (overlayCanvasRef.current) {
+      const overlay = overlayCanvasRef.current;
+      const overlaySize = 240; 
+      overlay.width = overlaySize;
+      overlay.height = overlaySize;
+      const octx = overlay.getContext('2d');
+      if (octx) {
+        octx.imageSmoothingEnabled = true;
+        octx.imageSmoothingQuality = 'high';
+        octx.clearRect(0, 0, overlaySize, overlaySize);
+        octx.drawImage(
+          img,
+          Math.round(pixelCrop.x * scaleX),
+          Math.round(pixelCrop.y * scaleY),
+          Math.round(pixelCrop.width * scaleX),
+          Math.round(pixelCrop.height * scaleY),
+          0,
+          0,
+          overlaySize,
+          overlaySize
+        );
+      }
+    }
   };
+
+  useEffect(() => {
+    if (imgSrc) {
+      setShowPreview(true);
+      updatePreview();
+    } else {
+      setShowPreview(false);
+    }
+  }, [crop, imgSrc]);
+
+  useEffect(() => {
+    if (isPreviewHovered) {
+      updatePreview();
+    }
+  }, [isPreviewHovered]);
 
   const downloadCropped = () => {
     updateCanvas();
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !crop || canvas.width === 0 || canvas.height === 0) return;
 
     canvas.toBlob(
       (blob) => {
@@ -501,156 +609,195 @@ function SmartCrop() {
 
   return (
     <div style={styles.smartPage}>
-      <aside style={styles.smartSidebar}>
-        <div style={styles.sidebarHeader}>
-          <h3 style={styles.sidebarTitle}>Image Cropper</h3>
-        </div>
-
-        <div 
-          style={{
-            ...styles.uploadSection,
-            ...(hoveredUpload && styles.uploadSectionHover)
-          }}
-          onMouseEnter={() => setHoveredUpload(true)}
-          onMouseLeave={() => setHoveredUpload(false)}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onSelectFile}
-            style={styles.fileInput}
-          />
-          <div style={styles.uploadContent}>
-            <div style={styles.uploadIcon}>📁</div>
-            <h4 style={styles.uploadTitle}>Upload Image</h4>
-            <p style={styles.uploadSubtitle}>Click or drag & drop</p>
-            {fileName && (
-              <p style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
-                {fileName}
-              </p>
-            )}
+      <div style={styles.pageInner}>
+        <main style={styles.editorCard}>
+          <div style={styles.editorToolbar}>
+            <button
+              style={{
+                ...styles.iconBtn,
+                ...styles.secondaryBtn,
+                ...(hoveredSecondary && styles.secondaryBtnHover),
+              }}
+              onClick={() => {
+                setImgSrc(undefined);
+                setFileName('');
+                setAspect(undefined);
+                setCrop(undefined);
+              }}
+              onMouseEnter={() => setHoveredSecondary(true)}
+              onMouseLeave={() => setHoveredSecondary(false)}
+              title="Clear"
+            >
+              🗑️
+            </button>
+            <button
+              style={{
+                ...styles.iconBtn,
+                ...styles.primaryBtn,
+                ...(hoveredPrimary && styles.primaryBtnHover),
+                ...((!imgSrc || !crop) && styles.primaryBtnDisabled),
+              }}
+              onClick={downloadCropped}
+              disabled={!imgSrc || !crop}
+              onMouseEnter={() => setHoveredPrimary(true)}
+              onMouseLeave={() => setHoveredPrimary(false)}
+              title="Download"
+            >
+              ⬇️
+            </button>
           </div>
-        </div>
+            <div style={styles.smartEditor}>
+              {imgSrc ? (
+                <div style={styles.cropContainer}>
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(c) => setCrop(c)}
+                    onComplete={updatePreview}
+                    aspect={aspect}
+                    keepSelection
+                    className="crop-area"
+                    ruleOfThirds
+                  >
+                    <img
+                      ref={imgRef}
+                      src={imgSrc}
+                      alt="Crop source"
+                      onLoad={onImageLoad}
+                      style={styles.cropImage}
+                    />
+                  </ReactCrop>
+                </div>
+              ) : (
+                <div style={styles.placeholder}>
+                  <div style={styles.placeholderIcon}>🖼️</div>
+                  <p>Upload an image to start cropping</p>
+                  <p style={{ fontSize: '14px', opacity: 0.7 }}>
+                    Supports JPG, PNG, WebP
+                  </p>
+                </div>
+              )}
 
-        <div style={styles.ratioSection}>
-          <h4 style={styles.sectionTitle}>Aspect Ratio</h4>
-          <div style={styles.ratioGrid}>
-            {RATIOS.map((r) => (
-              <button
-                key={r.label}
-                style={getRatioBtnStyle(r.value)}
-                onClick={() => handleAspectChange(r.value)}
-                title={r.label}
-                onMouseEnter={() => setHoveredRatio(r.value)}
-                onMouseLeave={() => setHoveredRatio(null)}
-              >
-                {r.icon}<br/>
-                <span style={{ fontSize: '11px' }}>{r.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+              {showPreview && (
+                <div style={styles.previewSection}>
+                  <div
+                    onMouseEnter={() => setIsPreviewHovered(true)}
+                    onMouseLeave={() => setIsPreviewHovered(false)}
+                    style={{ position: 'relative' }}
+                  >
+                    <canvas
+                      ref={previewCanvasRef}
+                      style={styles.previewCanvas}
+                    />
+                    {isPreviewHovered && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-260px',
+                          right: '0',
+                          background: 'rgba(0,0,0,0.6)',
+                          padding: '10px',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          zIndex: 5,
+                        }}
+                      >
+                        <canvas
+                          ref={overlayCanvasRef}
+                          style={{
+                            width: '240px',
+                            height: '240px',
+                            display: 'block',
+                            borderRadius: '10px',
+                            objectFit: 'cover',
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p
+                    style={{
+                      color: 'white',
+                      fontSize: '12px',
+                      textAlign: 'center',
+                      marginTop: '8px',
+                      opacity: 0.8,
+                    }}
+                  >
+                    Preview
+                  </p>
+                </div>
+              )}
 
-        <button
-          style={{
-            ...styles.smartCropBtn,
-            ...(hoveredSmartBtn && styles.smartCropBtnHover),
-            ...((!imgSrc || !aspect) && styles.smartCropBtnDisabled)
-          }}
-          onClick={smartCrop}
-          disabled={!imgSrc || !aspect}
-          onMouseEnter={() => setHoveredSmartBtn(true)}
-          onMouseLeave={() => setHoveredSmartBtn(false)}
-        >
-          <span style={styles.smartCropBtnIcon}>✨</span>
-          Smart Crop
-        </button>
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </div>
+          </main>
 
-        <div style={styles.actionsRow}>
-          <button 
+        <div style={styles.bottomToolbar}>
+          <div
             style={{
-              ...styles.secondaryBtn,
-              ...(hoveredSecondary && styles.secondaryBtnHover)
+              ...styles.uploadSection,
+              ...(hoveredUpload && styles.uploadSectionHover),
             }}
-            onClick={() => {
-              setImgSrc(undefined);
-              setFileName("");
-              setAspect(undefined);
-              setCrop(undefined);
-            }}
-            onMouseEnter={() => setHoveredSecondary(true)}
-            onMouseLeave={() => setHoveredSecondary(false)}
+            onMouseEnter={() => setHoveredUpload(true)}
+            onMouseLeave={() => setHoveredUpload(false)}
           >
-            Clear
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onSelectFile}
+              style={styles.fileInput}
+            />
+            <div style={styles.uploadIcon}>📁</div>
+            <div style={styles.uploadContent}>
+              <h4 style={styles.uploadTitle}>
+                {fileName || 'Upload image'}
+              </h4>
+              <p style={styles.uploadSubtitle}>
+                {fileName ? 'Click to change' : 'Click or drag & drop'}
+              </p>
+            </div>
+          </div>
+
+          <div style={styles.toolbarDivider}></div>
+          <div style={styles.ratioSection}>
+            <h4 style={styles.sectionTitle}>Ratio:</h4>
+            <div style={styles.ratioGrid}>
+              {RATIOS.map((r) => (
+                <button
+                  key={r.label}
+                  style={getRatioBtnStyle(r.value)}
+                  onClick={() => handleAspectChange(r.value)}
+                  title={r.label}
+                  onMouseEnter={() => setHoveredRatio(r.value)}
+                  onMouseLeave={() => setHoveredRatio(null)}
+                >
+                  <span>{r.icon}</span>
+                  <span>{r.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={styles.toolbarDivider}></div>
+
           <button
             style={{
-              ...styles.primaryBtn,
-              ...(hoveredPrimary && styles.primaryBtnHover),
-              ...(!imgSrc && styles.primaryBtnDisabled)
+              ...styles.smartCropBtn,
+              ...(hoveredSmartBtn && styles.smartCropBtnHover),
+              ...((!imgSrc || !aspect) && styles.smartCropBtnDisabled),
             }}
-            onClick={downloadCropped}
-            disabled={!imgSrc}
-            onMouseEnter={() => setHoveredPrimary(true)}
-            onMouseLeave={() => setHoveredPrimary(false)}
+            onClick={smartCrop}
+            disabled={!imgSrc || !aspect}
+            onMouseEnter={() => setHoveredSmartBtn(true)}
+            onMouseLeave={() => setHoveredSmartBtn(false)}
           >
-            <span style={{ marginRight: '8px' }}>⬇️</span>
-            Download
+            <span style={styles.smartCropBtnIcon}>✨</span>
+            Smart Crop
           </button>
         </div>
-      </aside>
-
-      <main style={styles.smartEditor}>
-        {imgSrc ? (
-          <div style={styles.cropContainer}>
-            <ReactCrop
-              crop={crop}
-              onChange={(c) => setCrop(c)}
-              onComplete={updatePreview}
-              aspect={aspect}
-              keepSelection
-              className="crop-area"
-              ruleOfThirds
-            >
-              <img
-                ref={imgRef}
-                src={imgSrc}
-                alt="Crop source"
-                onLoad={onImageLoad}
-                style={styles.cropImage}
-              />
-            </ReactCrop>
-          </div>
-        ) : (
-          <div style={styles.placeholder}>
-            <div style={styles.placeholderIcon}>🖼️</div>
-            <p>Upload an image to start cropping</p>
-            <p style={{ fontSize: '14px', opacity: 0.7 }}>
-              Supports JPG, PNG, WebP
-            </p>
-          </div>
-        )}
-        
-        {showPreview && (
-          <div style={styles.previewSection}>
-            <canvas 
-              ref={previewCanvasRef} 
-              style={styles.previewCanvas}
-            />
-            <p style={{ 
-              color: 'white', 
-              fontSize: '12px', 
-              textAlign: 'center',
-              marginTop: '8px',
-              opacity: 0.8 
-            }}>
-              Preview
-            </p>
-          </div>
-        )}
-        
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-      </main>
+      </div>
     </div>
   );
 }
