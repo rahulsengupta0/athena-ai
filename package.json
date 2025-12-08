@@ -30,7 +30,6 @@
     "jwt-decode": "^4.0.0",
     "konva": "^10.0.2",
     "lucide-react": "^0.554.0",
-    "framer-motion": "^12.23.24",
     "fuse.js": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "marked": "^17.0.0",

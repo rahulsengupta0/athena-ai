@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -18,16 +18,24 @@ const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
+  const processedTokenRef = useRef(null);
 
   // Handle token-based authentication from LMS
   useEffect(() => {
-    const handleTokenAuth = async () => {
-      const token = searchParams.get('token');
-      
-      if (!token) {
-        return;
-      }
+    const token = searchParams.get('token');
+    
+    // Skip if no token or if we've already processed this token
+    if (!token || processedTokenRef.current === token) {
+      return;
+    }
 
+    // Mark this token as being processed
+    processedTokenRef.current = token;
+
+    const handleTokenAuth = async () => {
+      // Clear any existing token first to prevent AuthContext from using an old one
+      localStorage.removeItem('token');
+      
       setIsLoading(true);
       setError(null);
 
@@ -35,22 +43,25 @@ const AuthPage = () => {
         // Verify the token with the backend
         const response = await api.verifyToken(token);
         
-        if (response.token) {
-          // Store the token in localStorage
-          login(response.token);
+        if (response.success && response.token) {
+          // Store the token in localStorage and wait for profile fetch
+          await login(response.token);
           
-          // Show success message
-          setMessage('Successfully authenticated! Redirecting...');
-          
-          // Redirect to dashboard
-          setTimeout(() => {
-            navigate('/');
-          }, 1000);
+          if (response.created) {
+            // New user - show welcome message before redirecting
+            setMessage('Account created and authenticated! Redirecting...');
+            setTimeout(() => {
+              navigate('/create', { replace: true });
+            }, 1000);
+          } else {
+            // Existing user - redirect immediately to Create page
+            navigate('/create', { replace: true });
+          }
         } else {
-          setError('Invalid or expired session');
-          // Redirect to home after showing error
+          setError(response.msg || 'Invalid or expired session');
+          // Redirect to landing page after showing error
           setTimeout(() => {
-            navigate('/');
+            navigate('/', { replace: true });
           }, 3000);
         }
       } catch (err) {
@@ -59,7 +70,7 @@ const AuthPage = () => {
         
         // Redirect to home after showing error
         setTimeout(() => {
-          navigate('/');
+          navigate('/', { replace: true });
         }, 3000);
       } finally {
         setIsLoading(false);
@@ -67,7 +78,7 @@ const AuthPage = () => {
     };
 
     handleTokenAuth();
-  }, [searchParams, login, navigate]);
+  }, [searchParams, login, navigate]); // Dependencies are now stable
 
   const toggleForm = () => {
     setIsSignup(!isSignup);
@@ -87,8 +98,8 @@ const AuthPage = () => {
   : `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`;
 
       const res = await axios.post(url, formData);
-      login(res.data.token);
-      navigate('/home');
+      await login(res.data.token);
+      navigate('/create');
     } catch (err) {
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
