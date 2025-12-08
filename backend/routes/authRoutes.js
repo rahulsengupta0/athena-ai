@@ -49,16 +49,53 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Verify token from LMS
+router.post('/verify', async (req, res) => {
+  const { token } = req.body;
+  
+  if (!token) {
+    return res.status(400).json({ msg: 'No token provided' });
+  }
 
-// Get current user route
-router.get("/me", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
+    // Verify the token using the same JWT_SECRET as LMS
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Extract user ID from the decoded token
+    const userId = decoded.user?.id || decoded.id || decoded.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ msg: 'Invalid token format' });
+    }
+
+    // Find the user in the database
+    const user = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Return the user info and the token
+    res.json({ 
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (err) {
-    res.status(500).send("Server Error");
+    console.error('Token verification error:', err.message);
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ msg: 'Token has expired' });
+    }
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ msg: 'Invalid token' });
+    }
+    res.status(500).json({ msg: 'Server error during token verification' });
   }
 });
-
 
 module.exports = router;
