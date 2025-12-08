@@ -86,6 +86,15 @@ const NAV_ITEMS = [
     path: "/video-maker"
   },
   {
+    label: "Editor",
+    key: "editor",
+    icon: <FiFileText size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/editor"
+  },
+  {
     label: "Team",
     key: "team",
     icon: <FiUsers size={18} />,
