@@ -40,6 +40,8 @@ import DocumentGenerator from './components/aigenerator/DocumentGenerator';
 import PresentationStudio from './components/presentationstudio/PresentationStudio';
 
 import LandingPage from './pages/LandingPage';
+import EditorPage from './pages/EditorPage';
+
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
@@ -92,6 +94,7 @@ const AppContent = () => {
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
           <Route path="/docGenerator" element={<DocumentGenerator/>} />
+          <Route path="/editor" element={<EditorPage />} />
 
         </Routes>
       </div>
