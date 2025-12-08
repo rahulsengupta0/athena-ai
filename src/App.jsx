@@ -4,34 +4,33 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SideBar from "./components/SideBar";
 import { SidebarProvider, useSidebar } from "./contexts/SidebarContext";
 
-import { Home } from "./pages/Home";
-import { Create } from "./pages/Create";
-import AISuggestTemp from "./components/homepage/AISuggestTemp";
-import AIDesign from "./components/createpage/CardsPages/AIDesign";
-import ImageCreator from "./components/createpage/CardsPages/ImageCreator";
-import ContentWriter from "./components/createpage/CardsPages/ContentWriter";
-import CodeGenerator from "./components/createpage/CardsPages/CodeGenerator";
-import VideoProducer from "./components/createpage/CardsPages/VideoProducer";
-import BrandBuilder from "./components/createpage/CardsPages/BrandBuilder";
-import { Project } from "./pages/Project";
-import AllProjects from "./pages/AllProjects";
-import Templates from "./pages/Templates";
-import { Favourites } from "./pages/Favorites";
-import { AiGenerator } from "./pages/AiGenerator";
-import { ImageEdit } from "./pages/ImageEdit";
-import { VideoMaker } from "./pages/VideoMaker";
-import { Analatics } from "./pages/Analatics";
-import { Setting } from "./pages/Setting";
-import Help from "./pages/Help";
-import { Team } from "./pages/Team";
-import AcceptInvite from "./pages/AcceptInvite";
-import ArtisticImageGenerator from "./components/imageeditor/ArtisticImageGenerator";
-import BackgroundRemover from "./components/imageeditor/BackgroundRemover";
-import ImageEditor from "./components/imageeditor/ImageEditor";
-import CanvaClone from "./pages/CanvaClone";
-import Brandkit from "./pages/Brandkit";
-import BrandKitDetail from "./pages/BrandKitDetail";
-import Presentation from "./pages/Presentation";
+import { Home } from './pages/Home';
+import { Create } from './pages/Create';
+import AISuggestTemp from './components/homepage/AISuggestTemp';
+import AIDesign from './components/createpage/CardsPages/AIDesign';
+import ImageCreator from './components/createpage/CardsPages/ImageCreator';
+import ContentWriter from './components/createpage/CardsPages/ContentWriter';
+import CodeGenerator from './components/createpage/CardsPages/CodeGenerator';
+import VideoProducer from './components/createpage/CardsPages/VideoProducer';
+import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
+import { Project } from './pages/Project';
+import AllProjects from './pages/AllProjects';
+import Templates from './pages/Templates';
+import { AiGenerator } from './pages/AiGenerator';
+import { ImageEdit } from './pages/ImageEdit';
+import { VideoMaker } from './pages/VideoMaker';
+import { Analatics } from './pages/Analatics';
+import { Setting } from './pages/Setting';
+import Help from './pages/Help';
+import { Team } from './pages/Team';
+import AcceptInvite from './pages/AcceptInvite';
+import ArtisticImageGenerator from './components/imageeditor/ArtisticImageGenerator';
+import BackgroundRemover from './components/imageeditor/BackgroundRemover';
+import ImageEditor from './components/imageeditor/ImageEditor';
+import CanvaClone from './pages/CanvaClone';
+import Brandkit from './pages/Brandkit';
+import BrandKitDetail from './pages/BrandKitDetail';
+import Presentation from './pages/Presentation';
 
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -80,8 +79,6 @@ const AppContent = () => {
           <Route path="/projects" element={<Project />} />
           <Route path="/projects/all" element={<AllProjects />} />
           <Route path="/projects/templates" element={<Templates />} />
-
-          <Route path="/favorites" element={<Favourites />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
           <Route
             path="/ai-generator/presentation-studio"

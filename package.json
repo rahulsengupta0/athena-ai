@@ -25,6 +25,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "fabric": "^6.7.1",
+    "framer-motion": "^12.23.25",
     "jspdf": "^3.0.4",
     "jwt-decode": "^4.0.0",
     "konva": "^10.0.2",
