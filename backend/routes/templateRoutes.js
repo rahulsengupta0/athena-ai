@@ -132,6 +132,7 @@ router.get('/', async (req, res) => {
   try {
     const bucket = process.env.AWS_S3_BUCKET;
     const region = process.env.AWS_REGION;
+    const { category } = req.query;
 
     const listCommand = new ListObjectsV2Command({
       Bucket: bucket,
@@ -147,7 +148,7 @@ router.get('/', async (req, res) => {
 
     const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com/`;
 
-    const templates = await Promise.all(
+    let templates = await Promise.all(
       objects.map(async (obj) => {
         const key = obj.Key;
         if (!key || !key.endsWith('.json')) return null;
@@ -174,7 +175,12 @@ router.get('/', async (req, res) => {
       })
     );
 
-    const filtered = templates.filter(Boolean);
+    let filtered = templates.filter(Boolean);
+
+    if (category) {
+      filtered = filtered.filter(template => template.category.toLowerCase() === category.toLowerCase());
+    }
+
     res.json(filtered);
   } catch (error) {
     console.error('List templates error:', error);

@@ -16,6 +16,7 @@ import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
 import { Project } from './pages/Project';
 import AllProjects from './pages/AllProjects';
 import Templates from './pages/Templates';
+import CategoryTemplates from './pages/CategoryTemplates';
 import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
 import { VideoMaker } from './pages/VideoMaker';
@@ -79,6 +80,7 @@ const AppContent = () => {
           <Route path="/projects" element={<Project />} />
           <Route path="/projects/all" element={<AllProjects />} />
           <Route path="/projects/templates" element={<Templates />} />
+          <Route path="/templates/:category" element={<CategoryTemplates />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
           <Route
             path="/ai-generator/presentation-studio"
