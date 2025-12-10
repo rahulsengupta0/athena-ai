@@ -5,10 +5,10 @@ const cors = require('cors');
 
 const app = express();
 
-// app.use(cors());             // Enable CORS
+app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
+  "https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
 ];
 
@@ -73,7 +73,7 @@ app.use('/api', logoRoutes);
 app.use('/api/inference', inferenceRoutes);
 app.use('/api/user-data', userDataRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/deepseek', deepseekRoutes); 
+app.use('/api/deepseek', deepseekRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/phone', phoneSupport.router);
 app.use('/api', brandKitRoutes);

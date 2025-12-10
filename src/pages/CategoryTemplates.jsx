@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-const Templates = () => {
+const CategoryTemplates = () => {
   const { category } = useParams();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,8 +10,9 @@ const Templates = () => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
+        const formattedCategory = category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-        const response = await fetch(`${API_BASE_URL}/api/templates?category=${category}`);
+        const response = await fetch(`${API_BASE_URL}/api/templates?category=${formattedCategory}`);
         if (!response.ok) {
           throw new Error('Failed to fetch templates');
         }
@@ -35,9 +36,11 @@ const Templates = () => {
     return <div>Error: {error}</div>;
   }
 
+  const formattedCategory = category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
   return (
     <div style={{ padding: '2rem' }}>
-      <h2>{category.charAt(0).toUpperCase() + category.slice(1)} Templates</h2>
+      <h2>{formattedCategory} Templates</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
         {templates.map((template) => (
           <div key={template._id} style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
@@ -53,4 +56,4 @@ const Templates = () => {
   );
 };
 
-export default Templates;
+export default CategoryTemplates;
