@@ -49,54 +49,76 @@ const PromptSection = ({
             />
           </div>
 
-          {/* Options Grid */}
-          <div className="presentation-studio-options-grid">
+          {/* Options Grid (Cards Instead of Dropdowns) */}
+          <div className="presentation-studio-card-options">
+            {/* Tone Cards */}
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">
-                Tone
-              </label>
-              <select
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="presentation-studio-select"
-              >
+              <label className="presentation-studio-label">Tone</label>
+              <div className="presentation-studio-card-grid">
                 {tones.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                  <div
+                    key={t}
+                    className={`presentation-studio-card-option ${tone === t ? "selected" : ""}`}
+                    onClick={() => setTone(t)}
+                    data-tone={t}
+                  >
+                    {t !== 'Professional' && t !== 'Friendly' && t !== 'Minimal' && t !== 'Corporate' && (
+                      <img 
+                        src={`/assets/tone/${t.toLowerCase()}.png`} 
+                        alt={t} 
+                        className="presentation-studio-card-image"
+                      />
+                    )}
+                    <span>{t}</span>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
 
+            {/* Length Cards */}
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">
-                Length
-              </label>
-              <select
-                value={length}
-                onChange={(e) => setLength(e.target.value)}
-                className="presentation-studio-select"
-              >
+              <label className="presentation-studio-label">Length</label>
+              <div className="presentation-studio-card-grid">
                 {lengths.map(l => (
-                  <option key={l} value={l}>{l} slides</option>
+                  <div
+                    key={l}
+                    className={`presentation-studio-card-option ${length === l ? "selected" : ""}`}
+                    onClick={() => setLength(l)}
+                    data-length={l}
+                  >
+                    <span>{l} slides</span>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
 
+            {/* Media Style Cards */}
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">
-                Media Style
-              </label>
-              <select
-                value={mediaStyle}
-                onChange={(e) => setMediaStyle(e.target.value)}
-                className="presentation-studio-select"
-              >
+              <label className="presentation-studio-label">Media Style</label>
+              <div className="presentation-studio-card-grid">
                 {mediaStyles.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <div
+                    key={s}
+                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Graphics' ? 'ai-graphics-card' : ''} ${s === 'Stock Images' ? 'stock-images-card' : ''}`}
+                    onClick={() => setMediaStyle(s)}
+                    {...(s === 'AI Graphics' ? { 'data-media': 'ai-graphics' } : {})}
+                    {...(s === 'Stock Images' ? { 'data-media': 'stock-images' } : {})}
+                  >
+                    {s !== 'AI Graphics' && s !== 'Stock Images' && (
+                      <img 
+                        src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`} 
+                        alt={s} 
+                        className="presentation-studio-card-image"
+                      />
+                    )}
+                    <span>{s}</span>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
 
-            <div className="presentation-studio-checkbox-group">
+            {/* Brand Style Checkbox */}
+            <div className="presentation-studio-checkbox-group" style={{ marginTop: "1rem" }}>
               <input
                 type="checkbox"
                 id="brandStyle"
