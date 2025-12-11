@@ -3,17 +3,16 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-// ✅ URL where your Chroma FastAPI server runs
+// URL where your Chroma FastAPI server runs
 const CHROMA_URL = "http://localhost:8000";
 
-// ===============================
-// 🔹 DeepSeek Chat Route (with Chroma search)
-// ===============================
+// Open AI Bot Routes
+
 router.post('/chat', async (req, res) => {
   try {
     const { message, history } = req.body;
 
-    // ✅ Step 1: Fetch context from ChromaDB
+    // Step 1: Fetch context from ChromaDB
     let contextDocs = "";
     try {
       const chromaResponse = await axios.get(`${CHROMA_URL}/search`, {
@@ -32,7 +31,7 @@ router.post('/chat', async (req, res) => {
       contextDocs = "Knowledge base unavailable.";
     }
 
-    // ✅ Step 2: Build system prompt
+    // Step 2: Build system prompt
     const systemPrompt = {
       role: "system",
       content: `
@@ -43,18 +42,20 @@ router.post('/chat', async (req, res) => {
         ${contextDocs}
 
         Instructions:
-        - Never mention DeepSeek, OpenRouter, or any external system.
+        - Never mention OpenAI, ChatGPT, or any external system.
         - Always stay polite, concise, and friendly.
         - If users ask about navigation, guide them clearly based on the information above.
         - If a feature isn’t mentioned, respond gracefully: “That feature is not available yet.”
       `,
     };
 
-    // ✅ Step 3: Send chat request to DeepSeek via OpenRouter
+    // Step 3: Send chat request to OpenAI
+    const openaiKey = process.env.OPENAI_API_KEY;
+
     const response = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       {
-        model: 'deepseek/deepseek-r1:free',
+        model: 'gpt-4.1-mini',
         messages: [
           systemPrompt,
           ...(history || []), // history ALREADY includes the message
@@ -62,7 +63,7 @@ router.post('/chat', async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'http://localhost:3000',
           'X-Title': 'Athena AI',
@@ -70,14 +71,14 @@ router.post('/chat', async (req, res) => {
       }
     );
 
-    // ✅ Step 4: Send DeepSeek response back to frontend
+    // Step 4: Send OpenAI response back to frontend
     const data = response.data;
     res.json({
       reply: data?.choices?.[0]?.message?.content || 'No response from Athena.',
     });
 
   } catch (error) {
-    console.error('DeepSeek API error:', error.response?.data || error.message);
+    console.error('OpenAI API error:', error.response?.data || error.message);
     res.status(500).json({
       error: error.response?.data || error.message,
     });
