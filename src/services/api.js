@@ -21,7 +21,7 @@ class ApiService {
 
     try {
       console.log(`Making request to: ${url}`);
-      console.log('Request headers:', config.headers);
+      // console.log('Request headers:', config.headers); // Optional debug
       const response = await fetch(url, config);
       const contentType = response.headers.get('content-type') || '';
       let data;
@@ -50,7 +50,7 @@ class ApiService {
     }
   }
 
-  // Profile API methods
+  // ============= PROFILE API METHODS =============
   async getProfile() {
     return this.request('/api/profile', {
       headers: getAuthHeaders(),
@@ -59,11 +59,11 @@ class ApiService {
 
   async updateProfile(profileData) {
     const { avatar, ...textData } = profileData;
-    
+
     // If there's an avatar file, use FormData, otherwise use JSON
     if (avatar instanceof File) {
       const formData = new FormData();
-      
+
       Object.keys(textData).forEach(key => {
         if (textData[key] !== null) {
           formData.append(key, textData[key]);
@@ -104,7 +104,7 @@ class ApiService {
   }
 
   // ============= USER DATA API METHODS =============
-  
+
   // Projects
   async getProjects() {
     return this.request('/api/user-data/projects', {
@@ -248,7 +248,6 @@ class ApiService {
   }
 
   async deleteBrandKitFolder(kitFolder) {
-    // URL encode the kitFolder to handle special characters
     const encodedKitFolder = encodeURIComponent(kitFolder);
     return this.request(`/api/brandkit/${encodedKitFolder}`, {
       method: 'DELETE',
@@ -339,7 +338,9 @@ class ApiService {
     });
   }
 
-  // ============= TEMPLATE MANAGEMENT (ADMIN) =============
+  // ============= TEMPLATE MANAGEMENT (ADMIN & USER) =============
+
+  // 1. Upload Thumbnail Image
   async uploadTemplateThumbnail(file) {
     const formData = new FormData();
     formData.append('thumbnail', file);
@@ -352,6 +353,7 @@ class ApiService {
     });
   }
 
+  // 2. Upload Background Image
   async uploadTemplateBackground(file) {
     const formData = new FormData();
     formData.append('background', file);
@@ -364,7 +366,9 @@ class ApiService {
     });
   }
 
+  // 3. Upload JSON & Save Metadata (Unified Endpoint)
   async uploadTemplateJSON(templateData) {
+    // This endpoint now handles both S3 upload of JSON and MongoDB metadata creation
     return this.request('/api/templates/upload-template-json', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -372,13 +376,51 @@ class ApiService {
     });
   }
 
-  // List all created templates (from S3) for the Templates page
-  async getTemplates() {
-    return this.request('/api/templates', {
+  // 4. Save Metadata (Deprecated alias: points to uploadTemplateJSON for compatibility)
+  async saveTemplateMetadata(data) {
+    // If you have logic that separates saving metadata, you can handle it here,
+    // but the new backend route handles it within uploadTemplateJSON.
+    // We return the data directly as if it was a separate successful call.
+    return Promise.resolve(data);
+  }
+
+  // 5. Get Templates (All or Filtered by Category)
+  async getTemplates(category = '') {
+    // If category is provided, append as query param
+    const endpoint = category
+      ? `/api/templates?category=${encodeURIComponent(category)}`
+      : '/api/templates';
+
+    return this.request(endpoint, {
       headers: getAuthHeaders(),
     });
+  }
+
+  // 6. Get Templates by Category (Explicit Helper)
+  async getTemplatesByCategory(categoryName) {
+    return this.getTemplates(categoryName);
+  }
+
+  // 7. Get Single Template Metadata by ID
+  async getTemplateById(id) {
+    return this.request(`/api/templates/${id}`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  // 8. Fetch JSON Content from S3 URL
+  async fetchTemplateJSON(jsonUrl) {
+    // This is a direct fetch to S3 (or signed URL), so we might not need auth headers
+    // depending on bucket policy. Using standard fetch here.
+    try {
+      const response = await fetch(jsonUrl);
+      if (!response.ok) throw new Error('Failed to load template design');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching template JSON:', error);
+      throw error;
+    }
   }
 }
 
 export default new ApiService();
-
