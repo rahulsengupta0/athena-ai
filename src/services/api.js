@@ -40,7 +40,7 @@ class ApiService {
 
       if (!response.ok) {
         console.error('Response error:', data);
-        throw new Error((data && data.message) || 'Something went wrong');
+        throw new Error((data && data.msg) || 'Something went wrong');
       }
 
       return data;
@@ -170,6 +170,14 @@ class ApiService {
     return this.request(`/api/user-data/favorites/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+    });
+  }
+
+  async toggleFavorite({ itemId, type, favorite }) {
+    return this.request('/api/user-data/favorites/toggle', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ itemId, type, favorite }),
     });
   }
 
@@ -317,6 +325,17 @@ class ApiService {
   async getTeamStats() {
     return this.request('/api/team/stats', {
       headers: getAuthHeaders(),
+    });
+  }
+
+  // ============= AUTH METHODS =============
+  async verifyToken(token) {
+    return this.request('/api/auth/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
     });
   }
 

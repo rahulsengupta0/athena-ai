@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 
 const AuthContext = createContext();
@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch user profile to check role
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const profileData = await api.getProfile();
       setUser(profileData);
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,20 +37,20 @@ export const AuthProvider = ({ children }) => {
       setIsAdmin(false);
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchUserProfile]);
 
-  const login = async (token) => {
+  const login = useCallback(async (token) => {
     localStorage.setItem("token", token);
     setIsAuthenticated(true);
     await fetchUserProfile();
-  };
+  }, [fetchUserProfile]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     setUser(null);
     setIsAdmin(false);
-  };
+  }, []);
 
   if (isAuthenticated === null || isLoading) {
     // You can show a loading indicator here while the token check is in progress
