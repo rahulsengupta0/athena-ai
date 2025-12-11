@@ -8,6 +8,7 @@ const app = express();
 // app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
 ];
@@ -22,12 +23,9 @@ app.use(cors({
 
 app.use(express.json());     // JSON parsing
 
-// aws test
+// ✅ Import routes
 const uploadRoutes = require('./routes/upload');
-app.use('/api/upload', uploadRoutes);
-
 const brandKitRoutes = require('./routes/brandKit');
-app.use('/api', brandKitRoutes);
 
 // In backend/app.js or backend/server.js
 const generateDocument = require('./routes/generateDocument');
@@ -35,39 +33,23 @@ app.use('/api', generateDocument);
 
 
 const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes );
-
 const imageRoutes = require('./routes/imageRoutes');
-app.use('/api/image', imageRoutes);
-
 const applyStyleRoutes = require('./routes/applyStyle');
-app.use('/api', applyStyleRoutes);
-
-
 const aiImageRoutes = require('./routes/aiImageRoutes');
-app.use('/api/ai-image', aiImageRoutes);
-
 const codegenRoutes = require('./routes/codegenRoutes');
-app.use('/api/codegen', codegenRoutes);
-
-const videoRoutes = require("./routes/videoRoutes");
-app.use("/api/video", videoRoutes);
-
+const videoRoutes = require('./routes/videoRoutes');
 const contentRoutes = require('./routes/contentRoutes');
-app.use('/api/content', contentRoutes);
-
-const logoRoutes = require('./routes/logoRoutes'); // add this line
-app.use('/api', logoRoutes); // add this line
-
-// Import your inference routes
+const logoRoutes = require('./routes/logoRoutes');
 const inferenceRoutes = require('./routes/inferenceRoutes');
-app.use('/api/inference', inferenceRoutes);
-
 const userDataRoutes = require('./routes/userDataRoutes');
-app.use('/api/user-data', userDataRoutes);
-
 const profileRoutes = require('./routes/profileRoutes');
-app.use('/api/profile', profileRoutes);
+const chatbotRoutes = require('./routes/chatbotRoutes');
+const emailRoutes = require('./routes/emailRoutes');
+const phoneSupport = require("./routes/phoneSupport");
+const ppRoutes = require('./routes/pptroutes');
+
+const passwordRoutes = require('./routes/passwordRoutes');
+app.use('/api/password', passwordRoutes);
 
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
@@ -77,15 +59,42 @@ app.use('/api/templates', templateRoutes);
 
 const textEnhanceRoutes = require('./routes/textEnhanceRoutes');
 app.use('/api/text-enhance', textEnhanceRoutes);
+
+
+// ✅ Mount routes
+app.use('/api/upload', uploadRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/image', imageRoutes);
+app.use('/api', applyStyleRoutes);
+app.use('/api/ai-image', aiImageRoutes);
+app.use('/api/codegen', codegenRoutes);
+app.use('/api/video', videoRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api', logoRoutes);
+app.use('/api/inference', inferenceRoutes);
+app.use('/api/user-data', userDataRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/chatbot', chatbotRoutes); 
+app.use('/api/email', emailRoutes);
+app.use('/api/phone', phoneSupport.router);
+app.use('/api', brandKitRoutes);
+app.use('/api/pp', ppRoutes);
+
+
+
+// ✅ MongoDB connection
 const teamRoutes = require('./routes/teamRoutes');
 app.use('/api/team', teamRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(console.error);
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB error:', err.message));
 
-app.get('/', (req, res) => res.send('API is working'));
+// ✅ Base route
+app.get('/', (req, res) => res.send('API is working ✅'));
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+

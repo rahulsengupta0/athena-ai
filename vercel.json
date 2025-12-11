@@ -1,5 +1,11 @@
 {
   "env": {
     "ROLLUP_USE_NATIVE": "false"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }

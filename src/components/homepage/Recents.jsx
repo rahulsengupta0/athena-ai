@@ -23,6 +23,11 @@ const Recents = () => {
     return () => window.removeEventListener("resize", handle);
   }, []);
 
+  const getCurrentPreviewUrl = () => {
+    if (!preview || !preview.list || preview.list.length === 0) return null;
+    return preview.list[preview.index]?.url || null;
+  };
+
   // Close on Esc and navigate with arrow keys when preview is open
   useEffect(() => {
     if (!preview) return;
@@ -204,7 +209,7 @@ const Recents = () => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
+                <button
                         title="View"
                         onClick={() => {
                           const filesOnly = recentProjects.filter((p) => p.type === 'file' && /\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(p.url || ''));
@@ -537,6 +542,14 @@ const Recents = () => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#8a5bff';
                   }}
+                  onClick={() => {
+                    const imgUrl = getCurrentPreviewUrl();
+                    if (!imgUrl) return;
+                    setPreview(null);
+                    navigate('/bgremove', {
+                      state: { imageUrl: imgUrl, from: 'recents', tool: 'background-removal' },
+                    });
+                  }}
                 >
                   Try Now
                 </button>
@@ -598,6 +611,14 @@ const Recents = () => {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#8a5bff';
+                  }}
+                  onClick={() => {
+                    const imgUrl = getCurrentPreviewUrl();
+                    if (!imgUrl) return;
+                    setPreview(null);
+                    navigate('/imageeditor', {
+                      state: { imageUrl: imgUrl, from: 'recents', tool: 'smart-enhance' },
+                    });
                   }}
                 >
                   Try Now
@@ -661,6 +682,14 @@ const Recents = () => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#8a5bff';
                   }}
+                  onClick={() => {
+                    const imgUrl = getCurrentPreviewUrl();
+                    if (!imgUrl) return;
+                    setPreview(null);
+                    navigate('/imageeditor', {
+                      state: { imageUrl: imgUrl, from: 'recents', tool: 'color-grading' },
+                    });
+                  }}
                 >
                   Try Now
                 </button>
@@ -723,6 +752,14 @@ const Recents = () => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#8a5bff';
                   }}
+                  onClick={() => {
+                    const imgUrl = getCurrentPreviewUrl();
+                    if (!imgUrl) return;
+                    setPreview(null);
+                    navigate('/smartcrop', {
+                      state: { imageUrl: imgUrl, from: 'recents', tool: 'smart-crop' },
+                    });
+                  }}
                 >
                   Try Now
                 </button>
@@ -776,6 +813,14 @@ const Recents = () => {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#8a5bff';
+                  }}
+                  onClick={() => {
+                    const imgUrl = getCurrentPreviewUrl();
+                    if (!imgUrl) return;
+                    setPreview(null);
+                    navigate('/artisticiamge', {
+                      state: { imageUrl: imgUrl, from: 'recents', tool: 'style-transfer' },
+                    });
                   }}
                 >
                   Try Now

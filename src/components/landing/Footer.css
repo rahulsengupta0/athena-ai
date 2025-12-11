@@ -1,0 +1,28 @@
+/* Footer.css */
+.footer{ 
+  padding:26px 0; 
+  color:var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 22px 0;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 576px) {
+  .footer {
+    padding: 20px 0;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .footer {
+    padding: 18px 0;
+    font-size: 11px;
+  }
+}

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Support.css';
+import ChatModal from './ChatModal'
+import EmailSupport from './EmailSupport';
+import PhoneSupport from './PhoneSupport';
 
 const Support = () => {
   const [expandedFAQ, setExpandedFAQ] = useState(null);
@@ -140,48 +143,16 @@ const Support = () => {
     if (!modalType) return null;
 
     if (modalType === 'chat') {
-      return (
-        <div className="modal-body">
-          <h3>Live Chat</h3>
-          <p>Start a conversation with our support team. Typical reply time: under 2 minutes.</p>
-          <div className="chat-window">
-            <div className="chat-message bot">Hi! How can we help you today?</div>
-            <div className="chat-message user">I have a question about billing.</div>
-          </div>
-          <div className="chat-input-row">
-            <input className="chat-input" placeholder="Type your message..." />
-            <button className="chat-send">Send</button>
-          </div>
-        </div>
-      );
+      return <ChatModal onClose={() => setModalType(null)} />;
     }
 
+
     if (modalType === 'email') {
-      return (
-        <div className="modal-body">
-          <h3>Email Support</h3>
-          <p>Send us a detailed message and we’ll get back to you within 24 hours.</p>
-          <div className="form-grid">
-            <input className="form-input" placeholder="Your email" type="email" />
-            <input className="form-input" placeholder="Subject" />
-            <textarea className="form-textarea" placeholder="Describe your issue..." rows="6" />
-          </div>
-          <button className="primary-btn">Send Email</button>
-        </div>
-      );
+      return <EmailSupport onClose={() => setModalType(null)} />;
     }
 
     if (modalType === 'phone') {
-      return (
-        <div className="modal-body">
-          <h3>Phone Support</h3>
-          <p>Call us at <strong>+1 (800) 555-0199</strong> Mon–Fri, 9am–6pm (UTC).</p>
-          <div className="contact-actions">
-            <a className="primary-btn" href="tel:+18005550199">Call Now</a>
-            <a className="secondary-btn" href="https://cal.com" target="_blank" rel="noreferrer">Schedule a Call</a>
-          </div>
-        </div>
-      );
+      return <PhoneSupport onClose={() => setModalType(null)} />;
     }
 
     if (modalType === 'docs') {

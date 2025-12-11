@@ -35,25 +35,19 @@ const renderIcon = (iconType, color) => {
 
 const statusBg = {
   "Completed": "#eafbf3",
-  "In Progress": "#e7f0fd",
-  "Draft": "#fff9e7",
-  "Review": "#f7edfa"
+  "In Progress": "#e7f0fd"
 };
 
 const statusColor = {
   "Completed": "#4db97f",
-  "In Progress": "#387df6",
-  "Draft": "#b68d00",
-  "Review": "#ac50d9"
+  "In Progress": "#387df6"
 };
 
 const projectFilters = [
   "All Projects",
   "Favorites",
   "Completed",
-  "In Progress",
-  "Draft",
-  "Review"
+  "In Progress"
 ];
 
 export const AllProjects = () => {
@@ -67,6 +61,7 @@ export const AllProjects = () => {
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState(null); // { list: filesOnly[], index: number }
   const [currentPage, setCurrentPage] = useState(0);
+  const [favoritePending, setFavoritePending] = useState({});
   const itemsPerPage = 4;
 
   // Fetch projects and generated files from backend
@@ -145,6 +140,7 @@ export const AllProjects = () => {
     date: f.uploadedAt,
     url: f.url,
     iconKey: 'image',
+    favorite: !!f.favorite,
     _id: f._id
   }));
 
@@ -170,14 +166,59 @@ export const AllProjects = () => {
   const allItems = [...normalizedProjects, ...normalizedFiles]
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const handleToggleFavorite = async (item) => {
+    const id = item._id || item.id;
+    if (!id) return;
+    const type = item.type === 'project' ? 'project' : 'file';
+    setFavoritePending((prev) => ({ ...prev, [id]: true }));
+    try {
+      const response = await api.toggleFavorite({ itemId: id, type });
+      if (response?.type === 'project') {
+        setProjects((prev) => prev.map((proj) => proj._id === response.item._id ? response.item : proj));
+      } else if (response?.type === 'file') {
+        setGeneratedFiles((prev) => prev.map((file) => file._id === response.item._id ? response.item : file));
+      } else {
+        // Fallback: optimistically toggle when backend response is missing
+        if (type === 'project') {
+          setProjects((prev) => prev.map((proj) =>
+            proj._id === id ? { ...proj, favorite: !proj.favorite } : proj
+          ));
+        } else {
+          setGeneratedFiles((prev) => prev.map((file) =>
+            file._id === id ? { ...file, favorite: !file.favorite } : file
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Favorite toggle failed', error);
+      alert('Unable to update favorite right now.');
+    } finally {
+      setFavoritePending((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  const handleToggleStatus = async (project) => {
+    if (!project?._id) return;
+    const nextStatus = project.status === "Completed" ? "In Progress" : "Completed";
+    try {
+      const updated = await api.updateProject(project._id, { status: nextStatus });
+      setProjects((prev) => prev.map((p) => p._id === project._id ? updated : p));
+    } catch (error) {
+      console.error('Status update failed', error);
+      alert('Unable to update project status right now.');
+    }
+  };
+
   const filteredItems = useMemo(() => {
     switch (selectedFilter) {
       case "Favorites":
-        return allItems.filter((item) => item.type === "project" && item.favorite);
+        return allItems.filter((item) => !!item.favorite);
       case "Completed":
       case "In Progress":
-      case "Draft":
-      case "Review":
         return allItems.filter(
           (item) => item.type === "project" && item.status === selectedFilter
         );
@@ -413,6 +454,10 @@ export const AllProjects = () => {
           const globalIndex = safePage * itemsPerPage + i;
           const isImageFile = item.type === 'file' && item.url && /\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(item.url);
           const isProject = item.type === 'project';
+          const itemId = item._id || item.id || item.url || globalIndex;
+          const isFavorite = !!item.favorite;
+          const favoriteBusyForItem = !!favoritePending[itemId];
+          const canFavorite = isProject || item.type === 'file';
           
           return (
           <div
@@ -440,6 +485,38 @@ export const AllProjects = () => {
               }
             }}
           >
+            {canFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleFavorite(item);
+                }}
+                disabled={favoriteBusyForItem}
+                style={{
+                  position: "absolute",
+                  top: isImageFile ? 16 : 20,
+                  left: isImageFile ? 16 : 24,
+                  zIndex: 3,
+                  border: "none",
+                  background: "rgba(255,255,255,0.9)",
+                  borderRadius: "50%",
+                  width: 36,
+                  height: 36,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  opacity: favoriteBusyForItem ? 0.5 : 1,
+                  boxShadow: "0 6px 14px rgba(31,29,43,0.12)"
+                }}
+                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                {isFavorite
+                  ? <FiStar size={18} color="#f2a516" style={{ fill: "#f2a516" }} />
+                  : <FaRegStar size={18} color="#b2b4c3" />
+                }
+              </button>
+            )}
             {/* Image file display */}
             {isImageFile ? (
               <div
@@ -587,19 +664,6 @@ export const AllProjects = () => {
                     </div>
                   )}
                 </div>
-                {/* Star icon */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 20,
-                    left: 24,
-                    zIndex: 1
-                  }}
-                >
-                  {item.favorite
-                    ? <FiStar size={22} color="#fdd835" title="Favorite" style={{fill: "#fdd835"}} />
-                    : <FaRegStar size={22} color="#e4e4e6" title="Not Favorite" />}
-                </div>
                 {/* Project icon */}
                 <div style={{ marginBottom: 16 }}>
                   {renderIcon(item.iconType || "palette", item.iconColor || "#f79ebb")}
@@ -624,16 +688,26 @@ export const AllProjects = () => {
                     </span>
                   )}
                   {item.status && (
-                    <span style={{
-                      background: statusBg[item.status],
-                      color: statusColor[item.status],
-                      fontWeight: 700,
-                      borderRadius: 10,
-                      fontSize: "1.01rem",
-                      padding: "5px 15px"
-                    }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStatus(item);
+                      }}
+                      style={{
+                        background: statusBg[item.status] || "#eceaf6",
+                        color: statusColor[item.status] || "#4f4b6b",
+                        fontWeight: 700,
+                        borderRadius: 10,
+                        fontSize: "1.01rem",
+                        padding: "5px 15px",
+                        border: "none",
+                        cursor: "pointer"
+                      }}
+                      title={`Mark as ${item.status === "Completed" ? "In Progress" : "Completed"}`}
+                    >
                       {item.status}
-                    </span>
+                    </button>
                   )}
                 </div>
                 {item.hashtags && item.hashtags.length > 0 && (

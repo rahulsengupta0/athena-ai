@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import api from '../services/api';
 
 const AuthPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({ 
     firstName: '', 
@@ -14,6 +16,69 @@ const AuthPage = () => {
     password: '' 
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
+  const processedTokenRef = useRef(null);
+
+  // Handle token-based authentication from LMS
+  useEffect(() => {
+    const token = searchParams.get('token');
+    
+    // Skip if no token or if we've already processed this token
+    if (!token || processedTokenRef.current === token) {
+      return;
+    }
+
+    // Mark this token as being processed
+    processedTokenRef.current = token;
+
+    const handleTokenAuth = async () => {
+      // Clear any existing token first to prevent AuthContext from using an old one
+      localStorage.removeItem('token');
+      
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Verify the token with the backend
+        const response = await api.verifyToken(token);
+        
+        if (response.success && response.token) {
+          // Store the token in localStorage and wait for profile fetch
+          await login(response.token);
+          
+          if (response.created) {
+            // New user - show welcome message before redirecting
+            setMessage('Account created and authenticated! Redirecting...');
+            setTimeout(() => {
+              navigate('/create', { replace: true });
+            }, 1000);
+          } else {
+            // Existing user - redirect immediately to Create page
+            navigate('/create', { replace: true });
+          }
+        } else {
+          setError(response.msg || 'Invalid or expired session');
+          // Redirect to landing page after showing error
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 3000);
+        }
+      } catch (err) {
+        console.error('Token verification failed:', err);
+        setError(err.message || 'Invalid or expired session');
+        
+        // Redirect to home after showing error
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 3000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleTokenAuth();
+  }, [searchParams, login, navigate]); // Dependencies are now stable
 
   const toggleForm = () => {
     setIsSignup(!isSignup);
@@ -33,8 +98,8 @@ const AuthPage = () => {
   : `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`;
 
       const res = await axios.post(url, formData);
-      login(res.data.token);
-      navigate('/');
+      await login(res.data.token);
+      navigate('/create');
     } catch (err) {
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
@@ -44,6 +109,134 @@ const AuthPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading or message state when verifying token
+  if (searchParams.get('token')) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'white',
+          padding: '40px',
+          borderRadius: '16px',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '400px',
+          textAlign: 'center'
+        }}>
+          {isLoading && (
+            <>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                border: '4px solid #f3f4f6',
+                borderTop: '4px solid #667eea',
+                borderRadius: '50%',
+                margin: '0 auto 20px',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#2d3748',
+                marginBottom: '12px'
+              }}>
+                Verifying your session...
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: '#718096'
+              }}>
+                Please wait while we authenticate you
+              </p>
+            </>
+          )}
+          
+          {message && !isLoading && (
+            <>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#10b981',
+                margin: '0 auto 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '30px',
+                color: 'white'
+              }}>
+                ✓
+              </div>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#10b981',
+                marginBottom: '12px'
+              }}>
+                {message}
+              </h2>
+            </>
+          )}
+          
+          {error && !isLoading && (
+            <>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                margin: '0 auto 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '30px',
+                color: 'white'
+              }}>
+                ✕
+              </div>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#ef4444',
+                marginBottom: '12px'
+              }}>
+                Authentication Failed
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: '#718096',
+                marginBottom: '20px'
+              }}>
+                {error}
+              </p>
+              <p style={{
+                fontSize: '12px',
+                color: '#9ca3af'
+              }}>
+                Redirecting to login page...
+              </p>
+            </>
+          )}
+        </div>
+        
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
 
   return (
     <div style={{

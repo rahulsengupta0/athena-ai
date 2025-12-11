@@ -5,6 +5,7 @@ const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
 const BrandKit = require('../model/BrandKit');
 const User = require('../model/User');
+const UserFile = require('../model/UserFile');
 const s3 = require('../utils/s3');
 const { sendBrandKitShareEmail } = require('../utils/emailService');
 
@@ -125,6 +126,45 @@ router.delete('/favorites/:id', auth, async (req, res) => {
     res.json({ msg: 'Favorite deleted' });
   } catch (err) {
     res.status(500).send('Server Error');
+  }
+});
+
+// Toggle favorite directly from projects/files
+router.post('/favorites/toggle', auth, async (req, res) => {
+  try {
+    const { itemId, type, favorite } = req.body || {};
+    if (!itemId || !type) {
+      return res.status(400).json({ msg: 'itemId and type are required' });
+    }
+
+    const normalizedType = String(type).toLowerCase();
+    const resolveFavorite = (currentValue) =>
+      typeof favorite === 'boolean' ? favorite : !currentValue;
+
+    if (normalizedType === 'project') {
+      const project = await Project.findOne({ _id: itemId, userId: req.user.id });
+      if (!project) {
+        return res.status(404).json({ msg: 'Project not found' });
+      }
+      project.favorite = resolveFavorite(project.favorite);
+      await project.save();
+      return res.json({ type: 'project', item: project });
+    }
+
+    if (normalizedType === 'file') {
+      const file = await UserFile.findOne({ _id: itemId, user: req.user.id });
+      if (!file) {
+        return res.status(404).json({ msg: 'File not found' });
+      }
+      file.favorite = resolveFavorite(file.favorite);
+      await file.save();
+      return res.json({ type: 'file', item: file });
+    }
+
+    return res.status(400).json({ msg: 'Unsupported favorite type' });
+  } catch (err) {
+    console.error('Favorite toggle error:', err);
+    res.status(500).json({ msg: 'Server Error' });
   }
 });
 
