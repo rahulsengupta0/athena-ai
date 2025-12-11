@@ -8,6 +8,7 @@ const app = express();
 // app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
 ];
