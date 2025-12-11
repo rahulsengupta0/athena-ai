@@ -40,7 +40,7 @@ class ApiService {
 
       if (!response.ok) {
         console.error('Response error:', data);
-        throw new Error((data && data.message) || 'Something went wrong');
+        throw new Error((data && data.msg) || 'Something went wrong');
       }
 
       return data;
@@ -91,6 +91,7 @@ class ApiService {
   async changePassword(passwordData) {
     return this.request('/api/password', {
       method: 'PUT',
+      headers: getAuthHeaders(),
       body: JSON.stringify(passwordData),
     });
   }
@@ -169,6 +170,14 @@ class ApiService {
     return this.request(`/api/user-data/favorites/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+    });
+  }
+
+  async toggleFavorite({ itemId, type, favorite }) {
+    return this.request('/api/user-data/favorites/toggle', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ itemId, type, favorite }),
     });
   }
 
@@ -319,6 +328,17 @@ class ApiService {
     });
   }
 
+  // ============= AUTH METHODS =============
+  async verifyToken(token) {
+    return this.request('/api/auth/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+    });
+  }
+
   // ============= TEMPLATE MANAGEMENT (ADMIN) =============
   async uploadTemplateThumbnail(file) {
     const formData = new FormData();
@@ -349,6 +369,13 @@ class ApiService {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(templateData),
+    });
+  }
+
+  // List all created templates (from S3) for the Templates page
+  async getTemplates() {
+    return this.request('/api/templates', {
+      headers: getAuthHeaders(),
     });
   }
 }

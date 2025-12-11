@@ -1,0 +1,95 @@
+/* CreateSection.css */
+.create-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  max-width: var(--max-width);
+  margin: 24px auto 0
+}
+.create-card{ 
+  padding: 18px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px 
+}
+.cc-ico{ 
+  width: 44px; 
+  height: 44px; 
+  border-radius: 12px; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  color: white; 
+  background: linear-gradient(90deg, var(--accent1), var(--accent2)); 
+  font-size: 18px 
+}
+.cc-title{ 
+  font-weight: 700 
+}
+.cc-desc{ 
+  color: var(--text-muted); 
+  font-size: 14px 
+}
+
+@media (max-width:1100px){ 
+  .create-grid{ 
+    grid-template-columns: repeat(2, 1fr) 
+  } 
+}
+@media (max-width:700px){ 
+  .create-grid{ 
+    grid-template-columns: 1fr 
+  } 
+  .create-card{ 
+    padding: 16px 
+  } 
+}
+
+@media (max-width: 576px) {
+  .create-grid {
+    gap: 14px;
+  }
+  
+  .create-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+  
+  .cc-ico {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .cc-title {
+    font-size: 16px;
+  }
+  
+  .cc-desc {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .create-grid {
+    gap: 12px;
+  }
+  
+  .create-card {
+    padding: 12px;
+  }
+  
+  .cc-ico {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .cc-title {
+    font-size: 15px;
+  }
+  
+  .cc-desc {
+    font-size: 12px;
+  }
+}

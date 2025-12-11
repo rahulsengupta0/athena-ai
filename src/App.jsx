@@ -1,8 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import SideBar from './components/SideBar';
-import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
+import SideBar from "./components/SideBar";
+import { SidebarProvider, useSidebar } from "./contexts/SidebarContext";
 
 import { Home } from './pages/Home';
 import { Create } from './pages/Create';
@@ -16,7 +16,6 @@ import BrandBuilder from './components/createpage/CardsPages/BrandBuilder';
 import { Project } from './pages/Project';
 import AllProjects from './pages/AllProjects';
 import Templates from './pages/Templates';
-import { Favourites } from './pages/Favorites';
 import { AiGenerator } from './pages/AiGenerator';
 import { ImageEdit } from './pages/ImageEdit';
 import { VideoMaker } from './pages/VideoMaker';
@@ -33,22 +32,28 @@ import Brandkit from './pages/Brandkit';
 import BrandKitDetail from './pages/BrandKitDetail';
 import Presentation from './pages/Presentation';
 
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminRoute from './components/AdminRoute';
-import AuthPage from './pages/AuthPage';
-import AdminDash from './pages/AdminDash';
-import BrandKitResult from './pages/BrandKitResult';
-import DocumentGenerator from './components/aigenerator/DocumentGenerator';
-import UiPhotoGenerator from './components/aigenerator/UiPhotoGenerator';
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AuthPage from "./pages/AuthPage";
+import AdminDash from "./pages/AdminDash";
+import BrandKitResult from "./pages/BrandKitResult";
+import DocumentGenerator from "./components/aigenerator/DocumentGenerator";
+import UiPhotoGenerator from "./components/aigenerator/UiPhotoGenerator";
+import SmartCrop from "./components/aigenerator/SmartCrop";
+
+import PresentationStudio from "./components/presentationstudio/PresentationStudio";
+
+import LandingPage from "./pages/LandingPage";
+import EditorPage from './pages/EditorPage';
 
 
 const AppContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
 
   const getContentMargin = () => {
-    if (isMobile) return '0';
-    return isCollapsed ? '60px' : '260px';
+    if (isMobile) return "0";
+    return isCollapsed ? "60px" : "260px";
   };
 
   return (
@@ -58,11 +63,11 @@ const AppContent = () => {
         className="app-content"
         style={{
           marginLeft: getContentMargin(),
-          transition: 'margin-left 0.25s ease',
+          transition: "margin-left 0.25s ease",
         }}
       >
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/ai-suggest-templates" element={<AISuggestTemp />} />
           <Route path="/create" element={<Create />} />
           <Route path="/create/ai-design" element={<AIDesign />} />
@@ -71,11 +76,18 @@ const AppContent = () => {
           <Route path="/create/code-generator" element={<CodeGenerator />} />
           <Route path="/create/video-producer" element={<VideoProducer />} />
           <Route path="/create/brand-builder" element={<BrandBuilder />} />
+
+          <Route path="/projects/:folder?" element={<Project />} />
           <Route path="/projects" element={<Project />} />
           <Route path="/projects/all" element={<AllProjects />} />
           <Route path="/projects/templates" element={<Templates />} />
-          <Route path="/favorites" element={<Favourites />} />
           <Route path="/ai-generator" element={<AiGenerator />} />
+          <Route
+            path="/ai-generator/presentation-studio"
+            element={<PresentationStudio />}
+          />
+          <Route path="/presentation-studio" element={<PresentationStudio />} />
+
           <Route path="/image-editor" element={<ImageEdit />} />
           <Route path="/video-maker" element={<VideoMaker />} />
           <Route path="/analytics" element={<Analatics />} />
@@ -91,7 +103,12 @@ const AppContent = () => {
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
           <Route path="/docGenerator" element={<DocumentGenerator/>} />
-          <Route path="/uiphoto" element={<UiPhotoGenerator/>} />
+          <Route path="/editor" element={<EditorPage />} />
+
+          <Route path="/docGenerator" element={<DocumentGenerator />} />
+          <Route path="/uiphoto" element={<UiPhotoGenerator />} />
+          <Route path="/smartcrop" element={<SmartCrop />} />
+
           <Route
             path="/admin-dash"
             element={
@@ -100,8 +117,8 @@ const AppContent = () => {
               </AdminRoute>
             }
           />
-          <Route path="/presentation" element={<Presentation />} />
 
+          <Route path="/presentation" element={<Presentation />} />
         </Routes>
       </div>
     </div>
@@ -114,8 +131,12 @@ function App() {
       <SidebarProvider>
         <Router>
           <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
+
+            {/* PROTECTED ROUTES */}
             <Route
               path="/*"
               element={

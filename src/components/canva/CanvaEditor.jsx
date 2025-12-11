@@ -381,66 +381,99 @@ const CanvaEditor = () => {
   const handleDrawingSettingsChange = (property, value) => {
     setDrawingSettings(prev => ({ ...prev, [property]: value }));
   };
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
+  let newLayer;
+  const tool = toolOverride || selectedTool;
 
-  const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
-    let newLayer;
-    const tool = toolOverride || selectedTool;
-    
-    if (tool === 'text' || tool === 'heading' || tool === 'subheading' || tool === 'textbox') {
-      const isHeading = tool === 'heading';
-      const isSubheading = tool === 'subheading';
-      const isTextBox = tool === 'textbox' || tool === 'text';
-      const presetFontSize = isHeading ? 48 : isSubheading ? 32 : 16;
-      const presetFontWeight = isHeading ? 'bold' : 'normal';
-      const presetText = isHeading
+  if (tool === 'text' || tool === 'heading' || tool === 'subheading' || tool === 'textbox') {
+    const isHeading = tool === 'heading';
+    const isSubheading = tool === 'subheading';
+
+    const presetName =
+      tool === 'heading'
+        ? 'Heading'
+        : tool === 'subheading'
+        ? 'Subheading'
+        : 'Body Text';
+
+    const presetText =
+      tool === 'heading'
         ? 'Add a heading'
-        : isSubheading
+        : tool === 'subheading'
         ? 'Add a subheading'
-        : 'Add a little bit of body text';
-      const presetName = isHeading ? 'Heading' : isSubheading ? 'Subheading' : 'Text Box';
+        : 'Add some body text';
 
-      newLayer = {
-        id: Date.now(),
-        type: 'text',
-        name: presetName,
-        text: presetText,
-        x: x,
-        y: y,
-        width: 300,
-        height: isHeading ? 80 : isSubheading ? 60 : 50,
-        ...textSettings,
-        fontSize: presetFontSize,
-        fontWeight: presetFontWeight,
-        visible: true,
-        locked: false,
-        rotation: 0
-      };
-    } else if (
-      ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle','diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft','arrowUp','arrowDown','cloud'].includes(tool)
-    ) {
-      newLayer = {
-        id: Date.now(),
-        type: 'shape',
-        name: tool.charAt(0).toUpperCase() + tool.slice(1),
-        shape: tool,
-        x: x,
-        y: y,
-        width: tool === 'ellipse' || tool === 'roundedRectangle' ? 160 : tool.includes('arrow') ? 140 : 100,
-        height: tool === 'ellipse' || tool === 'roundedRectangle' ? 100 : 100,
-        ...shapeSettings,
-        visible: true,
-        locked: false,
-        rotation: 0
-      };
-    }
+    const presetFontSize =
+      tool === 'heading'
+        ? 32
+        : tool === 'subheading'
+        ? 24
+        : 16;
 
-    if (newLayer) {
-      const newLayers = [...layers, newLayer];
-      setLayers(newLayers);
-      setSelectedLayer(newLayer.id);
-      saveToHistory(newLayers);
-    }
-  };
+    const presetFontWeight = isHeading ? '700' : isSubheading ? '600' : '400';
+
+    const width = 300;
+    const height = isHeading ? 80 : isSubheading ? 60 : 50;
+
+    const safeX = x;
+    const safeY = y;
+
+    newLayer = {
+      id: Date.now(),
+      type: 'text',
+      name: presetName,
+      text: presetText,
+      x: safeX,
+      y: safeY,
+      width,
+      height,
+      ...textSettings,
+      fontSize: presetFontSize,
+      fontWeight: presetFontWeight,
+      visible: true,
+      locked: false,
+      rotation: 0,
+    };
+  } else if (
+    ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle',
+     'diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft',
+     'arrowUp','arrowDown','cloud'].includes(tool)
+  ) {
+    const width =
+      tool === 'ellipse' || tool === 'roundedRectangle' ? 160
+      : tool.includes('arrow') ? 140
+      : 100;
+    const height =
+      tool === 'ellipse' || tool === 'roundedRectangle' ? 100
+      : 100;
+
+    const safeX = clamp(x, 0, canvasSize.width - width);
+    const safeY = clamp(y, 0, canvasSize.height - height);
+
+    newLayer = {
+      id: Date.now(),
+      type: 'shape',
+      name: tool.charAt(0).toUpperCase() + tool.slice(1),
+      shape: tool,
+      x: safeX,
+      y: safeY,
+      width,
+      height,
+      ...shapeSettings,
+      visible: true,
+      locked: false,
+      rotation: 0,
+    };
+  }
+
+  if (newLayer) {
+    const newLayers = [...layers, newLayer];
+    setLayers(newLayers);
+    setSelectedLayer(newLayer.id);
+    saveToHistory(newLayers);
+  }
+};
 
   const handleLayerSelect = (layerId) => {
     setSelectedLayer(layerId);
@@ -2018,29 +2051,41 @@ const drawHeartPath = (ctx, x, y, w, h) => {
       ));
       return;
     }
-    if (isResizing && resizeStart.layerId) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-      const newWidth = Math.max(10, resizeStart.width + deltaX);
-      const newHeight = Math.max(10, resizeStart.height + deltaY);
-      setLayers(prevLayers => prevLayers.map(layer =>
-        layer.id === resizeStart.layerId
-          ? { ...layer, width: newWidth, height: newHeight }
-          : layer
-      ));
-      return;
-    }
-    if (isDragging && selectedLayer) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      
-      setLayers(prevLayers => prevLayers.map(layer => 
-        layer.id === selectedLayer 
-          ? { ...layer, x: layer.x + deltaX, y: layer.y + deltaY }
-          : layer
-      ));
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
+if (isResizing && resizeStart.layerId) {
+  const deltaX = e.clientX - resizeStart.x;
+  const deltaY = e.clientY - resizeStart.y;
+
+  setLayers(prevLayers => prevLayers.map(layer => {
+    if (layer.id !== resizeStart.layerId) return layer;
+
+    const rawWidth = Math.max(10, resizeStart.width + deltaX);
+    const rawHeight = Math.max(10, resizeStart.height + deltaY);
+const newWidth = Math.max(10, rawWidth);
+const newHeight = Math.max(10, rawHeight);
+
+
+    return { ...layer, width: newWidth, height: newHeight };
+  }));
+  return;
+}
+
+if (isDragging && selectedLayer) {
+  const deltaX = e.clientX - dragStart.x;
+  const deltaY = e.clientY - dragStart.y;
+
+  setLayers(prevLayers => prevLayers.map(layer => {
+    if (layer.id !== selectedLayer) return layer;
+
+const nextX = layer.x + deltaX;
+const nextY = layer.y + deltaY;
+
+
+    return { ...layer, x: nextX, y: nextY };
+  }));
+
+  setDragStart({ x: e.clientX, y: e.clientY });
+}
+
     if (drawingSettings.isDrawing && ['brush', 'pen', 'eraser'].includes(selectedTool)) {
       const now = performance.now();
       const minMs = 8; // throttle
@@ -3560,9 +3605,12 @@ const drawHeartPath = (ctx, x, y, w, h) => {
         <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
           <div ref={contentWrapperRef}
             style={{
-              width: canvasSize.width,
-              height: canvasSize.height,
-              position: 'relative'
+position: 'relative',
+    width: `${canvasSize.width}px`,
+    height: `${canvasSize.height}px`,
+    overflow: 'hidden',                    // ← this clips elements
+    transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
+    transformOrigin: 'top left',
             }}
           >
             {/* Invisible spacer to create scrollable area proportional to zoom */}
@@ -3579,13 +3627,21 @@ const drawHeartPath = (ctx, x, y, w, h) => {
               }}
             />
             <div 
-              style={styles.canvas} 
-              onClick={handleCanvasClick} 
-              onMouseDown={handleDrawingMouseDown}
-              onMouseMove={handleCanvasMouseMove}
-              onMouseLeave={handleCanvasMouseLeave}
-              ref={canvasRef}
-            >
+  style={{
+        ...styles.canvas,
+        position: 'relative',
+        width: `${canvasSize.width}px`,
+        height: `${canvasSize.height}px`,
+        overflow: 'hidden',                          // ← keep here
+        transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
+        transformOrigin: 'top left',               // <- key line
+  }} 
+  onClick={handleCanvasClick} 
+  onMouseDown={handleDrawingMouseDown}
+  onMouseMove={handleCanvasMouseMove}
+  onMouseLeave={handleCanvasMouseLeave}
+  ref={canvasRef}
+>
             {layers.length === 0 && !hasChosenTemplate ? (
               <div
                 style={{

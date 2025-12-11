@@ -14,11 +14,22 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ---------------- OPENAI TEXT GENERATOR ----------------
 async function generateWithOpenAI(prompt) {
-  const completion = await openai.responses.create({
-    model: "gpt-4o-mini",
-    input: prompt
-  });
-  return completion.output_text;
+const completion = await openai.responses.create({
+  model: "gpt-4o-mini",
+  input: [
+    {
+      role: "system",
+      content: "You are an AI that outputs ONLY the raw content requested. Do NOT add any extra text, no introductions, no explanations, no suggestions like 'let me know if you need more', no closing lines. Output ONLY the document content—nothing else."
+    },
+    {
+      role: "user",
+      content: prompt
+    }
+  ]
+});
+
+return completion.output_text.trim();
+
 }
 
 // ---------------- DOCUMENT CREATORS ----------------
@@ -42,17 +53,132 @@ async function createDOCX(text) {
 }
 
 function createXLSX(text) {
-  const rows = text.split("\n").map(line => [line]);
+  // Split into rows
+  const lines = text.split("\n").map(line => line.trim()).filter(l => l !== "");
+
+  // Split each line into columns
+  const rows = lines.map(line => {
+    return line.split(/[\s|-]+/); // split by space or dash
+  });
+
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 }
 
-function createCSV(text) { return Buffer.from(text, 'utf-8'); }
+
+function createCSV(text) {
+  // Convert OpenAI text response into clean rows
+  const lines = text.split("\n").map(line => line.trim()).filter(l => l !== "");
+
+  // Convert each line into CSV values (split by spaces or hyphens etc.)
+  const parsedLines = lines.map(line => {
+    return line.split(/[\s|-]+/).join(",");
+  });
+
+  const csvContent = parsedLines.join("\n");
+  return Buffer.from(csvContent, "utf-8");
+}
+function createCSV(text) {
+  // Convert OpenAI text response into clean rows
+  const lines = text.split("\n").map(line => line.trim()).filter(l => l !== "");
+
+  // Convert each line into CSV values (split by spaces or hyphens etc.)
+  const parsedLines = lines.map(line => {
+    return line.split(/[\s|-]+/).join(",");
+  });
+
+  const csvContent = parsedLines.join("\n");
+  return Buffer.from(csvContent, "utf-8");
+}
+
 function createTXT(text) { return Buffer.from(text, 'utf-8'); }
 function createMarkdown(text) { return Buffer.from(text, 'utf-8'); }
-function createJSON(text) { return Buffer.from(JSON.stringify({ result: text }, null, 2)); }
+function createJSON(text) {
+  // Try to parse if AI already returned JSON
+  try {
+    const parsed = JSON.parse(text);
+    return Buffer.from(JSON.stringify(parsed, null, 2));
+  } catch (e) {}
+
+  // Detect intent
+  const intent = detectIntent(text);
+  let output;
+
+  switch (intent) {
+    case "list":
+      output = parseList(text);
+      break;
+
+    case "numberList":
+      output = parseNumberList(text);
+      break;
+
+    case "keyValue":
+      output = parseKeyValue(text);
+      break;
+
+    case "code":
+      output = { code: text };
+      break;
+
+    case "paragraph":
+      output = { content: text.replace(/\n/g, " ") }; // remove \n
+      break;
+
+    default:
+      output = { content: text.replace(/\n/g, " ") };
+      break;
+  }
+
+  return Buffer.from(
+    JSON.stringify(
+      {
+        type: intent,
+        output,
+        raw: text.replace(/\n/g, " ") // remove \n from raw
+      },
+      null,
+      2
+    )
+  );
+}
+
+function detectIntent(text) {
+  if (/^\d+\./m.test(text)) return "numberList"; // numbered list
+  if (text.includes(":")) return "keyValue";
+  if (text.startsWith("-") || text.includes("\n-")) return "list";
+  if (text.includes("{") || text.includes("function") || text.includes("=")) return "code";
+  if (text.split(" ").length > 20) return "paragraph";
+  return "unknown";
+}
+
+function parseList(text) {
+  return text
+    .split("\n")
+    .map(line => line.replace(/^[-*]\s*/, "").trim())
+    .filter(l => l);
+}
+
+function parseNumberList(text) {
+  return text
+    .split("\n")
+    .map(line => line.replace(/^\d+\.\s*/, "").trim())
+    .filter(l => l);
+}
+
+function parseKeyValue(text) {
+  const obj = {};
+  text.split("\n").forEach(line => {
+    const [key, value] = line.split(":");
+    if (key && value) obj[key.trim()] = value.trim();
+  });
+  return obj;
+}
+
+
 
 async function createPPTX(text) {
   const pptx = new pptxgen();

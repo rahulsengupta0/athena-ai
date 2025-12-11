@@ -1,11 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function ArtisticImageGenerator() {
+  const location = useLocation();
+  const passedImageUrl = location.state?.imageUrl || null;
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [prompt, setPrompt] = useState('');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // If an image URL is passed from Recents, auto-load it as the source image
+  useEffect(() => {
+    const preload = async () => {
+      if (!passedImageUrl || imageFile || imagePreview) return;
+      try {
+        const res = await fetch(passedImageUrl);
+        const blob = await res.blob();
+        const file = new File([blob], 'image-from-recents.png', {
+          type: blob.type || 'image/png',
+        });
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+        setGeneratedImage(null);
+      } catch (e) {
+        console.error('Failed to preload image for ArtisticImageGenerator', e);
+      }
+    };
+
+    preload();
+  }, [passedImageUrl, imageFile, imagePreview]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];

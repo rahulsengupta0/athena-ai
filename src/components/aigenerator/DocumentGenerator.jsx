@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const formats = [
   { key: 'pdf', label: 'PDF', icon: '📄' },
   { key: 'docx', label: 'DOCX', icon: '📝' },
@@ -23,7 +23,7 @@ function DocumentGenerator() {
   const fetchMyDocuments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/my-documents', {
+      const res = await fetch(`${API_BASE_URL}/api/my-documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -46,7 +46,7 @@ function DocumentGenerator() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/generate-document', {
+      const res = await fetch(`${API_BASE_URL}/api/generate-document`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ function DocumentGenerator() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/delete-document', {
+      const res = await fetch(`${API_BASE_URL}/api/delete-document`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',

@@ -11,7 +11,7 @@ const NAV_ITEMS = [
     key: "dashboard",
     icon: <FiGrid size={18} />,
     section: "Navigation",
-    path: "/"
+    path: "/home"
   },
   {
     label: "Create",
@@ -39,13 +39,6 @@ const NAV_ITEMS = [
     path: "/projects"
   },
   {
-    label: "Favorites",
-    key: "favorites",
-    icon: <FiStar size={18} />,
-    section: "Navigation",
-    path: "/favorites"
-  },
-  {
     label: "AI Generator",
     key: "aiGenerator",
     icon: <FiZap size={18} />,
@@ -53,6 +46,15 @@ const NAV_ITEMS = [
     sublabel: "Pro",
     sublabelClass: "pro",
     path: "/ai-generator"
+  },
+  {
+    label: "Presentation Studio",
+    key: "presentationStudio",
+    icon: <FiGrid size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/presentation-studio"
   },
   {
     label: "Image Editor",
@@ -85,6 +87,15 @@ const NAV_ITEMS = [
     sublabel: "Beta",
     sublabelClass: "beta",
     path: "/video-maker"
+  },
+  {
+    label: "Editor",
+    key: "editor",
+    icon: <FiFileText size={18} />,
+    section: "AI Tools",
+    sublabel: "New",
+    sublabelClass: "new",
+    path: "/editor"
   },
   {
     label: "Team",
