@@ -39,13 +39,6 @@ const NAV_ITEMS = [
     path: "/projects"
   },
   {
-    label: "Favorites",
-    key: "favorites",
-    icon: <FiStar size={18} />,
-    section: "Navigation",
-    path: "/favorites"
-  },
-  {
     label: "AI Generator",
     key: "aiGenerator",
     icon: <FiZap size={18} />,
