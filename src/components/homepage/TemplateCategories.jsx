@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import businessImg from '../../assets/bussiness.PNG';
 import socialImg from '../../assets/socialMedia.PNG';
@@ -14,20 +14,43 @@ const categories = [
   { name: 'Poster', path: '/templates/poster', image: posterImg },
 ];
 
+const CategoryCard = ({ category }) => {
+  const [hover, setHover] = useState(false);
+
+  const cardStyle = {
+    display: 'block',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    textDecoration: 'none',
+    color: 'inherit',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    transform: hover ? 'translateY(-5px)' : 'translateY(0)',
+    boxShadow: hover ? '0 8px 16px rgba(0,0,0,0.1)' : 'none',
+  };
+
+  return (
+    <Link
+      to={category.path}
+      style={cardStyle}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <img src={category.image} alt={category.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+      <div style={{ padding: '1rem' }}>
+        <h3>{category.name}</h3>
+      </div>
+    </Link>
+  );
+};
+
 const TemplateCategories = () => {
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Explore Templates</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
         {categories.map((category) => (
-          <Link to={category.path} key={category.name} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
-              <img src={category.image} alt={category.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-              <div style={{ padding: '1rem' }}>
-                <h3>{category.name}</h3>
-              </div>
-            </div>
-          </Link>
+          <CategoryCard key={category.name} category={category} />
         ))}
       </div>
     </div>

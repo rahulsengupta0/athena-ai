@@ -5,10 +5,9 @@ const { requireAdmin } = require('../middlewares/admin');
 const {
   S3Client,
   PutObjectCommand,
-  ListObjectsV2Command,
-  GetObjectCommand,
 } = require('@aws-sdk/client-s3');
 const path = require('path');
+const Template = require('../model/Template'); // Import your MongoDB Model
 
 // Initialize S3 Client with AWS SDK v3
 const s3Client = new S3Client({
@@ -26,6 +25,10 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 });
+
+// ---------------------------------------------------------
+// 1. Upload Helper Routes (Images)
+// ---------------------------------------------------------
 
 // Upload thumbnail to S3
 router.post('/upload-thumbnail', requireAdmin, upload.single('thumbnail'), async (req, res) => {
@@ -45,11 +48,11 @@ router.post('/upload-thumbnail', requireAdmin, upload.single('thumbnail'), async
     });
 
     await s3Client.send(command);
-    
+
     // Construct public URL
     const url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    
-    res.json({ 
+
+    res.json({
       url: url,
       key: key
     });
@@ -77,11 +80,11 @@ router.post('/upload-background', requireAdmin, upload.single('background'), asy
     });
 
     await s3Client.send(command);
-    
+
     // Construct public URL
     const url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    
-    res.json({ 
+
+    res.json({
       url: url,
       key: key
     });
@@ -91,7 +94,11 @@ router.post('/upload-background', requireAdmin, upload.single('background'), asy
   }
 });
 
-// Upload template JSON to S3
+// ---------------------------------------------------------
+// 2. Main Template Logic (JSON + Database)
+// ---------------------------------------------------------
+
+// Upload template JSON to S3 AND Save Metadata to MongoDB
 router.post('/upload-template-json', requireAdmin, async (req, res) => {
   try {
     const templateData = req.body;
@@ -100,6 +107,7 @@ router.post('/upload-template-json', requireAdmin, async (req, res) => {
       return res.status(400).json({ msg: 'Template ID and name are required' });
     }
 
+    // 1. Upload JSON to S3
     const key = `templates/json/${templateData.id}.json`;
     const jsonString = JSON.stringify(templateData, null, 2);
 
@@ -111,82 +119,71 @@ router.post('/upload-template-json', requireAdmin, async (req, res) => {
     });
 
     await s3Client.send(command);
-    
-    // Construct public URL
-    const url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    
-    res.json({ 
-      url: url,
-      key: key,
-      templateData: templateData
+
+    const s3Url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+    // 2. Save Metadata to MongoDB
+    // We extract the relevant info from the JSON payload to store in our DB for quick querying
+    const newTemplate = new Template({
+      name: templateData.name,
+      category: templateData.category || 'General',
+      thumbnailUrl: templateData.thumbnail, // Assumes frontend sends 'thumbnail' in JSON
+      jsonUrl: s3Url,
+      canvasWidth: templateData.canvas?.width || 1080,
+      canvasHeight: templateData.canvas?.height || 1080,
     });
+
+    const savedTemplate = await newTemplate.save();
+
+    res.json({
+      msg: 'Template uploaded and saved successfully',
+      url: s3Url,
+      key: key,
+      dbRecord: savedTemplate
+    });
+
   } catch (error) {
-    console.error('Template JSON upload error:', error);
-    res.status(500).json({ msg: 'Failed to upload template JSON', error: error.message });
+    console.error('Template upload/save error:', error);
+    res.status(500).json({ msg: 'Failed to upload template', error: error.message });
   }
 });
 
-// Public GET: list all template JSON files from S3 so the frontend Templates
-// page can show created templates under the templates section.
+// Public GET: List templates (Fetched from MongoDB, not S3 scan)
 router.get('/', async (req, res) => {
   try {
-    const bucket = process.env.AWS_S3_BUCKET;
-    const region = process.env.AWS_REGION;
     const { category } = req.query;
 
-    const listCommand = new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: 'templates/json/',
-    });
-
-    const listResponse = await s3Client.send(listCommand);
-    const objects = listResponse.Contents || [];
-
-    if (!objects.length) {
-      return res.json([]);
-    }
-
-    const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com/`;
-
-    let templates = await Promise.all(
-      objects.map(async (obj) => {
-        const key = obj.Key;
-        if (!key || !key.endsWith('.json')) return null;
-
-        const getCommand = new GetObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        });
-
-        const getResponse = await s3Client.send(getCommand);
-        const bodyString = await getResponse.Body.transformToString();
-        const data = JSON.parse(bodyString);
-
-        return {
-          id: data.id,
-          name: data.name,
-          category: data.category || 'Business',
-          description:
-            data.description ||
-            'Custom business promotional template created in Template Creator.',
-          thumbnailUrl: data.thumbnail,
-          jsonUrl: `${baseUrl}${key}`,
-        };
-      })
-    );
-
-    let filtered = templates.filter(Boolean);
-
+    let query = {};
     if (category) {
-      filtered = filtered.filter(template => template.category.toLowerCase() === category.toLowerCase());
+      // Case-insensitive match for category
+      query.category = { $regex: new RegExp(`^${category}$`, 'i') };
     }
 
-    res.json(filtered);
+    // Fetch from DB, sort by newest first
+    const templates = await Template.find(query).sort({ createdAt: -1 });
+
+    // Map DB objects to the format frontend expects (if needed)
+    // or simply return the DB objects directly
+    res.json(templates);
+
   } catch (error) {
     console.error('List templates error:', error);
     res.status(500).json({ msg: 'Failed to list templates', error: error.message });
   }
 });
 
-module.exports = router;
+// Public GET: Get Single Template by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const template = await Template.findById(req.params.id);
+    if (!template) {
+      return res.status(404).json({ msg: 'Template not found' });
+    }
+    res.json(template);
+  } catch (error) {
+    console.error('Get template error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+});
 
+module.exports = router;
