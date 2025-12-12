@@ -23,18 +23,40 @@ router.get('/generate', async (req, res) => {
 
   try {
     // Create the prompt for generating stylized text
-    const prompt = `Render the text: "${text}"
+    const prompt = `
+Create a clean, readable, Canva-style text design for the phrase: "${text}".
 
-Create 6 artistic, stylized text designs. 
-Each design should look like a logo / sticker.
-Visual Requirements:
-- PNG
-- transparent background
-- no surrounding box or border
-- no extra objects unless part of style
-- centered composition
-- high contrast, sharp edges
-- design must be readable`;
+STRICT RULES:
+- The text must be EXACTLY the same as provided. 
+- Do NOT alter spelling, spacing, or characters.
+- Do NOT reshape letters into objects or 3D sculptures.
+- No random decorations, no icons, no emoji, no blobs.
+
+STYLE:
+- Minimal, modern, elegant typography.
+- Soft shadows or subtle glow allowed.
+- Use ONE simple text effect only:
+  - subtle 3D,
+  - soft gradient,
+  - light glow,
+  - beveled edge,
+  - metallic sheen,
+  - pastel embossing.
+  
+BACKGROUND:
+- Transparent or very minimal plain.
+- No scenes, no props, no objects in background.
+
+COMPOSITION:
+- Text centered.
+- No poster layout, no labels, no stickers, no tags.
+- Keep design simple, clean, beautiful.
+
+GOAL:
+A high-quality, modern Canva-style text effect image that preserves the input text clearly and exactly.
+`;
+
+
 
     // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
