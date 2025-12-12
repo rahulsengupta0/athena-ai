@@ -99,12 +99,13 @@ const PromptSection = ({
                 {mediaStyles.map(s => (
                   <div
                     key={s}
-                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Graphics' ? 'ai-graphics-card' : ''} ${s === 'Stock Images' ? 'stock-images-card' : ''}`}
+                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Graphics' ? 'ai-graphics-card' : ''} ${s === 'Stock Images' ? 'stock-images-card' : ''} ${s === 'None' ? 'none-card' : ''}`}
                     onClick={() => setMediaStyle(s)}
                     {...(s === 'AI Graphics' ? { 'data-media': 'ai-graphics' } : {})}
                     {...(s === 'Stock Images' ? { 'data-media': 'stock-images' } : {})}
+                    {...(s === 'None' ? { 'data-media': 'none' } : {})}
                   >
-                    {s !== 'AI Graphics' && s !== 'Stock Images' && (
+                    {s !== 'AI Graphics' && s !== 'Stock Images' && s !== 'None' && (
                       <img 
                         src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`} 
                         alt={s} 
