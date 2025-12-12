@@ -5,9 +5,10 @@ const { requireAdmin } = require('../middlewares/admin');
 const {
   S3Client,
   PutObjectCommand,
+  DeleteObjectCommand,
 } = require('@aws-sdk/client-s3');
 const path = require('path');
-const Template = require('../model/Template'); // Import your MongoDB Model
+const Template = require('../model/Template');
 
 // Initialize S3 Client with AWS SDK v3
 const s3Client = new S3Client({
@@ -25,6 +26,25 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 });
+
+// --- HELPER: Extract S3 Key from full URL ---
+// Converts "https://bucket.s3.region.amazonaws.com/path/to/file.png"
+// to "path/to/file.png"
+const getKeyFromUrl = (url) => {
+  if (!url) return null;
+  try {
+    // Split by the bucket domain to get the path
+    const bucketDomain = `${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+    if (url.includes(bucketDomain)) {
+      return url.split(bucketDomain)[1];
+    }
+    // Fallback if URL format is different
+    return new URL(url).pathname.substring(1);
+  } catch (e) {
+    console.error('Error parsing S3 URL:', e);
+    return null;
+  }
+};
 
 // ---------------------------------------------------------
 // 1. Upload Helper Routes (Images)
@@ -123,11 +143,10 @@ router.post('/upload-template-json', requireAdmin, async (req, res) => {
     const s3Url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
     // 2. Save Metadata to MongoDB
-    // We extract the relevant info from the JSON payload to store in our DB for quick querying
     const newTemplate = new Template({
       name: templateData.name,
       category: templateData.category || 'General',
-      thumbnailUrl: templateData.thumbnail, // Assumes frontend sends 'thumbnail' in JSON
+      thumbnailUrl: templateData.thumbnail,
       jsonUrl: s3Url,
       canvasWidth: templateData.canvas?.width || 1080,
       canvasHeight: templateData.canvas?.height || 1080,
@@ -148,22 +167,17 @@ router.post('/upload-template-json', requireAdmin, async (req, res) => {
   }
 });
 
-// Public GET: List templates (Fetched from MongoDB, not S3 scan)
+// Public GET: List templates
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
 
     let query = {};
     if (category) {
-      // Case-insensitive match for category
       query.category = { $regex: new RegExp(`^${category}$`, 'i') };
     }
 
-    // Fetch from DB, sort by newest first
     const templates = await Template.find(query).sort({ createdAt: -1 });
-
-    // Map DB objects to the format frontend expects (if needed)
-    // or simply return the DB objects directly
     res.json(templates);
 
   } catch (error) {
@@ -182,6 +196,58 @@ router.get('/:id', async (req, res) => {
     res.json(template);
   } catch (error) {
     console.error('Get template error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+// DELETE: Remove Template from DB AND S3
+router.delete('/:id', requireAdmin, async (req, res) => {
+  try {
+    // 1. Find the template first to get URLs
+    const template = await Template.findById(req.params.id);
+
+    if (!template) {
+      return res.status(404).json({ msg: 'Template not found' });
+    }
+
+    // 2. Extract S3 Keys
+    const jsonKey = getKeyFromUrl(template.jsonUrl);
+    const thumbnailKey = getKeyFromUrl(template.thumbnailUrl);
+
+    // 3. Delete JSON file from S3
+    if (jsonKey) {
+      try {
+        await s3Client.send(new DeleteObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Key: jsonKey,
+        }));
+        console.log(`Deleted S3 JSON: ${jsonKey}`);
+      } catch (err) {
+        console.error(`Failed to delete S3 JSON (${jsonKey}):`, err);
+        // Continue even if S3 fails, so we can clean up the DB
+      }
+    }
+
+    // 4. Delete Thumbnail file from S3
+    if (thumbnailKey) {
+      try {
+        await s3Client.send(new DeleteObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Key: thumbnailKey,
+        }));
+        console.log(`Deleted S3 Thumbnail: ${thumbnailKey}`);
+      } catch (err) {
+        console.error(`Failed to delete S3 Thumbnail (${thumbnailKey}):`, err);
+      }
+    }
+
+    // 5. Delete from MongoDB
+    await Template.findByIdAndDelete(req.params.id);
+    console.log("Template and associated S3 files deleted successfully");
+
+    res.json({ msg: 'Template and associated S3 files deleted successfully' });
+  } catch (error) {
+    console.error('Delete template error:', error);
     res.status(500).json({ msg: 'Server Error' });
   }
 });

@@ -24,32 +24,6 @@ const getDefaultLayers = (width, height) => [
     x: width / 2,
     y: height * 0.28,
   },
-  {
-    id: 'subheading-layer',
-    type: 'text',
-    name: 'Subheading',
-    content: 'Add supporting copy here',
-    fontSize: 36,
-    color: '#4b5563',
-    fontWeight: 500,
-    textAlign: 'center',
-    opacity: 1,
-    x: width / 2,
-    y: height * 0.42,
-  },
-  {
-    id: 'cta-layer',
-    type: 'text',
-    name: 'CTA',
-    content: 'Call to action',
-    fontSize: 32,
-    color: '#ffffff',
-    fontWeight: 600,
-    textAlign: 'center',
-    opacity: 1,
-    x: width / 2,
-    y: height * 0.65,
-  },
 ];
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -66,24 +40,28 @@ const TempUpload = () => {
   const [elements, setElements] = useState(() =>
     getDefaultLayers(INITIAL_CANVAS.width, INITIAL_CANVAS.height)
   );
-  const [selectedElementId, setSelectedElementId] = useState(
-    () => getDefaultLayers(INITIAL_CANVAS.width, INITIAL_CANVAS.height)[0]?.id || null
-  );
+  const [selectedElementId, setSelectedElementId] = useState(null);
+
+  // File Upload States
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [backgroundFile, setBackgroundFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [backgroundPreview, setBackgroundPreview] = useState('');
+
+  // UI States
+  const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'layers'
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState({ type: '', message: '' });
   const [generatedJSON, setGeneratedJSON] = useState(null);
   const [jsonUrl, setJsonUrl] = useState('');
+
   const imageUploadInputRef = useRef(null);
   const dragInfoRef = useRef({ id: null, startX: 0, startY: 0, elementX: 0, elementY: 0 });
   const previousElementsRef = useRef([]);
 
   const selectedElement = elements.find((el) => el.id === selectedElementId) || null;
 
-  // Generate preview URL for files
+  // --- Effects ---
   useEffect(() => {
     if (thumbnailFile) {
       const url = URL.createObjectURL(thumbnailFile);
@@ -102,7 +80,6 @@ const TempUpload = () => {
     setBackgroundPreview('');
   }, [backgroundFile]);
 
-  // Cleanup blob URLs when elements are removed/unmounted
   const cleanupElementResources = useCallback((element) => {
     if (element?.type === 'image' && element.previewSrc && element.previewSrc.startsWith('blob:')) {
       URL.revokeObjectURL(element.previewSrc);
@@ -119,34 +96,20 @@ const TempUpload = () => {
     previousElementsRef.current = elements;
   }, [elements, cleanupElementResources]);
 
-  useEffect(
-    () => () => {
-      previousElementsRef.current.forEach(cleanupElementResources);
-    },
-    [cleanupElementResources]
-  );
-
+  // --- Handlers ---
   const handleChange = (field) => (e) => {
-    const value =
-      e.target.type === 'number' || e.target.type === 'range'
-        ? Number(e.target.value)
-        : e.target.value;
+    const value = e.target.type === 'number' || e.target.type === 'range' ? Number(e.target.value) : e.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleFileChange = (field) => (e) => {
     const file = e.target.files?.[0] || null;
-    if (field === 'thumbnail') {
-      setThumbnailFile(file);
-    } else {
-      setBackgroundFile(file);
-    }
+    if (field === 'thumbnail') setThumbnailFile(file);
+    else setBackgroundFile(file);
   };
 
   const handleElementChange = (id, updates) => {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, ...updates } : el))
-    );
+    setElements((prev) => prev.map((el) => (el.id === id ? { ...el, ...updates } : el)));
   };
 
   const handleAddTextElement = () => {
@@ -166,6 +129,26 @@ const TempUpload = () => {
     };
     setElements((prev) => [...prev, newElement]);
     setSelectedElementId(id);
+    setActiveTab('layers');
+  };
+
+  const handleAddShape = (shapeType) => {
+    const id = createLayerId('shape');
+    const newElement = {
+      id,
+      type: 'shape',
+      shapeType: shapeType,
+      name: shapeType === 'circle' ? 'Circle' : 'Rectangle',
+      width: 300,
+      height: 300,
+      color: '#3b82f6',
+      opacity: 1,
+      x: formData.canvasWidth / 2,
+      y: formData.canvasHeight / 2,
+    };
+    setElements((prev) => [...prev, newElement]);
+    setSelectedElementId(id);
+    setActiveTab('layers');
   };
 
   const handleImageFileAdded = (file) => {
@@ -175,93 +158,65 @@ const TempUpload = () => {
     const newElement = {
       id,
       type: 'image',
-      name: file.name || `Image ${elements.filter((el) => el.type === 'image').length + 1}`,
+      name: file.name || 'Image',
       previewSrc,
       uploadedSrc: null,
       file,
-      width: Math.min(formData.canvasWidth * 0.6, 600),
-      height: Math.min(formData.canvasHeight * 0.6, 600),
+      width: 400,
+      height: 400,
       opacity: 1,
       x: formData.canvasWidth / 2,
       y: formData.canvasHeight / 2,
     };
     setElements((prev) => [...prev, newElement]);
     setSelectedElementId(id);
+    setActiveTab('layers');
   };
 
-  const triggerImageUpload = () => {
-    imageUploadInputRef.current?.click();
-  };
-
-  const handleImageUploadInput = (event) => {
-    const file = event.target.files?.[0];
+  const triggerImageUpload = () => imageUploadInputRef.current?.click();
+  const handleImageUploadInput = (e) => {
+    const file = e.target.files?.[0];
     if (file) {
       handleImageFileAdded(file);
-      event.target.value = '';
+      e.target.value = '';
     }
-  };
-
-  const handleReplaceImage = (id, file) => {
-    if (!file) return;
-    const previewSrc = URL.createObjectURL(file);
-    setElements((prev) =>
-      prev.map((el) => {
-        if (el.id !== id) return el;
-        cleanupElementResources(el);
-        return {
-          ...el,
-          previewSrc,
-          uploadedSrc: null,
-          file,
-        };
-      })
-    );
   };
 
   const handleRemoveElement = (id) => {
     const removed = elements.find((el) => el.id === id);
-    if (removed) {
-      cleanupElementResources(removed);
-    }
+    if (removed) cleanupElementResources(removed);
     setElements((prev) => prev.filter((el) => el.id !== id));
-    if (selectedElementId === id) {
-      setSelectedElementId(elements.find((el) => el.id !== id)?.id || null);
-    }
+    if (selectedElementId === id) setSelectedElementId(null);
   };
 
-  const handleCanvasClick = () => {
-    setSelectedElementId(null);
-  };
-
-  // Drag handling
+  // --- Drag & Selection Logic ---
   const previewScale = useMemo(() => {
-    const maxWidth = 420;
-    const maxHeight = 420;
+    const maxWidth = 500;
+    const maxHeight = 500;
     const scaleX = maxWidth / formData.canvasWidth;
     const scaleY = maxHeight / formData.canvasHeight;
-    return Math.min(scaleX, scaleY, 0.5);
+    return Math.min(scaleX, scaleY, 0.6);
   }, [formData.canvasWidth, formData.canvasHeight]);
 
   const scaledWidth = formData.canvasWidth * previewScale;
   const scaledHeight = formData.canvasHeight * previewScale;
 
-  const handleDragging = useCallback(
-    (event) => {
-      const info = dragInfoRef.current;
-      if (!info.id) return;
-      const deltaX = (event.clientX - info.startX) / previewScale;
-      const deltaY = (event.clientY - info.startY) / previewScale;
-      setElements((prev) =>
-        prev.map((el) => {
-          if (el.id !== info.id) return el;
-          const nextX = clamp(info.elementX + deltaX, 0, formData.canvasWidth);
-          const nextY = clamp(info.elementY + deltaY, 0, formData.canvasHeight);
-          return { ...el, x: nextX, y: nextY };
-        })
-      );
-    },
-    [formData.canvasWidth, formData.canvasHeight, previewScale]
-  );
+  const handleDragging = useCallback((event) => {
+    const info = dragInfoRef.current;
+    if (!info.id) return;
+
+    const deltaX = (event.clientX - info.startX) / previewScale;
+    const deltaY = (event.clientY - info.startY) / previewScale;
+
+    setElements((prev) => prev.map((el) => {
+      if (el.id !== info.id) return el;
+      return {
+        ...el,
+        x: clamp(info.elementX + deltaX, 0, formData.canvasWidth),
+        y: clamp(info.elementY + deltaY, 0, formData.canvasHeight)
+      };
+    }));
+  }, [formData.canvasWidth, formData.canvasHeight, previewScale]);
 
   const stopDragging = useCallback(() => {
     dragInfoRef.current = { id: null, startX: 0, startY: 0, elementX: 0, elementY: 0 };
@@ -272,64 +227,31 @@ const TempUpload = () => {
   const handleDragStart = (id, event) => {
     event.preventDefault();
     event.stopPropagation();
+
     const element = elements.find((el) => el.id === id);
     if (!element) return;
-    dragInfoRef.current = {
-      id,
-      startX: event.clientX,
-      startY: event.clientY,
-      elementX: element.x,
-      elementY: element.y,
-    };
+
+    dragInfoRef.current = { id, startX: event.clientX, startY: event.clientY, elementX: element.x, elementY: element.y };
     setSelectedElementId(id);
     window.addEventListener('mousemove', handleDragging);
     window.addEventListener('mouseup', stopDragging);
   };
 
-  useEffect(() => {
-    return () => {
-      window.removeEventListener('mousemove', handleDragging);
-      window.removeEventListener('mouseup', stopDragging);
-    };
-  }, [handleDragging, stopDragging]);
+  const handleBackgroundClick = (e) => {
+    if (e.target.classList.contains('temp-preview-canvas') || e.target.classList.contains('temp-preview-column')) {
+        setSelectedElementId(null);
+    }
+  };
 
-  // Ensure elements stay within new bounds if canvas size changes
-  useEffect(() => {
-    setElements((prev) =>
-      prev.map((el) => ({
-        ...el,
-        x: clamp(el.x, 0, formData.canvasWidth),
-        y: clamp(el.y, 0, formData.canvasHeight),
-        width: el.type === 'image' ? clamp(el.width || 0, 20, formData.canvasWidth) : el.width,
-        height: el.type === 'image' ? clamp(el.height || 0, 20, formData.canvasHeight) : el.height,
-      }))
-    );
-  }, [formData.canvasWidth, formData.canvasHeight]);
-
+  // --- Generate JSON ---
   const handleGenerateJSON = async () => {
-    if (!formData.templateName.trim()) {
-      setUploadStatus({ type: 'error', message: 'Template name is required' });
-      return;
-    }
-
-    if (!thumbnailFile || !backgroundFile) {
-      setUploadStatus({
-        type: 'error',
-        message: 'Both thumbnail and background image are required',
-      });
-      return;
-    }
-
-    if (!elements.length) {
-      setUploadStatus({
-        type: 'error',
-        message: 'Add at least one layer to the canvas before generating a template.',
-      });
+    if (!formData.templateName.trim() || !thumbnailFile || !backgroundFile) {
+      setUploadStatus({ type: 'error', message: 'Name, Thumbnail, and Background are required.' });
       return;
     }
 
     setIsUploading(true);
-    setUploadStatus({ type: 'info', message: 'Uploading assets to S3...' });
+    setUploadStatus({ type: 'info', message: 'Uploading assets...' });
 
     try {
       const [thumbnailResult, backgroundResult] = await Promise.all([
@@ -337,7 +259,6 @@ const TempUpload = () => {
         api.uploadTemplateBackground(backgroundFile),
       ]);
 
-      const uploadedImageMap = {};
       const resolvedElements = [];
 
       for (const element of elements) {
@@ -354,19 +275,27 @@ const TempUpload = () => {
             textAlign: element.textAlign,
             opacity: element.opacity ?? 1,
           });
-        } else {
+        }
+        else if (element.type === 'shape') {
+          resolvedElements.push({
+            type: 'shape',
+            shapeType: element.shapeType,
+            name: element.name,
+            x: element.x,
+            y: element.y,
+            width: element.width,
+            height: element.height,
+            color: element.color,
+            opacity: element.opacity ?? 1,
+          });
+        }
+        else if (element.type === 'image') {
           let imageUrl = element.uploadedSrc;
           if (!imageUrl && element.file) {
             const uploadResult = await api.uploadTemplateBackground(element.file);
             imageUrl = uploadResult.url;
-            uploadedImageMap[element.id] = imageUrl;
           }
-
-          if (!imageUrl) {
-            throw new Error(
-              `Image layer "${element.name}" requires either a file upload or an image URL.`
-            );
-          }
+          if (!imageUrl) continue;
 
           resolvedElements.push({
             type: 'image',
@@ -377,17 +306,8 @@ const TempUpload = () => {
             width: element.width,
             height: element.height,
             opacity: element.opacity ?? 1,
-            rotation: element.rotation || 0,
           });
         }
-      }
-
-      if (Object.keys(uploadedImageMap).length > 0) {
-        setElements((prev) =>
-          prev.map((el) =>
-            uploadedImageMap[el.id] ? { ...el, uploadedSrc: uploadedImageMap[el.id] } : el
-          )
-        );
       }
 
       const templateJSON = {
@@ -414,18 +334,13 @@ const TempUpload = () => {
         ],
       };
 
-      setUploadStatus({ type: 'info', message: 'Uploading template JSON...' });
       const jsonResult = await api.uploadTemplateJSON(templateJSON);
-
       setGeneratedJSON(templateJSON);
       setJsonUrl(jsonResult.url);
-      setUploadStatus({ type: 'success', message: 'Template uploaded successfully!' });
+      setUploadStatus({ type: 'success', message: 'Template saved successfully!' });
     } catch (error) {
       console.error('Upload error:', error);
-      setUploadStatus({
-        type: 'error',
-        message: error.message || 'Failed to upload template. Please try again.',
-      });
+      setUploadStatus({ type: 'error', message: 'Failed to upload template.' });
     } finally {
       setIsUploading(false);
     }
@@ -435,526 +350,341 @@ const TempUpload = () => {
     <div className="temp-upload-page">
       <div className="temp-upload-wrapper">
         <div className="temp-upload-card">
-          <h2 className="temp-upload-title">Template Creator</h2>
-          <p className="temp-upload-subtitle">
-            Drag layers, drop new assets, and upload polished templates to S3.
-          </p>
+          <h2 className="temp-upload-title">Template Studio</h2>
 
-          <div className="temp-upload-main-grid">
-            <div className="temp-form-column">
-              <div className="temp-section">
-                <h3 className="temp-section-title">Basic Information</h3>
-                <div className="temp-two-column">
-                  <div className="temp-field">
-                    <label className="temp-label">Template Name *</label>
-                    <input
-                      type="text"
-                      value={formData.templateName}
-                      onChange={handleChange('templateName')}
-                      className="temp-input"
-                      placeholder="Enter template name"
-                    />
-                  </div>
-                  <div className="temp-field">
-                    <label className="temp-label">Category *</label>
-                    <select
-                      value={formData.category}
-                      onChange={handleChange('category')}
-                      className="temp-select"
-                    >
-                      <option value="Instagram Post">Instagram Post</option>
-                      <option value="Poster">Poster</option>
-                      <option value="YouTube Thumbnail">YouTube Thumbnail</option>
-                      <option value="Story">Story</option>
-                    </select>
-                  </div>
-                </div>
+          <div style={{ display: 'flex', gap: '20px', minHeight: '600px', marginTop: '20px' }}>
+
+            {/* 1. LEFT SIDEBAR */}
+            <div style={{
+              width: '320px',
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px',
+              borderRight: '1px solid #eee',
+              paddingRight: '15px'
+            }}>
+              <div className="temp-tabs" style={{
+                display: 'flex',
+                background: '#f1f5f9',
+                padding: '4px',
+                borderRadius: '8px',
+                gap: '4px'
+              }}>
+                {['settings', 'layers'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`temp-tab-btn ${activeTab === tab ? 'active' : ''}`}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: activeTab === tab ? '#fff' : 'transparent',
+                      color: activeTab === tab ? '#0f172a' : '#64748b',
+                      boxShadow: activeTab === tab ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
               </div>
 
-              <div className="temp-section">
-                <h3 className="temp-section-title">Canvas Settings</h3>
-                <div className="temp-three-column">
-                  <div className="temp-field">
-                    <label className="temp-label">Width (px)</label>
-                    <input
-                      type="number"
-                      value={formData.canvasWidth}
-                      onChange={handleChange('canvasWidth')}
-                      min="100"
-                      className="temp-input"
-                    />
-                  </div>
-                  <div className="temp-field">
-                    <label className="temp-label">Height (px)</label>
-                    <input
-                      type="number"
-                      value={formData.canvasHeight}
-                      onChange={handleChange('canvasHeight')}
-                      min="100"
-                      className="temp-input"
-                    />
-                  </div>
-                  <div className="temp-field">
-                    <label className="temp-label">Background Color</label>
-                    <div className="temp-color-row">
-                      <input
-                        type="color"
-                        value={formData.backgroundColor}
-                        onChange={handleChange('backgroundColor')}
-                        className="temp-color-swatch"
-                      />
-                      <input
-                        type="text"
-                        value={formData.backgroundColor}
-                        onChange={handleChange('backgroundColor')}
-                        className="temp-input"
-                      />
+              <div className="temp-sidebar-content" style={{ overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
+                {activeTab === 'settings' && (
+                  <div className="temp-form-column">
+                    <div className="temp-section">
+                      <label className="temp-label">Template Name</label>
+                      <input type="text" value={formData.templateName} onChange={handleChange('templateName')} className="temp-input" placeholder="e.g. Summer Sale" />
+
+                      <label className="temp-label" style={{marginTop: '10px'}}>Category</label>
+                      <select value={formData.category} onChange={handleChange('category')} className="temp-select">
+                        <option value="Instagram Post">Instagram Post</option>
+                        <option value="Poster">Poster</option>
+                        <option value="YouTube Thumbnail">YouTube Thumbnail</option>
+                        <option value="Story">Story</option>
+                      </select>
                     </div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="temp-section">
-                <h3 className="temp-section-title">Upload Files</h3>
-                <div className="temp-files-grid">
-                  <div className="temp-field">
-                    <label className="temp-label">Thumbnail Image *</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange('thumbnail')}
-                      className="temp-input"
-                    />
-                    {thumbnailPreview && (
-                      <img
-                        src={thumbnailPreview}
-                        alt="Thumbnail preview"
-                        className="temp-file-preview"
-                      />
-                    )}
-                  </div>
-                  <div className="temp-field">
-                    <label className="temp-label">Background Image *</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange('background')}
-                      className="temp-input"
-                    />
-                    {backgroundPreview && (
-                      <img
-                        src={backgroundPreview}
-                        alt="Background preview"
-                        className="temp-file-preview"
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="temp-section">
-                <div className="temp-section-header">
-                  <h3 className="temp-section-title">Canvas Layers</h3>
-                  <p className="temp-layer-hint">
-                    Drag layers in the preview or select one below to fine-tune.
-                  </p>
-                </div>
-                <div className="temp-layer-actions">
-                  <button type="button" className="temp-layer-btn" onClick={handleAddTextElement}>
-                    + Add Text Layer
-                  </button>
-                  <button type="button" className="temp-layer-btn" onClick={triggerImageUpload}>
-                    + Add Image Layer
-                  </button>
-                  <input
-                    ref={imageUploadInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="temp-layer-file-input"
-                    onChange={handleImageUploadInput}
-                  />
-                </div>
-                <div className="temp-layer-list">
-                  {elements.map((element) => (
-                    <button
-                      type="button"
-                      key={element.id}
-                      className={`temp-layer-item ${
-                        element.id === selectedElementId ? 'is-selected' : ''
-                      }`}
-                      onClick={() => setSelectedElementId(element.id)}
-                    >
-                      <div>
-                        <p className="temp-layer-name">{element.name}</p>
-                        <span className="temp-layer-type">
-                          {element.type === 'text' ? 'Text' : 'Image'}
-                        </span>
+                    <div className="temp-section">
+                      <label className="temp-label">Canvas (px)</label>
+                      <div className="temp-two-column">
+                        <input type="number" value={formData.canvasWidth} onChange={handleChange('canvasWidth')} className="temp-input" placeholder="W" />
+                        <input type="number" value={formData.canvasHeight} onChange={handleChange('canvasHeight')} className="temp-input" placeholder="H" />
                       </div>
-                      <span className="temp-layer-position">
-                        {Math.round(element.x)}px / {Math.round(element.y)}px
-                      </span>
-                    </button>
-                  ))}
-                  {!elements.length && (
-                    <p className="temp-layer-empty">No layers yet — add text or image layers above.</p>
-                  )}
-                </div>
-              </div>
-
-              {selectedElement && (
-                <div className="temp-section">
-                  <div className="temp-section-header">
-                    <h3 className="temp-section-title">Layer Settings</h3>
-                    <p className="temp-layer-hint">Editing: {selectedElement.name}</p>
-                  </div>
-                  <div className="temp-section-group">
-                    <div className="temp-field-grid">
-                      <div className="temp-field">
-                        <label className="temp-label">X Position</label>
-                        <input
-                          type="number"
-                          value={Math.round(selectedElement.x)}
-                          onChange={(e) =>
-                            handleElementChange(selectedElement.id, {
-                              x: Number(e.target.value) || 0,
-                            })
-                          }
-                          className="temp-input"
-                        />
-                      </div>
-                      <div className="temp-field">
-                        <label className="temp-label">Y Position</label>
-                        <input
-                          type="number"
-                          value={Math.round(selectedElement.y)}
-                          onChange={(e) =>
-                            handleElementChange(selectedElement.id, {
-                              y: Number(e.target.value) || 0,
-                            })
-                          }
-                          className="temp-input"
-                        />
-                      </div>
-                      <div className="temp-field">
-                        <label className="temp-label">Opacity</label>
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="1"
-                          step="0.05"
-                          value={selectedElement.opacity ?? 1}
-                          onChange={(e) =>
-                            handleElementChange(selectedElement.id, {
-                              opacity: Number(e.target.value),
-                            })
-                          }
-                          className="temp-slider"
-                        />
+                      <div className="temp-color-row" style={{marginTop: '10px'}}>
+                        <input type="color" value={formData.backgroundColor} onChange={handleChange('backgroundColor')} className="temp-color-swatch" />
+                        <span style={{fontSize:'12px', color:'#666'}}>Background Color</span>
                       </div>
                     </div>
 
-                    {selectedElement.type === 'text' ? (
-                      <>
-                        <div className="temp-field">
-                          <label className="temp-label">Text</label>
-                          <input
-                            type="text"
-                            value={selectedElement.content}
-                            onChange={(e) =>
-                              handleElementChange(selectedElement.id, {
-                                content: e.target.value,
-                              })
-                            }
-                            className="temp-input"
-                          />
-                        </div>
-                        <div className="temp-field-grid">
-                          <div className="temp-field">
-                            <label className="temp-label">Font Size</label>
-                            <input
-                              type="number"
-                              min="8"
-                              value={selectedElement.fontSize}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, {
-                                  fontSize: Number(e.target.value) || 12,
-                                })
-                              }
-                              className="temp-input"
-                            />
-                          </div>
-                          <div className="temp-field">
-                            <label className="temp-label">Color</label>
-                            <input
-                              type="color"
-                              value={selectedElement.color}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, { color: e.target.value })
-                              }
-                              className="temp-color-swatch"
-                            />
-                          </div>
-                          <div className="temp-field">
-                            <label className="temp-label">Font Weight</label>
-                            <select
-                              value={selectedElement.fontWeight}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, {
-                                  fontWeight: Number(e.target.value),
-                                })
-                              }
-                              className="temp-select"
-                            >
-                              <option value={400}>Regular</option>
-                              <option value={500}>Medium</option>
-                              <option value={600}>Semi-bold</option>
-                              <option value={700}>Bold</option>
-                              <option value={800}>Extra-bold</option>
-                            </select>
-                          </div>
-                          <div className="temp-field">
-                            <label className="temp-label">Alignment</label>
-                            <select
-                              value={selectedElement.textAlign}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, {
-                                  textAlign: e.target.value,
-                                })
-                              }
-                              className="temp-select"
-                            >
-                              <option value="left">Left</option>
-                              <option value="center">Center</option>
-                              <option value="right">Right</option>
-                            </select>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="temp-field-grid">
-                          <div className="temp-field">
-                            <label className="temp-label">Width (px)</label>
-                            <input
-                              type="number"
-                              min="20"
-                              value={Math.round(selectedElement.width || 0)}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, {
-                                  width: clamp(Number(e.target.value) || 20, 20, formData.canvasWidth),
-                                })
-                              }
-                              className="temp-input"
-                            />
-                          </div>
-                          <div className="temp-field">
-                            <label className="temp-label">Height (px)</label>
-                            <input
-                              type="number"
-                              min="20"
-                              value={Math.round(selectedElement.height || 0)}
-                              onChange={(e) =>
-                                handleElementChange(selectedElement.id, {
-                                  height: clamp(
-                                    Number(e.target.value) || 20,
-                                    20,
-                                    formData.canvasHeight
-                                  ),
-                                })
-                              }
-                              className="temp-input"
-                            />
-                          </div>
-                        </div>
-                        <div className="temp-field">
-                          <label className="temp-label">Image URL (optional)</label>
-                          <input
-                            type="text"
-                            value={selectedElement.uploadedSrc || ''}
-                            onChange={(e) =>
-                              handleElementChange(selectedElement.id, {
-                                uploadedSrc: e.target.value,
-                                previewSrc: e.target.value,
-                                file: null,
-                              })
-                            }
-                            className="temp-input"
-                            placeholder="https://example.com/asset.png"
-                          />
-                        </div>
-                        <div className="temp-layer-actions">
-                          <label className="temp-layer-btn secondary">
-                            Replace Image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="temp-layer-file-input"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  handleReplaceImage(selectedElement.id, file);
-                                  e.target.value = '';
-                                }
-                              }}
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            className="temp-layer-btn danger"
-                            onClick={() => handleRemoveElement(selectedElement.id)}
-                          >
-                            Remove Layer
-                          </button>
-                        </div>
-                      </>
-                    )}
+                    <div className="temp-section">
+                      <label className="temp-label">Assets</label>
+                      <div className="temp-field" style={{marginBottom:'10px'}}>
+                        <span style={{fontSize:'12px'}}>Thumbnail:</span>
+                        <input type="file" accept="image/*" onChange={handleFileChange('thumbnail')} className="temp-input" />
+                      </div>
+                      <div className="temp-field">
+                        <span style={{fontSize:'12px'}}>Background:</span>
+                        <input type="file" accept="image/*" onChange={handleFileChange('background')} className="temp-input" />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                    {selectedElement.type === 'text' && (
-                      <button
-                        type="button"
-                        className="temp-layer-btn danger"
-                        onClick={() => handleRemoveElement(selectedElement.id)}
-                      >
-                        Remove Layer
+                {activeTab === 'layers' && (
+                  <div>
+                    <div className="temp-layer-actions-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '10px',
+                      marginBottom: '20px'
+                    }}>
+                      <button className="temp-layer-btn" onClick={handleAddTextElement} style={actionBtnStyle}>
+                        <span style={{fontSize:'18px'}}>T</span> Add Text
                       </button>
-                    )}
+                      <button className="temp-layer-btn" onClick={triggerImageUpload} style={actionBtnStyle}>
+                        <span style={{fontSize:'18px'}}>🖼️</span> Add Image
+                      </button>
+                      <button className="temp-layer-btn" onClick={() => handleAddShape('rectangle')} style={actionBtnStyle}>
+                        <div style={{width:'16px', height:'16px', border:'2px solid currentColor'}}></div> Rect
+                      </button>
+                      <button className="temp-layer-btn" onClick={() => handleAddShape('circle')} style={actionBtnStyle}>
+                        <div style={{width:'16px', height:'16px', border:'2px solid currentColor', borderRadius:'50%'}}></div> Circle
+                      </button>
+
+                      <input ref={imageUploadInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUploadInput} />
+                    </div>
+
+                    <div className="temp-layer-list">
+                      <h4 style={{fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '10px', textTransform: 'uppercase'}}>Layers</h4>
+                      {elements.slice().reverse().map((element) => (
+                        <div
+                          key={element.id}
+                          className={`temp-layer-item ${element.id === selectedElementId ? 'is-selected' : ''}`}
+                          onClick={() => setSelectedElementId(element.id)}
+                          style={{
+                            padding: '10px',
+                            marginBottom: '6px',
+                            background: element.id === selectedElementId ? '#eff6ff' : '#fff',
+                            border: element.id === selectedElementId ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <span style={{fontWeight: 500, fontSize:'14px'}}>{element.name}</span>
+                          <span style={{fontSize: '10px', color: '#64748b', textTransform: 'capitalize', background:'#f1f5f9', padding:'2px 6px', borderRadius:'4px'}}>{element.type}</span>
+                        </div>
+                      ))}
+                      {elements.length === 0 && <p className="temp-layer-empty">No layers added.</p>}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <button
                 onClick={handleGenerateJSON}
                 disabled={isUploading}
                 className="temp-primary-button"
+                style={{marginTop: '10px'}}
               >
-                {isUploading ? 'Uploading...' : 'Generate JSON & Upload to S3'}
+                {isUploading ? 'Saving...' : 'Save Template'}
               </button>
 
               {uploadStatus.message && (
-                <div className={`temp-status temp-status-${uploadStatus.type || 'info'}`}>
+                <div className={`temp-status temp-status-${uploadStatus.type}`}>
                   {uploadStatus.message}
                 </div>
               )}
 
+              {/* --- RESTORED JSON URL LINK --- */}
               {jsonUrl && (
-                <div className="temp-json-url">
-                  <p className="temp-label">Template JSON uploaded:</p>
-                  <a
-                    href={jsonUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="temp-json-link"
-                  >
+                <div style={{
+                  marginTop: '15px',
+                  padding: '10px',
+                  background: '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  wordBreak: 'break-all'
+                }}>
+                  <p style={{fontWeight: 600, color: '#0369a1', marginBottom: '4px', margin: 0}}>Template Saved</p>
+                  <a href={jsonUrl} target="_blank" rel="noopener noreferrer" style={{color: '#0284c7', textDecoration:'underline'}}>
                     {jsonUrl}
                   </a>
                 </div>
               )}
             </div>
 
-            <div className="temp-preview-column">
-              <div className="temp-preview-card">
-                <h3 className="temp-section-title">Live Preview</h3>
-                <div className="temp-preview-frame">
-                  <div
-                    className="temp-preview-canvas"
-                    style={{
-                      width: `${scaledWidth}px`,
-                      height: `${scaledHeight}px`,
-                      backgroundColor: formData.backgroundColor,
-                    }}
-                    onClick={handleCanvasClick}
-                  >
-                    {backgroundPreview && (
-                      <img
-                        src={backgroundPreview}
-                        alt="Background"
-                        className="temp-preview-image"
-                        style={{ zIndex: 1 }}
-                      />
-                    )}
-
-                    {elements.map((element) => {
-                      const leftPercent = (element.x / formData.canvasWidth) * 100;
-                      const topPercent = (element.y / formData.canvasHeight) * 100;
-                      const isSelected = element.id === selectedElementId;
-                      const baseStyles = {
-                        left: `${leftPercent}%`,
-                        top: `${topPercent}%`,
-                        opacity: element.opacity ?? 1,
-                      };
-
-                      if (element.type === 'text') {
-                        return (
-                          <div
-                            key={element.id}
-                            className={`temp-preview-item temp-preview-text ${
-                              isSelected ? 'is-selected' : ''
-                            }`}
-                            style={baseStyles}
-                            onMouseDown={(e) => handleDragStart(element.id, e)}
-                          >
-                            <span
-                              style={{
-                                fontSize: `${(element.fontSize || 16) * previewScale}px`,
-                                color: element.color,
-                                fontWeight: element.fontWeight,
-                                textAlign: element.textAlign,
-                              }}
-                            >
-                              {element.content || 'Text layer'}
-                            </span>
-                          </div>
-                        );
-                      }
-
-                      const imageSource = element.previewSrc || element.uploadedSrc;
-                      if (!imageSource) {
-                        return null;
-                      }
-                      const widthPx = (element.width || 100) * previewScale;
-                      const heightPx = (element.height || 100) * previewScale;
-                      return (
-                        <div
-                          key={element.id}
-                          className={`temp-preview-item temp-preview-image-layer ${
-                            isSelected ? 'is-selected' : ''
-                          }`}
-                          style={{
-                            ...baseStyles,
-                            width: `${widthPx}px`,
-                            height: `${heightPx}px`,
-                            marginLeft: `-${widthPx / 2}px`,
-                            marginTop: `-${heightPx / 2}px`,
-                          }}
-                          onMouseDown={(e) => handleDragStart(element.id, e)}
-                        >
-                          <img src={imageSource} alt={element.name} draggable={false} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <p className="temp-preview-scale">
-                  Preview scale: {(previewScale * 100).toFixed(1)}%
-                </p>
-
-                {thumbnailPreview && (
-                  <div className="temp-thumbnail-preview">
-                    <h4>Thumbnail Preview</h4>
-                    <img src={thumbnailPreview} alt="Thumbnail" />
-                  </div>
+            {/* 2. MIDDLE PREVIEW */}
+            <div
+              className="temp-preview-column"
+              onClick={handleBackgroundClick}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f3f4f6',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                position: 'relative'
+              }}
+            >
+              <div
+                className="temp-preview-canvas"
+                style={{
+                  width: `${scaledWidth}px`,
+                  height: `${scaledHeight}px`,
+                  backgroundColor: formData.backgroundColor,
+                  position: 'relative',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  overflow: 'hidden'
+                }}
+              >
+                {backgroundPreview && (
+                  <img src={backgroundPreview} alt="Background" style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }} />
                 )}
-              </div>
 
-              {generatedJSON && (
-                <div className="temp-json-preview">
-                  <h4 className="temp-json-preview-title">Generated JSON</h4>
-                  <pre className="temp-json-preview-body">
-                    {JSON.stringify(generatedJSON, null, 2)}
-                  </pre>
-                </div>
-              )}
+                {elements.map((element) => {
+                  const isSelected = element.id === selectedElementId;
+                  const baseStyle = {
+                    position: 'absolute',
+                    left: `${(element.x / formData.canvasWidth) * 100}%`,
+                    top: `${(element.y / formData.canvasHeight) * 100}%`,
+                    opacity: element.opacity ?? 1,
+                    transform: 'translate(-50%, -50%)',
+                    cursor: 'move',
+                    border: isSelected ? '2px solid #3b82f6' : 'none',
+                    zIndex: 10,
+                    userSelect: 'none'
+                  };
+
+                  if (element.type === 'text') {
+                    return (
+                      <div key={element.id} style={baseStyle} onMouseDown={(e) => handleDragStart(element.id, e)}>
+                        <span style={{
+                          fontSize: `${element.fontSize * previewScale}px`,
+                          color: element.color,
+                          fontWeight: element.fontWeight,
+                          textAlign: element.textAlign,
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {element.content}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  if (element.type === 'shape') {
+                    return (
+                      <div key={element.id} style={{
+                        ...baseStyle,
+                        width: `${element.width * previewScale}px`,
+                        height: `${element.height * previewScale}px`,
+                        backgroundColor: element.color,
+                        borderRadius: element.shapeType === 'circle' ? '50%' : '0%'
+                      }} onMouseDown={(e) => handleDragStart(element.id, e)} />
+                    );
+                  }
+
+                  if (element.type === 'image') {
+                    const src = element.previewSrc || element.uploadedSrc;
+                    if(!src) return null;
+                    return (
+                      <div key={element.id} style={{
+                        ...baseStyle,
+                        width: `${element.width * previewScale}px`,
+                        height: `${element.height * previewScale}px`,
+                      }} onMouseDown={(e) => handleDragStart(element.id, e)}>
+                        <img src={src} alt="el" style={{width:'100%', height:'100%', objectFit:'cover'}} draggable={false} />
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              <p className="temp-preview-scale" style={{marginTop:'15px', color:'#666', fontSize:'12px'}}>
+                Preview Scale: {(previewScale * 100).toFixed(0)}%
+              </p>
             </div>
+
+            {/* 3. RIGHT PROPERTIES PANEL */}
+            {selectedElement && (
+              <div style={{
+                width: '260px',
+                flexShrink: 0,
+                borderLeft: '1px solid #eee',
+                paddingLeft: '15px',
+                background: 'white',
+                borderRadius: '0 8px 8px 0'
+              }}>
+                <h3 className="temp-section-title">Edit Layer</h3>
+
+                <div className="temp-section-group">
+                  <label className="temp-label">Position</label>
+                  <div className="temp-two-column">
+                    <input type="number" value={Math.round(selectedElement.x)} onChange={(e) => handleElementChange(selectedElement.id, { x: Number(e.target.value) })} className="temp-input" placeholder="X" />
+                    <input type="number" value={Math.round(selectedElement.y)} onChange={(e) => handleElementChange(selectedElement.id, { y: Number(e.target.value) })} className="temp-input" placeholder="Y" />
+                  </div>
+
+                  <label className="temp-label">Opacity</label>
+                  <input type="range" min="0.1" max="1" step="0.1" value={selectedElement.opacity || 1} onChange={(e) => handleElementChange(selectedElement.id, { opacity: Number(e.target.value) })} className="temp-slider" />
+
+                  {selectedElement.type === 'text' && (
+                    <>
+                      <label className="temp-label">Content</label>
+                      <input
+                        type="text"
+                        value={selectedElement.content}
+                        onChange={(e) => handleElementChange(selectedElement.id, { content: e.target.value })}
+                        className="temp-input"
+                        autoFocus
+                      />
+                      <label className="temp-label">Style</label>
+                      <div className="temp-two-column">
+                        <input type="number" value={selectedElement.fontSize} onChange={(e) => handleElementChange(selectedElement.id, { fontSize: Number(e.target.value) })} className="temp-input" />
+                        <input type="color" value={selectedElement.color} onChange={(e) => handleElementChange(selectedElement.id, { color: e.target.value })} className="temp-color-swatch" />
+                      </div>
+                    </>
+                  )}
+
+                  {(selectedElement.type === 'shape' || selectedElement.type === 'image') && (
+                    <>
+                      <label className="temp-label">Dimensions</label>
+                      <div className="temp-two-column">
+                        <input type="number" value={selectedElement.width} onChange={(e) => handleElementChange(selectedElement.id, { width: Number(e.target.value) })} className="temp-input" />
+                        <input type="number" value={selectedElement.height} onChange={(e) => handleElementChange(selectedElement.id, { height: Number(e.target.value) })} className="temp-input" />
+                      </div>
+                    </>
+                  )}
+
+                  {selectedElement.type === 'shape' && (
+                    <>
+                      <label className="temp-label">Color</label>
+                      <input type="color" value={selectedElement.color} onChange={(e) => handleElementChange(selectedElement.id, { color: e.target.value })} className="temp-color-swatch" style={{width:'100%'}} />
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => handleRemoveElement(selectedElement.id)}
+                    className="temp-layer-btn danger"
+                    style={{marginTop: '20px', width: '100%'}}
+                  >
+                    Delete Layer
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -962,5 +692,21 @@ const TempUpload = () => {
   );
 };
 
-export default TempUpload;
+// Inline Styles for Action Buttons
+const actionBtnStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  padding: '12px',
+  background: '#f8fafc',
+  border: '1px solid #e2e8f0',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '13px',
+  fontWeight: '600',
+  color: '#334155',
+  transition: 'all 0.2s',
+};
 
+export default TempUpload;
