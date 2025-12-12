@@ -2495,17 +2495,22 @@ const nextY = layer.y + deltaY;
         cursor: 'not-allowed'
       }
     },
-    canvasArea: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'flex-start',
-      justifyContent: 'flex-start',
-      padding: '40px',
-      paddingRight: '48px',
-      position: 'relative',
-      overflow: 'auto',
-      minWidth: 0
-    },
+canvasArea: {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'flex-start',
+  padding: '40px',
+  paddingRight: '48px',
+  position: 'relative',
+  overflow: 'auto',  // ✅ This enables scrollbars
+  minWidth: 0,
+  // ADD THESE:
+  overscrollBehavior: 'contain',  // Prevent page scroll
+  scrollbarWidth: 'thin',         // Thin scrollbars
+  WebkitOverflowScrolling: 'touch' ,// Smooth iOS scrolling
+},
+
     canvas: {
       width: canvasSize.width,
       height: canvasSize.height,
@@ -3582,24 +3587,26 @@ const nextY = layer.y + deltaY;
       <div style={styles.mainArea}>
         {/* Top Toolbar */}
         <TopToolbar
-          styles={styles}
-          undo={undo}
-          redo={redo}
-          historyIndex={historyIndex}
-          historyLength={history.length}
-          zoom={zoom}
-          handleZoomOut={handleZoomOut}
-          handleZoomIn={handleZoomIn}
-          handleZoomReset={handleZoomReset}
-          handleFitToScreen={handleFitToScreen}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          canvasSize={canvasSize}
-          selectedTool={selectedTool}
-          onSave={handleSaveDesign}
-          onDuplicate={handleDuplicateSelected}
-          hasSelection={!!selectedLayer}
-        />
+  styles={styles}
+  undo={undo}
+  redo={redo}
+  historyIndex={historyIndex}
+  historyLength={history.length}
+  zoom={zoom}
+  setZoom={setZoom}  // ADD THIS LINE
+  handleZoomOut={handleZoomOut}
+  handleZoomIn={handleZoomIn}
+  handleZoomReset={handleZoomReset}
+  handleFitToScreen={handleFitToScreen}
+  showGrid={showGrid}
+  setShowGrid={setShowGrid}
+  canvasSize={canvasSize}
+  selectedTool={selectedTool}
+  onSave={handleSaveDesign}
+  onDuplicate={handleDuplicateSelected}
+  hasSelection={!!selectedLayer}
+/>
+
 
         {/* Canvas Area */}
         <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
