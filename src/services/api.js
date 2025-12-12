@@ -407,6 +407,14 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
+  
+
+  async deleteTemplate(id) {
+    return this.request(`/api/templates/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  }
 
   // 8. Fetch JSON Content from S3 URL
   async fetchTemplateJSON(jsonUrl) {
