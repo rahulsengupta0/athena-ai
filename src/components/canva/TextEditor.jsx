@@ -7,6 +7,9 @@ import {
 import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
 import { enhanceText } from './TextEnhanceService';
 import TextEnhanceButton from './TextEnhanceButton';
+import TextStyleButton from './TextStyleButton';
+import TextStyleModal from './TextStyleModal';
+import { generateTextStyles } from './TextStyleService';
 
 const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -26,6 +29,8 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [width, setWidth] = useState(textElement?.width || 200);
   const [height, setHeight] = useState(textElement?.height || 50);
   const [isEnhancingText, setIsEnhancingText] = useState(false);
+  const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
+  const [showStyleModal, setShowStyleModal] = useState(false);
   const [isHeading, setIsHeading] = useState(isHeadingLayer(textElement));
 
   const textAreaRef = useRef(null);
@@ -286,6 +291,24 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
     }
   };
 
+  const handleOpenStyleModal = () => {
+    if (!text || !text.trim()) {
+      alert('Please enter some text first');
+      return;
+    }
+    setShowStyleModal(true);
+  };
+
+  const handleAddStyledImageToCanvas = (imageUrl) => {
+    // This function will be passed to the modal and called when a style is selected
+    // The actual implementation will depend on how your canvas works
+    // For now, we'll just log it
+    console.log('Adding styled image to canvas:', imageUrl);
+    // You'll need to implement the actual canvas addition in your CanvaEditor component
+    // This is just a placeholder
+    window.dispatchEvent(new CustomEvent('addStyledImageToCanvas', { detail: { imageUrl } }));
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -300,13 +323,21 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <label style={styles.label}>Text:</label>
-            <TextEnhanceButton
-              onClick={handleEnhanceText}
-              disabled={isEnhancingText || !text?.trim()}
-              isEnhancing={isEnhancingText}
-              variant="inline"
-              size={14}
-            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <TextEnhanceButton
+                onClick={handleEnhanceText}
+                disabled={isEnhancingText || !text?.trim()}
+                isEnhancing={isEnhancingText}
+                variant="inline"
+                size={14}
+              />
+              <TextStyleButton
+                onClick={handleOpenStyleModal}
+                disabled={!text?.trim()}
+                variant="inline"
+                size={14}
+              />
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568', cursor: 'pointer' }}>
@@ -516,6 +547,14 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
           </span>
         </div>
       </div>
+
+      {showStyleModal && (
+        <TextStyleModal 
+          text={text}
+          onClose={() => setShowStyleModal(false)}
+          onAddToCanvas={handleAddStyledImageToCanvas}
+        />
+      )}
 
       <div style={styles.actions}>
         <button
