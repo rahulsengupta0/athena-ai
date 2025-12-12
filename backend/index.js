@@ -11,6 +11,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
+  "http://localhost:5174",
 ];
 
 app.use(cors({
