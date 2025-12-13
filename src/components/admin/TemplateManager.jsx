@@ -4,7 +4,7 @@ import api from '../../services/api';
 const categories = [
   'Instagram Post',
   'Poster',
-  'YouTube Thumbnail',
+  'YouTube',
   'Story',
   'Business',
   'Social Media'

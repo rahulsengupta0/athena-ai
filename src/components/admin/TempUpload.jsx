@@ -403,9 +403,11 @@ const TempUpload = () => {
 
                       <label className="temp-label" style={{marginTop: '10px'}}>Category</label>
                       <select value={formData.category} onChange={handleChange('category')} className="temp-select">
+                        <option value="Business">Business</option>
+                        <option value="Social Media">Social Media</option>
                         <option value="Instagram Post">Instagram Post</option>
                         <option value="Poster">Poster</option>
-                        <option value="YouTube Thumbnail">YouTube Thumbnail</option>
+                        <option value="YouTube">YouTube</option>
                         <option value="Story">Story</option>
                       </select>
                     </div>

@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import TemplatePreviewModal from '../components/TemplatePreviewModal';
+import '../components/TemplatePreviewModal.css';
 
 const CategoryTemplates = () => {
   const { category } = useParams();
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -28,6 +33,20 @@ const CategoryTemplates = () => {
     fetchTemplates();
   }, [category]);
 
+  const handleTemplateClick = (template) => {
+    setSelectedTemplate(template);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTemplate(null);
+  };
+
+  const handleEditTemplate = (template) => {
+    navigate(`/editor/${template._id}`);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -43,7 +62,11 @@ const CategoryTemplates = () => {
       <h2>{formattedCategory} Templates</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
         {templates.map((template) => (
-          <div key={template._id} style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+          <div
+            key={template._id}
+            style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}
+            onClick={() => handleTemplateClick(template)}
+          >
             <img src={template.thumbnailUrl} alt={template.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
             <div style={{ padding: '1rem' }}>
               <h3>{template.name}</h3>
@@ -52,6 +75,14 @@ const CategoryTemplates = () => {
           </div>
         ))}
       </div>
+
+      {isModalOpen && (
+        <TemplatePreviewModal
+          template={selectedTemplate}
+          onClose={handleCloseModal}
+          onEdit={handleEditTemplate}
+        />
+      )}
     </div>
   );
 };
