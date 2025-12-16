@@ -87,6 +87,40 @@
   }
 }
 
+/* Tablet Responsiveness */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .presentation-studio {
+    padding: 0.875rem;
+  }
+  
+  .presentation-studio-container {
+    max-width: 95%;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .presentation-studio {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-container {
+    max-width: 100%;
+  }
+}
+
+/* Extra Small Mobile Devices */
+@media (max-width: 360px) {
+  .presentation-studio {
+    padding: 0.4rem;
+  }
+  
+  .presentation-studio-container {
+    max-width: 100%;
+    padding: 0 0.2rem;
+  }
+}
+
 .presentation-studio::before {
   content: '';
   position: absolute;
@@ -160,5 +194,20 @@
   
   .presentation-studio-creation-title {
     font-size: 1.25rem;
+  }
+}
+
+/* Font Size Adjustment for Extra Small Screens */
+@media (max-width: 360px) {
+  .presentation-studio {
+    font-size: 13px;
+  }
+  
+  .presentation-studio-title {
+    font-size: 1.2rem;
+  }
+  
+  .presentation-studio-creation-title {
+    font-size: 1.15rem;
   }
 }

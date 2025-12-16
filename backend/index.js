@@ -8,8 +8,10 @@ const app = express();
 app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://athena-ai-1-5pif.onrender.com",  // ADD THIS
+  "http://localhost:3000",
+  //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
+  "http://localhost:5174",
 ];
 
 app.use(cors({
@@ -42,7 +44,7 @@ const logoRoutes = require('./routes/logoRoutes');
 const inferenceRoutes = require('./routes/inferenceRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 const profileRoutes = require('./routes/profileRoutes');
-const deepseekRoutes = require('./routes/deepseekRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
 const emailRoutes = require('./routes/emailRoutes');
 const phoneSupport = require("./routes/phoneSupport");
 const ppRoutes = require('./routes/pptroutes');
@@ -73,7 +75,7 @@ app.use('/api', logoRoutes);
 app.use('/api/inference', inferenceRoutes);
 app.use('/api/user-data', userDataRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/deepseek', deepseekRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/phone', phoneSupport.router);
 app.use('/api', brandKitRoutes);
