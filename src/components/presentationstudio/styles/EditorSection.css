@@ -22,6 +22,25 @@
     padding: 1.25rem;
     border-radius: var(--ps-radius-lg);
   }
+  
+  .presentation-studio-thumbnails-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .presentation-studio-thumbnails-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .presentation-studio-templates-menu {
+    width: auto;
+    min-width: 12rem;
+    right: 0;
+    left: auto;
+    max-width: calc(100vw - 2rem);
+  }
 }
 
 .presentation-studio-thumbnails-header {
@@ -137,6 +156,7 @@
   gap: 1rem;
   max-height: calc(100vh - 250px);
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .presentation-studio-thumbnail {
@@ -163,11 +183,13 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .presentation-studio-thumbnail-info {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .presentation-studio-thumbnail-title {
@@ -178,6 +200,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .presentation-studio-thumbnail-description {
@@ -187,12 +211,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .presentation-studio-thumbnail-actions {
   display: flex;
   gap: 0.5rem;
   margin-left: 1rem;
+  flex-shrink: 0;
 }
 
 .presentation-studio-thumbnail-action-button {
@@ -238,6 +265,17 @@
   .presentation-studio-preview {
     padding: 1.5rem;
     border-radius: var(--ps-radius-lg);
+  }
+  
+  .presentation-studio-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .presentation-studio-preview-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -294,6 +332,16 @@
   .presentation-studio-slide-preview {
     padding: 1.5rem;
   }
+  
+  .presentation-studio-slide-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .presentation-studio-slide-content {
+    min-height: 10rem;
+    font-size: 1rem;
+  }
 }
 
 .presentation-studio-slide-title {
@@ -306,6 +354,7 @@
   margin-bottom: 2rem;
   color: var(--ps-text-primary);
   font-family: inherit;
+  word-break: break-word;
 }
 
 @media (max-width: 767px) {
@@ -330,6 +379,7 @@
   font-size: 1.1rem;
   line-height: 1.6;
   font-family: inherit;
+  word-break: break-word;
 }
 
 @media (max-width: 767px) {
@@ -358,6 +408,11 @@
 
 @media (max-width: 767px) {
   .presentation-studio-slide-image-container {
+    height: 12rem;
+    margin-top: 1.5rem;
+  }
+  
+  .presentation-studio-slide-placeholder {
     height: 12rem;
     margin-top: 1.5rem;
   }
@@ -410,12 +465,17 @@
     padding: 1.25rem;
     border-radius: var(--ps-radius-lg);
   }
+  
+  .presentation-studio-slide-actions-container {
+    gap: 0.5rem;
+  }
 }
 
 .presentation-studio-slide-actions-container {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  justify-content: center;
 }
 
 @media (max-width: 767px) {
@@ -440,10 +500,28 @@
   font-family: 'Inter', 'Poppins', Arial, sans-serif;
 }
 
+  @media (max-width: 767px) {
+    .presentation-studio-slide-action-button {
+      padding: 0.625rem 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .presentation-studio-slide-action-button span {
+      display: none;
+    }
+    
+    .presentation-studio-slide-action-button svg {
+      margin-right: 0;
+    }
+  }
+
 @media (max-width: 767px) {
-  .presentation-studio-slide-action-button {
-    padding: 0.625rem 1rem;
-    font-size: 0.9rem;
+  .presentation-studio-slide-action-button span {
+    display: none;
+  }
+  
+  .presentation-studio-slide-action-button svg {
+    margin-right: 0;
   }
 }
 
@@ -467,6 +545,10 @@
   .presentation-studio-ai-panel {
     padding: 1.25rem;
     border-radius: var(--ps-radius-lg);
+  }
+  
+  .presentation-studio-ai-panel-content {
+    gap: 1.25rem;
   }
 }
 
@@ -508,6 +590,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .presentation-studio-ai-action-button {
@@ -530,6 +614,11 @@
     padding: 0.625rem 0.875rem;
     font-size: 0.9rem;
   }
+  
+  .presentation-studio-ai-action-button {
+    padding: 0.625rem;
+    font-size: 0.85rem;
+  }
 }
 
 .presentation-studio-ai-action-button:hover {
@@ -539,25 +628,39 @@
 
 .presentation-studio-ai-ask {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.presentation-studio-ai-ask > div {
+  display: flex;
+  width: 100%;
 }
 
 .presentation-studio-ai-input {
   flex: 1;
   padding: 0.75rem;
   border: 1px solid var(--ps-border);
-  border-radius: var(--ps-radius-lg) 0 0 var(--ps-radius-lg);
+  border-radius: var(--ps-radius-lg);
   font-size: 0.95rem;
   background: var(--ps-bg-primary);
   color: var(--ps-text-primary);
   transition: var(--ps-transition);
   font-family: inherit;
   box-shadow: var(--ps-shadow-sm);
+  width: 100%;
+  margin-bottom: 0.5rem;
 }
 
 @media (max-width: 767px) {
   .presentation-studio-ai-input {
     padding: 0.625rem;
     font-size: 0.9rem;
+  }
+  
+  .presentation-studio-ai-send-button {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.85rem;
   }
 }
 
@@ -576,12 +679,15 @@
   background: var(--ps-accent-gradient);
   color: white;
   border: none;
-  border-radius: 0 var(--ps-radius-lg) var(--ps-radius-lg) 0;
+  border-radius: var(--ps-radius-lg);
   font-size: 0.95rem;
   cursor: pointer;
   transition: var(--ps-transition);
   font-weight: 600;
   font-family: 'Inter', 'Poppins', Arial, sans-serif;
+  width: 100%;
+  max-width: 120px;
+  align-self: flex-end;
 }
 
 @media (max-width: 767px) {
@@ -599,12 +705,20 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 767px) {
   .presentation-studio-theme-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
+  }
+  
+  .presentation-studio-theme-button {
+    padding: 0.625rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -626,6 +740,8 @@
   .presentation-studio-theme-button {
     padding: 0.625rem;
     font-size: 0.8rem;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 
@@ -644,11 +760,29 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 767px) {
   .presentation-studio-layout-options {
     gap: 0.5rem;
+  }
+  
+  .presentation-studio-layout-button {
+    padding: 0.625rem;
+    font-size: 0.8rem;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  .presentation-studio-layout-button span {
+    display: none;
+  }
+  
+  .presentation-studio-layout-button svg {
+    margin-right: 0;
   }
 }
 
@@ -727,6 +861,17 @@
   .presentation-studio-thumbnails-list {
     max-height: 300px;
   }
+  
+  /* Hide thumbnails on very small screens initially */
+  .presentation-studio-thumbnails {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  /* Optimize spacing for mobile */
+  .presentation-studio-editor {
+    gap: 1rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -755,6 +900,11 @@
     left: auto;
     right: 0;
   }
+  
+  /* Improve spacing on tablets */
+  .presentation-studio-editor {
+    gap: 1.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -768,6 +918,11 @@
   
   .presentation-studio-ai-panel {
     width: 25%;
+  }
+  
+  /* Optimize layout for larger screens */
+  .presentation-studio-editor {
+    gap: 2rem;
   }
 }
 
@@ -811,10 +966,332 @@
   
   .presentation-studio-theme-grid {
     gap: 0.4rem;
+    grid-template-columns: 1fr 1fr;
   }
   
   .presentation-studio-layout-options {
     gap: 0.4rem;
+  }
+  
+  .presentation-studio-thumbnail {
+    padding: 1rem;
+  }
+  
+  .presentation-studio-thumbnail-title {
+    font-size: 0.95rem;
+  }
+  
+  .presentation-studio-thumbnail-description {
+    font-size: 0.8rem;
+  }
+  
+  .presentation-studio-thumbnail-actions {
+    margin-left: 0.5rem;
+  }
+  
+  .presentation-studio-thumbnail-action-button {
+    padding: 0.25rem;
+  }
+  
+  .presentation-studio-preview-title {
+    font-size: 1.1rem;
+  }
+  
+  .presentation-studio-preview-action-button {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-ai-label {
+    font-size: 0.9rem;
+  }
+  
+  .presentation-studio-ai-input {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .presentation-studio-ai-send-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .presentation-studio-theme-button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .presentation-studio-layout-button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Further optimize for very small screens */
+  .presentation-studio-preview-header {
+    gap: 0.75rem;
+  }
+  
+  .presentation-studio-slide-actions-container {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-ai-actions {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-theme-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .presentation-studio-layout-options {
+    justify-content: center;
+  }
+  
+  /* Collapse columns completely on tiny screens */
+  .presentation-studio-editor {
+    gap: 0.75rem;
+  }
+  
+  .presentation-studio-thumbnails-list {
+    max-height: 200px;
+  }
+}
+
+/* Extra Small Screen Adjustments */
+@media (max-width: 360px) {
+  .presentation-studio-thumbnails {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-preview {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-slide-preview {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-slide-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .presentation-studio-slide-content {
+    min-height: 7rem;
+    font-size: 0.85rem;
+  }
+  
+  .presentation-studio-slide-image-container,
+  .presentation-studio-slide-placeholder {
+    height: 8rem;
+    margin-top: 0.75rem;
+  }
+  
+  .presentation-studio-slide-actions {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-ai-panel {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-theme-grid {
+    gap: 0.3rem;
+  }
+  
+  .presentation-studio-layout-options {
+    gap: 0.3rem;
+  }
+  
+  .presentation-studio-thumbnail {
+    padding: 0.75rem;
+  }
+  
+  .presentation-studio-thumbnail-title {
+    font-size: 0.9rem;
+  }
+  
+  .presentation-studio-thumbnail-description {
+    font-size: 0.75rem;
+  }
+  
+  .presentation-studio-thumbnail-actions {
+    margin-left: 0.4rem;
+  }
+  
+  .presentation-studio-thumbnail-action-button {
+    padding: 0.2rem;
+  }
+  
+  .presentation-studio-preview-title {
+    font-size: 1rem;
+  }
+  
+  .presentation-studio-preview-action-button {
+    padding: 0.4rem;
+  }
+  
+  .presentation-studio-ai-label {
+    font-size: 0.85rem;
+  }
+  
+  .presentation-studio-ai-input {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .presentation-studio-ai-send-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .presentation-studio-theme-button {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  .presentation-studio-layout-button {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  .presentation-studio-preview-header {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-slide-actions-container {
+    gap: 0.4rem;
+  }
+  
+  .presentation-studio-ai-actions {
+    gap: 0.4rem;
+  }
+  
+  .presentation-studio-editor {
+    gap: 0.5rem;
+  }
+  
+  .presentation-studio-thumbnails-list {
+    max-height: 150px;
+  }
+}
+
+/* Ultra Small Screen Adjustments */
+@media (max-width: 320px) {
+  .presentation-studio-thumbnails {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-preview {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-slide-preview {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-slide-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .presentation-studio-slide-content {
+    min-height: 6rem;
+    font-size: 0.8rem;
+  }
+  
+  .presentation-studio-slide-image-container,
+  .presentation-studio-slide-placeholder {
+    height: 7rem;
+    margin-top: 0.5rem;
+  }
+  
+  .presentation-studio-slide-actions {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-ai-panel {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-theme-grid {
+    gap: 0.2rem;
+    grid-template-columns: 1fr;
+  }
+  
+  .presentation-studio-layout-options {
+    gap: 0.2rem;
+  }
+  
+  .presentation-studio-thumbnail {
+    padding: 0.5rem;
+  }
+  
+  .presentation-studio-thumbnail-title {
+    font-size: 0.85rem;
+  }
+  
+  .presentation-studio-thumbnail-description {
+    font-size: 0.7rem;
+  }
+  
+  .presentation-studio-thumbnail-actions {
+    margin-left: 0.3rem;
+  }
+  
+  .presentation-studio-thumbnail-action-button {
+    padding: 0.15rem;
+  }
+  
+  .presentation-studio-preview-title {
+    font-size: 0.9rem;
+  }
+  
+  .presentation-studio-preview-action-button {
+    padding: 0.3rem;
+  }
+  
+  .presentation-studio-ai-label {
+    font-size: 0.8rem;
+  }
+  
+  .presentation-studio-ai-input {
+    padding: 0.3rem;
+    font-size: 0.75rem;
+  }
+  
+  .presentation-studio-ai-send-button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .presentation-studio-theme-button {
+    padding: 0.3rem;
+    font-size: 0.65rem;
+  }
+  
+  .presentation-studio-layout-button {
+    padding: 0.3rem;
+    font-size: 0.65rem;
+  }
+  
+  .presentation-studio-preview-header {
+    gap: 0.4rem;
+  }
+  
+  .presentation-studio-slide-actions-container {
+    gap: 0.3rem;
+  }
+  
+  .presentation-studio-ai-actions {
+    gap: 0.3rem;
+  }
+  
+  .presentation-studio-editor {
+    gap: 0.4rem;
+  }
+  
+  .presentation-studio-thumbnails-list {
+    max-height: 120px;
   }
 }
 
