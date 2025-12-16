@@ -24,38 +24,40 @@ router.get('/generate', async (req, res) => {
   try {
     // Create the prompt for generating stylized text
     const prompt = `
-Create a clean, readable, Canva-style text design for the phrase: "${text}".
+Create a clean, modern, Canva-style typography design for the text: "${text}".
 
 STRICT RULES:
-- The text must be EXACTLY the same as provided. 
-- Do NOT alter spelling, spacing, or characters.
-- Do NOT reshape letters into objects or 3D sculptures.
-- No random decorations, no icons, no emoji, no blobs.
+- The design must be TEXT ONLY.
+- No icons, no symbols, no shapes, no decorations.
+- No poster layout, no boxes, no UI panels, no labels.
+- Background must be plain, minimal, and soft (or fully transparent).
+- DO NOT stylize letters into objects.
+- DO NOT apply heavy 3D, metallic, neon, bubble, or chrome effects.
 
 STYLE:
-- Minimal, modern, elegant typography.
-- Soft shadows or subtle glow allowed.
-- Use ONE simple text effect only:
-  - subtle 3D,
-  - soft gradient,
-  - light glow,
-  - beveled edge,
-  - metallic sheen,
-  - pastel embossing.
-  
-BACKGROUND:
-- Transparent or very minimal plain.
-- No scenes, no props, no objects in background.
+- Use modern font pairings (bold + thin, serif + sans-serif, italic + regular).
+- Use clean, flat typography.
+- You may use:
+  - subtle shadow,
+  - subtle glow,
+  - subtle gradient,
+  - color contrast.
+- Keep everything light, minimal, elegant.
 
-COMPOSITION:
-- Text centered.
-- No poster layout, no labels, no stickers, no tags.
-- Keep design simple, clean, beautiful.
+TYPOGRAPHY RULES:
+- Explore different layout ideas:
+  - one word bold, one thin
+  - stacked text
+  - mixed-case styling
+  - letter spacing variations
+  - underline or accent lines (simple)
+  - overlapping text (minimal)
+  - italic + bold combination
 
 GOAL:
-A high-quality, modern Canva-style text effect image that preserves the input text clearly and exactly.
+Create a beautiful, modern, minimal typographic text design similar to Canva text templates—simple, readable, professional.
+Generate only ONE style per image.
 `;
-
 
 
     // Check if OpenAI API key is configured
