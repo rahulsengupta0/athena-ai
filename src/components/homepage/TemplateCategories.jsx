@@ -5,6 +5,7 @@ import socialImg from '../../assets/socialMedia.PNG';
 import youtubeImg from '../../assets/youtube.PNG';
 import instaImg from '../../assets/insta.PNG';
 import posterImg from '../../assets/poster.PNG';
+import storyImg from '../../assets/story.PNG';
 
 const categories = [
   { name: 'Business', path: '/templates/business', image: businessImg },
@@ -12,6 +13,7 @@ const categories = [
   { name: 'Youtube', path: '/templates/youtube', image: youtubeImg },
   { name: 'Instagram Post', path: '/templates/instagram-post', image: instaImg },
   { name: 'Poster', path: '/templates/poster', image: posterImg },
+  { name: 'Story', path: '/templates/story', image: storyImg },
 ];
 
 const CategoryCard = ({ category }) => {
