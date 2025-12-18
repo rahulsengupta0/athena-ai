@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
+import Konva from 'konva';
 import {
   ChevronLeft,
   Copy,
@@ -52,45 +53,46 @@ const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) =
   }, [nodeRef, effects, scaleFactor, ...dependencies]);
 };
 
-const useLayerBlur = (layerRef, blurValue = 0, scaleFactor = 1) => {
-  useEffect(() => {
-    const layerNode = layerRef?.current;
-    if (!layerNode) return;
-    const canvasElement = layerNode.getCanvas()?._canvas;
-    if (!canvasElement) return;
-    const blurPx = Math.max(0, (blurValue || 0) * scaleFactor);
-    canvasElement.style.filter = blurPx > 0 ? `blur(${blurPx}px)` : 'none';
-    return () => {
-      canvasElement.style.filter = 'none';
-    };
-  }, [layerRef, blurValue, scaleFactor]);
-};
-
-const ElementLayer = ({
+const ElementGroup = ({
   effects,
   scale,
   children,
-  showSelection = false,
-  selectionTargetRef = null,
-  onResize = null,
-  selectionVersion = 0,
 }) => {
-  const layerRef = useRef(null);
-  const blurValue = effects?.blur || 0;
-  useLayerBlur(layerRef, blurValue, scale);
+  const groupRef = useRef(null);
+  
+  // Apply blur effect to the group (replacing the CSS filter approach)
+  useEffect(() => {
+    const groupNode = groupRef?.current;
+    if (!groupNode) return;
+    
+    const normalized = normalizeImageEffects(effects);
+    const blurPx = Math.max(0, (normalized.blur || 0) * scale);
+    
+    // Apply blur filter if needed
+    if (blurPx > 0) {
+      const currentFilters = groupNode.filters() || [];
+      if (!currentFilters.includes(Konva.Filters.Blur)) {
+        groupNode.filters([...currentFilters, Konva.Filters.Blur]);
+      }
+      groupNode.blurRadius(blurPx);
+      groupNode.cache();
+    } else {
+      const currentFilters = groupNode.filters() || [];
+      const newFilters = currentFilters.filter(f => f !== Konva.Filters.Blur);
+      groupNode.filters(newFilters);
+      groupNode.blurRadius(0);
+      if (newFilters.length === 0) {
+        groupNode.clearCache();
+      }
+    }
+    
+    groupNode.getLayer()?.batchDraw();
+  }, [groupRef, effects, scale]);
+  
   return (
-    <Layer ref={layerRef}>
+    <Group ref={groupRef}>
       {children}
-      {showSelection && selectionTargetRef ? (
-        <ResizeHandles
-          isVisible={showSelection}
-          targetRef={selectionTargetRef}
-          scale={scale}
-          onResize={onResize}
-          selectionKey={selectionVersion}
-        />
-      ) : null}
-    </Layer>
+    </Group>
   );
 };
 
@@ -1263,8 +1265,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       const dropdownEl = previewDropdownRef.current;
       if (
         buttonEl &&
-        dropdownEl &&
-        !buttonEl.contains(event.target) &&
+        dropdownEl &&        !buttonEl.contains(event.target) &&
         !dropdownEl.contains(event.target)
       ) {
         setPreviewDropdownOpen(false);
@@ -2310,6 +2311,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                   }
                 }}
               >
+                {/* Background Layer */}
                 <Layer>
                   <Rect
                     name="background"
@@ -2320,85 +2322,103 @@ const handleApplyEnhancedText = (enhancedText) => {
                     fill={activeSlide?.background || '#ffffff'}
                   />
                 </Layer>
-                {activeSlide?.layers.map((layer) => {
-                  const layerRef = getLayerNodeRef(layer.id);
-                  if (!layer.visible) return null;
+                
+                {/* Elements Layer - All elements grouped together */}
+                <Layer>
+                  {activeSlide?.layers.map((layer) => {
+                    const layerRef = getLayerNodeRef(layer.id);
+                    if (!layer.visible) return null;
 
-                  const scaledX = layer.x * scale;
-                  const scaledY = layer.y * scale;
-                  const scaledWidth = layer.width * scale;
-                  const scaledHeight = layer.height * scale;
+                    const scaledX = layer.x * scale;
+                    const scaledY = layer.y * scale;
+                    const scaledWidth = layer.width * scale;
+                    const scaledHeight = layer.height * scale;
 
-                  let renderedLayer = null;
+                    let renderedLayer = null;
 
-                  if (layer.type === 'text') {
-                    renderedLayer = (
-                      <TextLayer
-                        ref={layerRef}
-                        layer={layer}
-                        scaledX={scaledX}
-                        scaledY={scaledY}
-                        scaledWidth={scaledWidth}
-                        scaledHeight={scaledHeight}
+                    if (layer.type === 'text') {
+                      renderedLayer = (
+                        <TextLayer
+                          ref={layerRef}
+                          layer={layer}
+                          scaledX={scaledX}
+                          scaledY={scaledY}
+                          scaledWidth={scaledWidth}
+                          scaledHeight={scaledHeight}
+                          scale={scale}
+                          onDragMove={(e) => handleLayerDragMove(layer, e)}
+                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                          onClick={(e) => handleLayerClick(layer, e)}
+                        />
+                      );
+                    } else if (layer.type === 'image') {
+                      renderedLayer = (
+                        <ImageLayer
+                          ref={layerRef}
+                          layer={layer}
+                          scaledX={scaledX}
+                          scaledY={scaledY}
+                          scaledWidth={scaledWidth}
+                          scaledHeight={scaledHeight}
+                          scale={scale}
+                          onDragMove={(e) => handleLayerDragMove(layer, e)}
+                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                          onClick={(e) => handleLayerClick(layer, e)}
+                        />
+                      );
+                    } else if (layer.type === 'shape') {
+                      renderedLayer = (
+                        <ShapeLayer
+                          ref={layerRef}
+                          layer={layer}
+                          scaledX={scaledX}
+                          scaledY={scaledY}
+                          scaledWidth={scaledWidth}
+                          scaledHeight={scaledHeight}
+                          scale={scale}
+                          onDragMove={(e) => handleLayerDragMove(layer, e)}
+                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                          onClick={(e) => handleLayerClick(layer, e)}
+                        />
+                      );
+                    }
+
+                    if (!renderedLayer) return null;
+
+                    return (
+                      <ElementGroup
+                        key={layer.id}
+                        effects={layer.effects}
                         scale={scale}
-                        onDragMove={(e) => handleLayerDragMove(layer, e)}
-                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                        onClick={(e) => handleLayerClick(layer, e)}
+                      >
+                        {renderedLayer}
+                      </ElementGroup>
+                    );
+                  })}
+                </Layer>
+                
+                {/* Selection/Transform Layer - For resize handles */}
+                <Layer>
+                  {activeSlide?.layers.map((layer) => {
+                    if (!layer.visible) return null;
+                    const isSelected = selectedLayerId === layer.id;
+                    if (!isSelected) return null;
+                    
+                    const layerRef = getLayerNodeRef(layer.id);
+                    const selectionVersion = `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${scale}`;
+                    
+                    return (
+                      <ResizeHandles
+                        key={`handles-${layer.id}`}
+                        isVisible={isSelected}
+                        targetRef={layerRef}
+                        scale={scale}
+                        onResize={(node) => handleLayerResize(layer.id, node)}
+                        selectionKey={selectionVersion}
                       />
                     );
-                  } else if (layer.type === 'image') {
-                    renderedLayer = (
-                      <ImageLayer
-                        ref={layerRef}
-                        layer={layer}
-                        scaledX={scaledX}
-                        scaledY={scaledY}
-                        scaledWidth={scaledWidth}
-                        scaledHeight={scaledHeight}
-                        scale={scale}
-                        onDragMove={(e) => handleLayerDragMove(layer, e)}
-                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                        onClick={(e) => handleLayerClick(layer, e)}
-                      />
-                    );
-                  } else if (layer.type === 'shape') {
-                    renderedLayer = (
-                      <ShapeLayer
-                        ref={layerRef}
-                        layer={layer}
-                        scaledX={scaledX}
-                        scaledY={scaledY}
-                        scaledWidth={scaledWidth}
-                        scaledHeight={scaledHeight}
-                        scale={scale}
-                        onDragMove={(e) => handleLayerDragMove(layer, e)}
-                        onDragEnd={(e) => handleLayerDragEnd(layer, e)}
-                        onClick={(e) => handleLayerClick(layer, e)}
-                      />
-                    );
-                  }
-
-                  if (!renderedLayer) return null;
-
-                  const isSelected = selectedLayerId === layer.id;
-                  const selectionVersion = isSelected
-                    ? `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${scale}`
-                    : 0;
-
-                  return (
-                    <ElementLayer
-                      key={layer.id}
-                      effects={layer.effects}
-                      scale={scale}
-                      showSelection={isSelected}
-                      selectionTargetRef={layerRef}
-                      onResize={(node) => handleLayerResize(layer.id, node)}
-                      selectionVersion={selectionVersion}
-                    >
-                      {renderedLayer}
-                    </ElementLayer>
-                  );
-                })}
+                  })}
+                </Layer>
               </Stage>
               <LayerActionBar
                 layer={selectedLayer}
@@ -2464,6 +2484,7 @@ const handleApplyEnhancedText = (enhancedText) => {
             onToggleVisibility={handleToggleLayerVisibility}
             onDuplicateLayer={handleDuplicateLayer}
             onReorderLayers={handleReorderLayers}
+            onUpdateLayer={updateLayerById}
           />
 
           <div
