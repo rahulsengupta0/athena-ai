@@ -1,8 +1,8 @@
 import React from "react";
 import Reveal from "./Reveal";
 import MotionCard from "./MotionCard";
-import { 
-  FiLayers, 
+import {
+  FiLayers,
   FiType,
   FiSquare,
   FiCircle,
@@ -18,9 +18,9 @@ import {
 import "./Showcase.css";
 
 // Import real assets
-import socialMedia from "../../assets/socialMedia.PNG";
-import poster from "../../assets/poster.PNG";
-import insta from "../../assets/insta.PNG";
+import socialMedia from "../../assets/socialMedia.png";
+import poster from "../../assets/poster.png";
+import insta from "../../assets/insta.png";
 
 const Showcase = () => {
   // Real AI generations showcase
@@ -104,29 +104,29 @@ const Showcase = () => {
                 <div className="demo-canvas">
                   {/* Background Grid */}
                   <div className="canvas-grid"></div>
-                  
+
                   {/* Design Elements */}
                   <div className="canvas-content">
                     {/* Gradient Background Shape */}
                     <div className="demo-element bg-shape"></div>
-                    
+
                     {/* Text Element - Large Heading */}
                     <div className="demo-element text-heading">
                       <div className="demo-text-content">Create Amazing</div>
                       <div className="element-border selected"></div>
                     </div>
-                    
+
                     {/* Text Element - Subheading */}
                     <div className="demo-element text-sub">
                       <div className="demo-text-content small">Designs in minutes</div>
                     </div>
-                    
+
                     {/* Shape Element - Circle */}
                     <div className="demo-element circle-shape"></div>
-                    
+
                     {/* Shape Element - Rectangle */}
                     <div className="demo-element rect-shape"></div>
-                    
+
                     {/* Icon Elements */}
                     <div className="demo-element icon-element" style={{ top: '60%', left: '15%' }}>
                       <FiStar size={24} />
@@ -276,7 +276,7 @@ const Showcase = () => {
                 <FiMessageSquare size={18} />
                 <h4>AI Assistant</h4>
               </div>
-              
+
               <div className="chat-messages">
                 <div className="chat-message user">
                   <div className="message-bubble">

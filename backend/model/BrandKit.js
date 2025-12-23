@@ -14,6 +14,6 @@ const BrandKitSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('BrandKit', BrandKitSchema);
+module.exports = mongoose.model('BrandKit', BrandKitSchema);   
 
 

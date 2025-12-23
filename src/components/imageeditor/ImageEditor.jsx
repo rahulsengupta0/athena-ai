@@ -2,10 +2,10 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { Slider, Button, Upload, message, Row, Col, Card, Space, Collapse } from 'antd';
-import { 
-  UploadOutlined, 
-  RotateLeftOutlined, 
-  RotateRightOutlined, 
+import {
+  UploadOutlined,
+  RotateLeftOutlined,
+  RotateRightOutlined,
   SwapOutlined,
   VerticalAlignTopOutlined,
   SaveOutlined,
@@ -26,7 +26,7 @@ const ImageEditor = () => {
   const [rotation, setRotation] = useState(0);
   const [flipHorizontal, setFlipHorizontal] = useState(1);
   const [flipVertical, setFlipVertical] = useState(1);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     brightness: 100,
@@ -121,13 +121,13 @@ const ImageEditor = () => {
   const getFilterStyle = () => {
     // Calculate combined brightness (exposure affects brightness)
     const combinedBrightness = filters.brightness + filters.exposure;
-    
+
     // Calculate combined saturation (vibrance affects saturation)
     const combinedSaturation = filters.saturation + filters.vibrance;
-    
+
     // Temperature adjustment (simulated with hue and saturation)
     const temperatureAdjustment = filters.temperature * 0.3;
-    
+
     return {
       filter: `
         brightness(${Math.max(0, combinedBrightness)}%)
@@ -146,7 +146,7 @@ const ImageEditor = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       img.onload = () => {
         if (croppedAreaPixels) {
           canvas.width = croppedAreaPixels.width;
@@ -195,7 +195,7 @@ const ImageEditor = () => {
 
         resolve(canvas.toDataURL('image/png'));
       };
-      
+
       img.src = image;
     });
   };
@@ -239,12 +239,12 @@ const ImageEditor = () => {
   };
 
   // Render adjustment slider component
-  const AdjustmentSlider = ({ 
-    label, 
-    value, 
-    onChange, 
-    min = 0, 
-    max = 200, 
+  const AdjustmentSlider = ({
+    label,
+    value,
+    onChange,
+    min = 0,
+    max = 200,
     step = 1,
     unit = '',
     defaultValue = 100
@@ -262,10 +262,10 @@ const ImageEditor = () => {
         onChange={onChange}
         tooltip={{ formatter: (val) => `${val}${unit}` }}
       />
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        fontSize: 12, 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 12,
         color: '#999',
         marginTop: 4
       }}>
@@ -278,10 +278,10 @@ const ImageEditor = () => {
 
   return (
     <div style={{ padding: 20, minHeight: '100vh', background: '#f5f5f5' }}>
-      <Card 
-        style={{ 
-          maxWidth: 1400, 
-          margin: '0 auto', 
+      <Card
+        style={{
+          maxWidth: 1400,
+          margin: '0 auto',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
           borderRadius: 12
         }}
@@ -298,9 +298,9 @@ const ImageEditor = () => {
 
         {/* Upload Section */}
         {!image && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: 60, 
+          <div style={{
+            textAlign: 'center',
+            padding: 60,
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: 12,
             color: 'white'
@@ -322,7 +322,7 @@ const ImageEditor = () => {
               size="large"
               icon={<UploadOutlined />}
               onClick={() => fileInputRef.current.click()}
-              style={{ 
+              style={{
                 background: 'rgba(255,255,255,0.2)',
                 border: '2px solid rgba(255,255,255,0.3)',
                 height: 50,
@@ -341,18 +341,18 @@ const ImageEditor = () => {
             {/* Tools Panel */}
             <Col xs={24} lg={8}>
               <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                
+
                 {/* Transform Tools */}
-                <Card 
-                  title="🔄 Transform" 
+                <Card
+                  title="🔄 Transform"
                   size="small"
                   style={{ borderRadius: 8 }}
                 >
                   <Space direction="vertical" style={{ width: '100%' }} size="small">
                     <Row gutter={8}>
                       <Col span={12}>
-                        <Button 
-                          icon={<RotateLeftOutlined />} 
+                        <Button
+                          icon={<RotateLeftOutlined />}
                           onClick={rotateLeft}
                           block
                           size="large"
@@ -361,8 +361,8 @@ const ImageEditor = () => {
                         </Button>
                       </Col>
                       <Col span={12}>
-                        <Button 
-                          icon={<RotateRightOutlined />} 
+                        <Button
+                          icon={<RotateRightOutlined />}
                           onClick={rotateRight}
                           block
                           size="large"
@@ -373,8 +373,8 @@ const ImageEditor = () => {
                     </Row>
                     <Row gutter={8}>
                       <Col span={12}>
-                        <Button 
-                          icon={<SwapOutlined />} 
+                        <Button
+                          icon={<SwapOutlined />}
                           onClick={flipHorizontalToggle}
                           block
                           size="large"
@@ -384,8 +384,8 @@ const ImageEditor = () => {
                         </Button>
                       </Col>
                       <Col span={12}>
-                        <Button 
-                          icon={<VerticalAlignTopOutlined />} 
+                        <Button
+                          icon={<VerticalAlignTopOutlined />}
                           onClick={flipVerticalToggle}
                           block
                           size="large"
@@ -395,18 +395,18 @@ const ImageEditor = () => {
                         </Button>
                       </Col>
                     </Row>
-                    <AdjustmentSlider 
-                      label="Rotation Angle" 
-                      value={rotation} 
+                    <AdjustmentSlider
+                      label="Rotation Angle"
+                      value={rotation}
                       onChange={setRotation}
                       min={-180}
                       max={180}
                       unit="°"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Zoom Level" 
-                      value={zoom} 
+                    <AdjustmentSlider
+                      label="Zoom Level"
+                      value={zoom}
                       onChange={setZoom}
                       min={1}
                       max={3}
@@ -417,50 +417,50 @@ const ImageEditor = () => {
                 </Card>
 
                 {/* Editing Tools Collapse */}
-                <Collapse 
+                <Collapse
                   defaultActiveKey={['1', '2', '3', '4']}
                   expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
                   style={{ background: 'transparent' }}
                 >
                   {/* Light Adjustments */}
                   <Panel header="💡 Light Adjustments" key="1" style={{ fontSize: 16, fontWeight: 600 }}>
-                    <AdjustmentSlider 
-                      label="Brightness" 
-                      value={filters.brightness} 
+                    <AdjustmentSlider
+                      label="Brightness"
+                      value={filters.brightness}
                       onChange={(val) => updateFilter('brightness', val)}
                       min={0}
                       max={200}
                       unit="%"
                     />
-                    <AdjustmentSlider 
-                      label="Contrast" 
-                      value={filters.contrast} 
+                    <AdjustmentSlider
+                      label="Contrast"
+                      value={filters.contrast}
                       onChange={(val) => updateFilter('contrast', val)}
                       min={0}
                       max={200}
                       unit="%"
                     />
-                    <AdjustmentSlider 
-                      label="Exposure" 
-                      value={filters.exposure} 
+                    <AdjustmentSlider
+                      label="Exposure"
+                      value={filters.exposure}
                       onChange={(val) => updateFilter('exposure', val)}
                       min={-100}
                       max={100}
                       unit="%"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Highlights" 
-                      value={filters.highlight} 
+                    <AdjustmentSlider
+                      label="Highlights"
+                      value={filters.highlight}
                       onChange={(val) => updateFilter('highlight', val)}
                       min={-100}
                       max={100}
                       unit="%"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Shadows" 
-                      value={filters.shadow} 
+                    <AdjustmentSlider
+                      label="Shadows"
+                      value={filters.shadow}
                       onChange={(val) => updateFilter('shadow', val)}
                       min={-100}
                       max={100}
@@ -471,44 +471,44 @@ const ImageEditor = () => {
 
                   {/* Color Adjustments */}
                   <Panel header="🎨 Color Adjustments" key="2" style={{ fontSize: 16, fontWeight: 600 }}>
-                    <AdjustmentSlider 
-                      label="Saturation" 
-                      value={filters.saturation} 
+                    <AdjustmentSlider
+                      label="Saturation"
+                      value={filters.saturation}
                       onChange={(val) => updateFilter('saturation', val)}
                       min={0}
                       max={200}
                       unit="%"
                     />
-                    <AdjustmentSlider 
-                      label="Hue" 
-                      value={filters.hue} 
+                    <AdjustmentSlider
+                      label="Hue"
+                      value={filters.hue}
                       onChange={(val) => updateFilter('hue', val)}
                       min={-180}
                       max={180}
                       unit="°"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Temperature" 
-                      value={filters.temperature} 
+                    <AdjustmentSlider
+                      label="Temperature"
+                      value={filters.temperature}
                       onChange={(val) => updateFilter('temperature', val)}
                       min={-100}
                       max={100}
                       unit="%"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Tint" 
-                      value={filters.tint} 
+                    <AdjustmentSlider
+                      label="Tint"
+                      value={filters.tint}
                       onChange={(val) => updateFilter('tint', val)}
                       min={-100}
                       max={100}
                       unit="%"
                       defaultValue={0}
                     />
-                    <AdjustmentSlider 
-                      label="Vibrance" 
-                      value={filters.vibrance} 
+                    <AdjustmentSlider
+                      label="Vibrance"
+                      value={filters.vibrance}
                       onChange={(val) => updateFilter('vibrance', val)}
                       min={-100}
                       max={100}
@@ -519,17 +519,17 @@ const ImageEditor = () => {
 
                   {/* Effects */}
                   <Panel header="✨ Effects" key="3" style={{ fontSize: 16, fontWeight: 600 }}>
-                    <AdjustmentSlider 
-                      label="Clarity" 
-                      value={filters.clarity} 
+                    <AdjustmentSlider
+                      label="Clarity"
+                      value={filters.clarity}
                       onChange={(val) => updateFilter('clarity', val)}
                       min={0}
                       max={100}
                       unit="%"
                     />
-                    <AdjustmentSlider 
-                      label="Grain" 
-                      value={filters.grain} 
+                    <AdjustmentSlider
+                      label="Grain"
+                      value={filters.grain}
                       onChange={(val) => updateFilter('grain', val)}
                       min={0}
                       max={100}
@@ -539,9 +539,9 @@ const ImageEditor = () => {
 
                   {/* Details */}
                   <Panel header="🔍 Details" key="4" style={{ fontSize: 16, fontWeight: 600 }}>
-                    <AdjustmentSlider 
-                      label="Sharpness" 
-                      value={filters.sharpness} 
+                    <AdjustmentSlider
+                      label="Sharpness"
+                      value={filters.sharpness}
                       onChange={(val) => updateFilter('sharpness', val)}
                       min={0}
                       max={100}
@@ -553,8 +553,8 @@ const ImageEditor = () => {
                 {/* Action Buttons */}
                 <Card size="small" style={{ borderRadius: 8 }}>
                   <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                    <Button 
-                      icon={<UndoOutlined />} 
+                    <Button
+                      icon={<UndoOutlined />}
                       onClick={resetAll}
                       block
                       size="large"
@@ -562,9 +562,9 @@ const ImageEditor = () => {
                     >
                       Reset All Adjustments
                     </Button>
-                    <Button 
-                      type="primary" 
-                      icon={<SaveOutlined />} 
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
                       onClick={downloadImage}
                       block
                       size="large"
@@ -579,14 +579,14 @@ const ImageEditor = () => {
 
             {/* Preview Area */}
             <Col xs={24} lg={16}>
-              <Card 
-                title={`Live Preview - Rotation: ${rotation}° | Flip: ${flipHorizontal === -1 ? 'H' : ''}${flipVertical === -1 ? 'V' : 'None'}`} 
+              <Card
+                title={`Live Preview - Rotation: ${rotation}° | Flip: ${flipHorizontal === -1 ? 'H' : ''}${flipVertical === -1 ? 'V' : 'None'}`}
                 style={{ height: '100%', borderRadius: 8 }}
                 bodyStyle={{ padding: 0 }}
               >
-                <div style={{ 
-                  position: 'relative', 
-                  height: '70vh', 
+                <div style={{
+                  position: 'relative',
+                  height: '70vh',
                   background: '#1a1a1a',
                   borderRadius: '0 0 8px 8px',
                   overflow: 'hidden',
@@ -594,9 +594,9 @@ const ImageEditor = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <div style={{ 
-                    position: 'relative', 
-                    width: '100%', 
+                  <div style={{
+                    position: 'relative',
+                    width: '100%',
                     height: '100%',
                     maxWidth: '100%',
                     maxHeight: '100%'
@@ -626,14 +626,14 @@ const ImageEditor = () => {
                     />
                   </div>
                 </div>
-                <div style={{ 
-                  padding: 16, 
+                <div style={{
+                  padding: 16,
                   background: '#fafafa',
                   borderTop: '1px solid #f0f0f0'
                 }}>
-                  <p style={{ 
-                    color: '#666', 
-                    textAlign: 'center', 
+                  <p style={{
+                    color: '#666',
+                    textAlign: 'center',
                     margin: 0,
                     fontSize: 14
                   }}>

@@ -127,7 +127,7 @@ export default function ArtisticImageGenerator() {
               </div>
               <div style={styles.uploadHint}>
                 {imageFile ? 'Click to change file' : 'PNG, JPG, JPEG up to 10MB'}
-              </div> 
+              </div>
             </div>
           </div>
         </label>
@@ -160,8 +160,8 @@ export default function ArtisticImageGenerator() {
       </div>
 
       <div style={styles.actions}>
-        <button 
-          onClick={handleSubmit} 
+        <button
+          onClick={handleSubmit}
           style={{
             ...styles.button,
             ...styles.primaryButton,
@@ -180,7 +180,7 @@ export default function ArtisticImageGenerator() {
         </button>
 
         {(imagePreview || prompt) && (
-          <button 
+          <button
             onClick={handleReset}
             style={{
               ...styles.button,
@@ -210,7 +210,7 @@ export default function ArtisticImageGenerator() {
               <img src={generatedImage} alt="Generated artistic version" style={styles.comparisonImage} />
             </div>
           </div>
-          <button 
+          <button
             onClick={handleDownload}
             style={{
               ...styles.button,
@@ -329,7 +329,7 @@ const styles = {
     marginBottom: '0.5rem',
     fontSize: '1.1rem',
   },
-  
+
   required: {
     color: '#ef4444',
     marginLeft: '0.25rem',

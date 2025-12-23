@@ -401,7 +401,7 @@ function SmartCrop() {
   const [hoveredSecondary, setHoveredSecondary] = useState(false);
   const [hoveredRatio, setHoveredRatio] = useState(null);
   const [isPreviewHovered, setIsPreviewHovered] = useState(false);
-  
+
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
   const previewCanvasRef = useRef(null);
@@ -526,7 +526,7 @@ function SmartCrop() {
 
     if (overlayCanvasRef.current) {
       const overlay = overlayCanvasRef.current;
-      const overlaySize = 240; 
+      const overlaySize = 240;
       overlay.width = overlaySize;
       overlay.height = overlaySize;
       const octx = overlay.getContext('2d');
@@ -595,15 +595,15 @@ function SmartCrop() {
   const getRatioBtnStyle = (ratio) => {
     const isActive = ratio === aspect;
     const isHovered = hoveredRatio === ratio && !isActive;
-    
+
     let style = { ...styles.ratioBtn };
-    
+
     if (isActive) {
       Object.assign(style, styles.ratioBtnActive);
     } else if (isHovered) {
       Object.assign(style, styles.ratioBtnHover);
     }
-    
+
     return style;
   };
 

@@ -52,14 +52,14 @@ const BrandKitResult = () => {
             <h3 className="asset-title">Logo</h3>
           </div>
           <div className="asset-preview">
-            <img 
-              src={state.logo} 
-              alt="Logo" 
+            <img
+              src={state.logo}
+              alt="Logo"
               className="asset-image logo-image clickable-image"
               onClick={() => openImageModal(state.logo, "Logo")}
             />
           </div>
-          <button 
+          <button
             className="download-btn"
             onClick={() => downloadAsset(state.logo, "logo.png")}
           >
@@ -75,14 +75,14 @@ const BrandKitResult = () => {
             <h3 className="asset-title">Banner</h3>
           </div>
           <div className="asset-preview">
-            <img 
-              src={state.banner} 
-              alt="Banner" 
+            <img
+              src={state.banner}
+              alt="Banner"
               className="asset-image banner-image clickable-image"
               onClick={() => openImageModal(state.banner, "Banner")}
             />
           </div>
-          <button 
+          <button
             className="download-btn"
             onClick={() => downloadAsset(state.banner, "banner.png")}
           >
@@ -98,14 +98,14 @@ const BrandKitResult = () => {
             <h3 className="asset-title">Poster</h3>
           </div>
           <div className="asset-preview">
-            <img 
-              src={state.poster} 
-              alt="Poster" 
+            <img
+              src={state.poster}
+              alt="Poster"
               className="asset-image poster-image clickable-image"
               onClick={() => openImageModal(state.poster, "Poster")}
             />
           </div>
-          <button 
+          <button
             className="download-btn"
             onClick={() => downloadAsset(state.poster, "poster.png")}
           >
@@ -135,14 +135,14 @@ const BrandKitResult = () => {
               </button>
             </div>
             <div className="modal-image-container">
-              <img 
-                src={selectedImage.src} 
+              <img
+                src={selectedImage.src}
                 alt={selectedImage.title}
                 className="modal-image"
               />
             </div>
             <div className="modal-actions">
-              <button 
+              <button
                 className="modal-download-btn"
                 onClick={() => downloadAsset(selectedImage.src, `${selectedImage.title.toLowerCase()}.png`)}
               >
