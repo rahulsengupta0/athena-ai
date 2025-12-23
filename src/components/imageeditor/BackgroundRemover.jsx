@@ -69,9 +69,9 @@ function BackgroundRemover() {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
     }}>
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ 
-          margin: "0 0 0.5rem 0", 
-          fontSize: "2rem", 
+        <h1 style={{
+          margin: "0 0 0.5rem 0",
+          fontSize: "2rem",
           fontWeight: "700",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           WebkitBackgroundClip: "text",
@@ -79,8 +79,8 @@ function BackgroundRemover() {
         }}>
           AI Background Remover
         </h1>
-        <p style={{ 
-          color: "#6b7280", 
+        <p style={{
+          color: "#6b7280",
           margin: 0,
           fontSize: "1rem"
         }}>
@@ -142,8 +142,8 @@ function BackgroundRemover() {
         </div>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading || !original}
             style={{
               padding: "0.75rem 2rem",
@@ -188,7 +188,7 @@ function BackgroundRemover() {
           </button>
 
           {original && (
-            <button 
+            <button
               type="button"
               onClick={handleReset}
               style={{
@@ -223,9 +223,9 @@ function BackgroundRemover() {
             padding: "1.5rem",
             border: "1px solid #e2e8f0"
           }}>
-            <h3 style={{ 
-              margin: "0 0 1rem 0", 
-              fontSize: "1rem", 
+            <h3 style={{
+              margin: "0 0 1rem 0",
+              fontSize: "1rem",
               fontWeight: "600",
               color: "#374151"
             }}>
@@ -236,14 +236,14 @@ function BackgroundRemover() {
               overflow: "hidden",
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
             }}>
-              <img 
-                src={original} 
-                alt="original" 
+              <img
+                src={original}
+                alt="original"
                 style={{
                   width: "100%",
                   height: "auto",
                   display: "block"
-                }} 
+                }}
               />
             </div>
           </div>
@@ -256,9 +256,9 @@ function BackgroundRemover() {
             padding: "1.5rem",
             border: "1px solid #bbf7d0"
           }}>
-            <h3 style={{ 
-              margin: "0 0 1rem 0", 
-              fontSize: "1rem", 
+            <h3 style={{
+              margin: "0 0 1rem 0",
+              fontSize: "1rem",
               fontWeight: "600",
               color: "#065f46"
             }}>
@@ -270,18 +270,18 @@ function BackgroundRemover() {
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               marginBottom: "1rem"
             }}>
-              <img 
-                src={result} 
-                alt="bg-removed" 
+              <img
+                src={result}
+                alt="bg-removed"
                 style={{
                   width: "100%",
                   height: "auto",
                   display: "block"
-                }} 
+                }}
               />
             </div>
-            <a 
-              href={result} 
+            <a
+              href={result}
               download="bg-removed.png"
               style={{
                 display: "inline-flex",

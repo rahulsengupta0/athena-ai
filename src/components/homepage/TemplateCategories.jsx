@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import businessImg from '../../assets/bussiness.PNG';
-import socialImg from '../../assets/socialMedia.PNG';
-import youtubeImg from '../../assets/youtube.PNG';
-import instaImg from '../../assets/insta.PNG';
-import posterImg from '../../assets/poster.PNG';
-import storyImg from '../../assets/story.PNG';
+import businessImg from '../../assets/bussiness.png';
+import socialImg from '../../assets/socialMedia.png';
+import youtubeImg from '../../assets/youtube.png';
+import instaImg from '../../assets/insta.png';
+import posterImg from '../../assets/poster.png';
+import storyImg from '../../assets/story.png';
 
 const categories = [
   { name: 'Business', path: '/templates/business', image: businessImg },
