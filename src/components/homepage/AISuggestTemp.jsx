@@ -13,65 +13,65 @@ import {
   FiMaximize2,
 } from "react-icons/fi";
 import { FaLinkedin, FaFacebook, FaTwitter, FaPinterest } from "react-icons/fa";
-import BussinessCard from "../../assets/bussiness.PNG";
-import Facebook from "../../assets/facebook.PNG";
-import Instagram from "../../assets/insta.PNG";
-import Social from "../../assets/socialMedia.PNG";
-import Poster from "../../assets/poster.PNG";
-import Youtube from "../../assets/youtube.PNG";
+import BussinessCard from "../../assets/bussiness.png";
+import Facebook from "../../assets/facebook.png";
+import Instagram from "../../assets/insta.png";
+import Social from "../../assets/socialMedia.png";
+import Poster from "../../assets/poster.png";
+import Youtube from "../../assets/youtube.png";
 import api from "../../services/api";
 
 const TEMPLATES = [
-  { 
-    id: 1, 
-    name: 'Social Media Post', 
-    width: 1080, 
-    height: 1080, 
+  {
+    id: 1,
+    name: 'Social Media Post',
+    width: 1080,
+    height: 1080,
     category: 'Social',
     thumbnail: Social,
     description: 'Perfect for engaging social content'
   },
-  { 
-    id: 2, 
-    name: 'Instagram Story', 
-    width: 1080, 
-    height: 1920, 
+  {
+    id: 2,
+    name: 'Instagram Story',
+    width: 1080,
+    height: 1920,
     category: 'Social',
     thumbnail: Instagram,
     description: 'Full-screen stories that captivate'
   },
-  { 
-    id: 3, 
-    name: 'Facebook Cover', 
-    width: 1200, 
-    height: 630, 
+  {
+    id: 3,
+    name: 'Facebook Cover',
+    width: 1200,
+    height: 630,
     category: 'Social',
     thumbnail: Facebook,
     description: 'Professional cover photos'
   },
-  { 
-    id: 4, 
-    name: 'YouTube Thumbnail', 
-    width: 1280, 
-    height: 720, 
+  {
+    id: 4,
+    name: 'YouTube Thumbnail',
+    width: 1280,
+    height: 720,
     category: 'Video',
     thumbnail: Youtube,
     description: 'Click-worthy video thumbnails'
   },
-  { 
-    id: 5, 
-    name: 'Business Card', 
-    width: 1050, 
-    height: 600, 
+  {
+    id: 5,
+    name: 'Business Card',
+    width: 1050,
+    height: 600,
     category: 'Business',
     thumbnail: BussinessCard,
     description: 'Professional networking cards'
   },
-  { 
-    id: 8, 
-    name: 'Poster', 
-    width: 1080, 
-    height: 1350, 
+  {
+    id: 8,
+    name: 'Poster',
+    width: 1080,
+    height: 1350,
     category: 'Print',
     thumbnail: Poster,
     description: 'Eye-catching promotional posters'
@@ -336,9 +336,9 @@ const AISuggestTemp = () => {
                 <FiChevronLeft
                   size={isSmallMobile ? 18 : isPhone ? 20 : 22}
                   color="currentColor"
-                  style={{ 
+                  style={{
                     transition: "color 0.3s",
-                    color: "#7049f7" 
+                    color: "#7049f7"
                   }}
                 />
               </button>
@@ -374,7 +374,7 @@ const AISuggestTemp = () => {
                     { bg: "#C4A484", text: "#ffffff", rgba: "rgba(196, 164, 132, 1)" }, // soft brown
                   ];
                   const footerColor = footerColors[idx % footerColors.length];
-                  
+
                   // Helper to convert rgba string to rgba with opacity
                   const rgbaWithOpacity = (opacity) => {
                     const match = footerColor.rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -383,7 +383,7 @@ const AISuggestTemp = () => {
                     }
                     return footerColor.rgba;
                   };
-                  
+
                   return (
                   <div
                     key={template.id}
@@ -452,7 +452,7 @@ const AISuggestTemp = () => {
                           }
                         }}
                       />
-                      
+
                       {/* Gradient Overlay at Bottom */}
                       <div
                         style={{
@@ -466,7 +466,7 @@ const AISuggestTemp = () => {
                           pointerEvents: "none",
                         }}
                       />
-                      
+
                       {/* Top Gradient Overlay for better text readability */}
                       <div
                         style={{
@@ -532,7 +532,7 @@ const AISuggestTemp = () => {
                       >
                         {template.name}
                       </div>
-                      
+
                       {/* Description */}
                       <div
                         style={{
@@ -573,7 +573,7 @@ const AISuggestTemp = () => {
                           {getCategoryIcon(template.category, template.name)}
                           <span>{template.width} × {template.height}</span>
                         </div>
-                        
+
                         <div
                           style={{
                             fontSize: isSmallMobile ? "0.8rem" : "0.85rem",
@@ -640,9 +640,9 @@ const AISuggestTemp = () => {
                 <FiChevronRight
                   size={isSmallMobile ? 18 : isPhone ? 20 : 22}
                   color="currentColor"
-                  style={{ 
+                  style={{
                     transition: "color 0.3s",
-                    color: "#7049f7" 
+                    color: "#7049f7"
                   }}
                 />
               </button>

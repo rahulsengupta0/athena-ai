@@ -1044,9 +1044,9 @@ const handleCreateClick = async () => {
       )}
 
       {/* Brand Kit Modal */}
-      <BrandKitModal 
-        isOpen={brandKitOpen} 
-        onClose={() => setBrandKitOpen(false)} 
+      <BrandKitModal
+        isOpen={brandKitOpen}
+        onClose={() => setBrandKitOpen(false)}
       />
 
       {/* Conditional sections based on active tab */}
