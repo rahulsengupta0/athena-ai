@@ -15,7 +15,8 @@ export const getAutoSizedTextFrame = (layer, text, layout) => {
 
   const padding = 12;
   const minWidth = 160;
-  const maxWidth = Math.min(layout.width * 0.75, layout.width - layer.x - 20);
+  const widthConstraint = Math.min(layout.width * 0.75, layout.width - layer.x - 20);
+  const maxWidth = Math.max(minWidth, widthConstraint);
   const baseWidth = layer.width || maxWidth;
   const width = Math.min(Math.max(baseWidth, minWidth), maxWidth);
 
