@@ -59,4 +59,3 @@ export const applyLayerEffectsToNode = (node, effects, scaleFactor = 1) => {
 
   node.getLayer()?.batchDraw();
 };
-

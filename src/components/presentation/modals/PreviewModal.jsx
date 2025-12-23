@@ -153,14 +153,22 @@ const PreviewShapeLayer = ({ layer, x, y, width, height, scale }) => {
   );
 };
 
-const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) => {
+const PreviewModal = ({
+  isOpen,
+  onClose,
+  slides,
+  layout,
+  startSlideIndex = 0,
+  mode = 'manual',
+  defaultDuration = 5,
+}) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(startSlideIndex);
 
   // Calculate preview scale to fit viewport
   const previewScale = useMemo(() => {
     if (!isOpen) return 1;
-    const viewportWidth = window.innerWidth - 160; // Account for padding and controls
-    const viewportHeight = window.innerHeight - 160;
+    const viewportWidth = window.innerWidth - 80; // Account for minimal padding and chrome
+    const viewportHeight = window.innerHeight - 120;
     return Math.min(viewportWidth / layout.width, viewportHeight / layout.height, 1);
   }, [isOpen, layout]);
 
@@ -169,7 +177,7 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
 
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation (always enabled to allow manual override)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -201,6 +209,18 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
   const handleNext = () => {
     setCurrentSlideIndex((prev) => (prev < slides.length - 1 ? prev + 1 : 0));
   };
+
+  // Auto play logic
+  useEffect(() => {
+    if (!isOpen || mode !== 'autoplay' || slides.length === 0) return;
+    const durationSeconds =
+      slides[currentSlideIndex]?.animationDuration ?? defaultDuration;
+    const timer = window.setTimeout(
+      () => setCurrentSlideIndex((prev) => (prev < slides.length - 1 ? prev + 1 : 0)),
+      Math.max(1, durationSeconds) * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [isOpen, mode, currentSlideIndex, slides, defaultDuration]);
 
   const renderSlide = (slide) => {
     if (!slide) return null;
@@ -285,18 +305,20 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
         bottom: 0,
         background: 'rgba(15, 23, 42, 0.95)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'stretch',
+        justifyContent: 'stretch',
         zIndex: 9999,
-        padding: '40px',
+        padding: '24px',
       }}
       onClick={onClose}
     >
       <div
         style={{
           position: 'relative',
-          background: '#ffffff',
-          borderRadius: '8px',
+          width: '100%',
+          height: '100%',
+          background: currentSlide?.background || '#ffffff',
+          borderRadius: '12px',
           boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           display: 'flex',
@@ -312,7 +334,7 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
             justifyContent: 'space-between',
             padding: '16px 20px',
             borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
-            background: '#ffffff',
+            background: currentSlide?.background || '#ffffff',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -349,8 +371,9 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '40px',
+            padding: 0,
             position: 'relative',
+            flex: 1,
           }}
         >
           {/* Previous button */}
@@ -427,7 +450,7 @@ const PreviewModal = ({ isOpen, onClose, slides, layout, startSlideIndex = 0 }) 
               gap: '8px',
               padding: '16px 20px',
               borderTop: '1px solid rgba(15, 23, 42, 0.1)',
-              background: '#f8fafc',
+              background: currentSlide?.background || '#f8fafc',
             }}
           >
             {slides.map((_, index) => (

@@ -12,3 +12,12 @@ export const getKonvaFontStyle = (fontStyle, fontWeight) => {
   return parts.length ? parts.join(' ') : 'normal';
 };
 
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Stage, Layer, Group, Text, Rect, Circle, Line, Ellipse, Image as KonvaImage } from 'react-konva';
 import {
   ChevronLeft,
@@ -12,6 +12,7 @@ import {
   PanelRight,
   ChevronRight,
   X,
+  Timer,
 } from 'lucide-react';
 import SelectionTool from './tools/SelectionTool';
 import TextTools from './tools/TextTools';
@@ -28,6 +29,8 @@ import TextEnhanceControls from './ai/TextEnhanceControls';
 import ImageGenerateControls from './ai/ImageGenerateControls';
 import ShapeImageFillControls from './effects/ShapeImageFillControls';
 import ImageLibrary from './controls/ImageLibrary';
+import ResizeHandles from './canvas/ResizeHandles';
+import LayerActionBar from './canvas/LayerActionBar';
 import FontFamilySelector from './controls/FontFamilySelector';
 import FontStyleControls from './controls/FontStyleControls';
 import TextAlignControls from './controls/TextAlignControls';
@@ -39,6 +42,7 @@ import { normalizeImageEffects } from './utils/effectDefaults';
 import { createImageLayer } from './utils/imageUtils';
 import { getAutoSizedTextFrame } from './utils/textLayout';
 import { getKonvaFontStyle } from './utils/fontUtils';
+import { enhancePresentationText } from './ai/api';
 
 const useLayerEffects = (nodeRef, effects, scaleFactor = 1, dependencies = []) => {
   useEffect(() => {
@@ -62,20 +66,50 @@ const useLayerBlur = (layerRef, blurValue = 0, scaleFactor = 1) => {
   }, [layerRef, blurValue, scaleFactor]);
 };
 
-const ElementLayer = ({ effects, scale, children }) => {
+const ElementLayer = ({
+  effects,
+  scale,
+  children,
+  showSelection = false,
+  selectionTargetRef = null,
+  onResize = null,
+  selectionVersion = 0,
+}) => {
   const layerRef = useRef(null);
   const blurValue = effects?.blur || 0;
   useLayerBlur(layerRef, blurValue, scale);
   return (
     <Layer ref={layerRef}>
       {children}
+      {showSelection && selectionTargetRef ? (
+        <ResizeHandles
+          isVisible={showSelection}
+          targetRef={selectionTargetRef}
+          scale={scale}
+          onResize={onResize}
+          selectionKey={selectionVersion}
+        />
+      ) : null}
     </Layer>
   );
 };
 
 
 // Image component for rendering images on canvas
-const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSelected, scale, onDragEnd, onClick }) => {
+const ImageLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragMove,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imageRef = useRef(null);
 
@@ -98,25 +132,15 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
 
   return (
     <Group
+      ref={ref}
       x={scaledX}
       y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
     >
-      {/* Selection border */}
-      {isSelected && (
-        <Rect
-          x={-2}
-          y={-2}
-          width={scaledWidth + 4}
-          height={scaledHeight + 4}
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-        />
-      )}
       <KonvaImage
         ref={imageRef}
         x={0}
@@ -142,43 +166,37 @@ const ImageLayer = ({ layer, scaledX, scaledY, scaledWidth, scaledHeight, isSele
       )}
     </Group>
   );
-};
+});
+ImageLayer.displayName = 'ImageLayer';
 
-const TextLayer = ({
-  layer,
-  scaledX,
-  scaledY,
-  scaledWidth,
-  scaledHeight,
-  isSelected,
-  scale,
-  onDragEnd,
-  onClick,
-}) => {
+const TextLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragMove,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const textRef = useRef(null);
   useLayerEffects(textRef, layer.effects, scale);
 
   return (
     <Group
+      ref={ref}
       x={scaledX}
       y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
     >
-      {isSelected && (
-        <Rect
-          x={-2}
-          y={-2}
-          width={scaledWidth + 4}
-          height={scaledHeight + 4}
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-          cornerRadius={12}
-        />
-      )}
       <Text
         ref={textRef}
         x={0}
@@ -198,7 +216,8 @@ const TextLayer = ({
       />
     </Group>
   );
-};
+});
+TextLayer.displayName = 'TextLayer';
 
 // Helper to create clip function for shapes (similar to CSS clipPath)
 const getShapeClipFunc = (shape, width, height) => {
@@ -225,17 +244,20 @@ const getShapeClipFunc = (shape, width, height) => {
   };
 };
 
-const ShapeLayer = ({
-  layer,
-  scaledX,
-  scaledY,
-  scaledWidth,
-  scaledHeight,
-  isSelected,
-  scale,
-  onDragEnd,
-  onClick,
-}) => {
+const ShapeLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragMove,
+    onDragEnd,
+    onClick,
+  },
+  ref,
+) => {
   const shapeRef = useRef(null);
   const imageRef = useRef(null);
   const [imageData, setImageData] = useState(null);
@@ -293,66 +315,6 @@ const ShapeLayer = ({
   const renderShape = () => {
     const hasImageFillRender = layer.fillType === 'image' && layer.fillImageSrc && imageDims;
     const clipFunc = hasImageFillRender ? getShapeClipFunc(layer.shape, scaledWidth, scaledHeight) : null;
-    
-    // Render selection outline
-    const renderSelection = () => {
-      if (!isSelected) return null;
-      
-      if (layer.shape === 'circle') {
-        const radius = Math.min(scaledWidth, scaledHeight) / 2;
-        return (
-          <Circle
-            x={radius}
-            y={radius}
-            radius={radius + 2}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        );
-      }
-      
-      if (layer.shape === 'ellipse') {
-        return (
-          <Ellipse
-            x={scaledWidth / 2}
-            y={scaledHeight / 2}
-            radiusX={scaledWidth / 2 + 2}
-            radiusY={scaledHeight / 2 + 2}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        );
-      }
-      
-      if (layer.shape === 'rectangle') {
-        return (
-          <Rect
-            x={-2}
-            y={-2}
-            width={scaledWidth + 4}
-            height={scaledHeight + 4}
-            stroke="rgba(79, 70, 229, 0.9)"
-            strokeWidth={2}
-            fill="transparent"
-            cornerRadius={layer.borderRadius * scale + 2}
-          />
-        );
-      }
-      
-      const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
-      if (points.length === 0) return null;
-      return (
-        <Line
-          points={points.map((p) => p - 2)}
-          closed
-          stroke="rgba(79, 70, 229, 0.9)"
-          strokeWidth={2}
-          fill="transparent"
-        />
-      );
-    };
     
     // Render shape with image fill or color fill
     const renderShapeContent = () => {
@@ -440,24 +402,16 @@ const ShapeLayer = ({
       return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
     };
     
-    return (
-      <>
-        {renderSelection()}
-        {renderShapeContent()}
-      </>
-    );
+    return renderShapeContent();
   };
-
-  const circleOffset = Math.min(scaledWidth, scaledHeight) / 2;
-  const isCircle = layer.shape === 'circle';
-  const groupX = isCircle ? scaledX + circleOffset : scaledX;
-  const groupY = isCircle ? scaledY + circleOffset : scaledY;
 
   return (
     <Group
-      x={groupX}
-      y={groupY}
+      ref={ref}
+      x={scaledX}
+      y={scaledY}
       draggable
+      onDragMove={onDragMove}
       onDragEnd={onDragEnd}
       onClick={onClick}
       onTap={onClick}
@@ -465,7 +419,8 @@ const ShapeLayer = ({
       {renderShape()}
     </Group>
   );
-};
+});
+ShapeLayer.displayName = 'ShapeLayer';
 
 const createLayer = (definition, coordinates) => {
   const preset = definition.preset;
@@ -532,6 +487,8 @@ const createLayer = (definition, coordinates) => {
   return base;
 };
 
+const DEFAULT_SLIDE_DURATION = 5;
+
 const PresentationWorkspace = ({ layout, onBack }) => {
   // Constants for canvas sizing
   const maxCanvasWidth = 980;
@@ -549,6 +506,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
       name: 'Slide 1',
       background: '#ffffff',
       layers: [],
+      animationDuration: DEFAULT_SLIDE_DURATION,
     },
   ]);
   const [activeSlideId, setActiveSlideId] = useState('slide-1');
@@ -559,14 +517,35 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [previewDropdownOpen, setPreviewDropdownOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState('manual');
   const [zoom, setZoom] = useState(initialZoom);
   const [isPanning, setIsPanning] = useState(false);
   const [imageLibrary, setImageLibrary] = useState([]);
+  const [enhancingLayerId, setEnhancingLayerId] = useState(null);
+  const [uploadingLayerId, setUploadingLayerId] = useState(null);
+  const [selectionBounds, setSelectionBounds] = useState(null);
+  const [isTimingPanelOpen, setIsTimingPanelOpen] = useState(false);
+  const [timingToast, setTimingToast] = useState(null);
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
+  const stageWrapperRef = useRef(null);
   const zoomTargetRef = useRef({ scrollLeft: null, scrollTop: null });
   const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const hasPannedRef = useRef(false);
+  const layerNodeRefs = useRef({});
+  const inspectorRef = useRef(null);
+  const timingButtonRef = useRef(null);
+  const timingPanelRef = useRef(null);
+  const previewButtonRef = useRef(null);
+  const previewDropdownRef = useRef(null);
+  const getLayerNodeRef = (layerId) => {
+    if (!layerNodeRefs.current[layerId]) {
+      layerNodeRefs.current[layerId] = React.createRef();
+    }
+    return layerNodeRefs.current[layerId];
+  };
+
   const IMAGE_LIBRARY_STORAGE_KEY = 'presentation-image-library';
 
   // History management hook
@@ -694,10 +673,31 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   );
 
   useEffect(() => {
+    if (!activeSlide) return;
+    const ids = new Set(activeSlide.layers.map((layer) => layer.id));
+    Object.keys(layerNodeRefs.current).forEach((layerId) => {
+      if (!ids.has(layerId)) {
+        delete layerNodeRefs.current[layerId];
+      }
+    });
+  }, [activeSlide]);
+
+  useEffect(() => {
     if (!activeSlide && slides.length > 0) {
       setActiveSlideId(slides[0].id);
     }
   }, [activeSlide, slides]);
+
+  useEffect(() => {
+    if (!activeSlide) return;
+    const ids = new Set(activeSlide.layers.map((layer) => layer.id));
+    if (enhancingLayerId && !ids.has(enhancingLayerId)) {
+      setEnhancingLayerId(null);
+    }
+    if (uploadingLayerId && !ids.has(uploadingLayerId)) {
+      setUploadingLayerId(null);
+    }
+  }, [activeSlide, enhancingLayerId, uploadingLayerId]);
 
   // Undo/Redo handlers
   const onUndo = () => {
@@ -1102,6 +1102,20 @@ const handleApplyEnhancedText = (enhancedText) => {
   });
 };
 
+  const handleLayerDragMove = (layer, e) => {
+    let node = e.target;
+    if (node.getType && node.getType() !== 'Group') {
+      node = node.getParent();
+    }
+    if (!node) return;
+    setSelectionBounds({
+      x: node.x(),
+      y: node.y(),
+      width: layer.width * scale,
+      height: layer.height * scale,
+    });
+  };
+
   const handleLayerDragEnd = (layer, e) => {
     // Get the Group node (parent) if dragging a child element
     let node = e.target;
@@ -1114,17 +1128,6 @@ const handleApplyEnhancedText = (enhancedText) => {
     let newX = node.x() / scale;
     let newY = node.y() / scale;
     
-    // For circles, the Group position is centered, so we need to adjust
-    if (layer.type === 'shape' && layer.shape === 'circle') {
-      const radius = Math.min(layer.width, layer.height) / 2;
-      newX = newX - radius;
-      newY = newY - radius;
-    }
-    
-    // Clamp to canvas bounds
-    newX = Math.max(0, Math.min(layout.width - layer.width, newX));
-    newY = Math.max(0, Math.min(layout.height - layer.height, newY));
-
     updateActiveSlide((slide) => {
       const updatedSlide = {
         ...slide,
@@ -1146,7 +1149,80 @@ const handleApplyEnhancedText = (enhancedText) => {
     // Reset node position to keep it in sync with the new coordinates
     // scale already includes zoom
     node.position({ x: newX * scale, y: newY * scale });
+    setSelectionBounds({
+      x: newX * scale,
+      y: newY * scale,
+      width: layer.width * scale,
+      height: layer.height * scale,
+    });
     };
+
+  const handleLayerResize = (layerId, node) => {
+    if (!node || !activeSlide) return;
+    const layer = activeSlide.layers.find((l) => l.id === layerId);
+    if (!layer) return;
+
+    const rect = node.getClientRect({ skipStroke: false });
+    const rawWidth = node.width();
+    const rawHeight = node.height();
+    const scaleX = node.scaleX() || 1;
+    const scaleY = node.scaleY() || 1;
+
+    const widthSource = rawWidth ? rawWidth * scaleX : rect.width;
+    const heightSource = rawHeight ? rawHeight * scaleY : rect.height;
+
+    const scaledWidth = Math.max(12, widthSource);
+    const scaledHeight = Math.max(12, heightSource);
+
+    // Reset scaling so future drags/resizes start from 1
+    node.scaleX(1);
+    node.scaleY(1);
+
+    let newWidth = scaledWidth / scale;
+    let newHeight = scaledHeight / scale;
+    let newX = node.x() / scale;
+    let newY = node.y() / scale;
+
+    if (layer.type === 'shape' && layer.shape === 'circle') {
+      const size = Math.max(newWidth, newHeight);
+      newWidth = size;
+      newHeight = size;
+    }
+
+    const maxWidth = layout.width;
+    const maxHeight = layout.height;
+
+    newWidth = Math.max(8, Math.min(maxWidth, newWidth));
+    newHeight = Math.max(8, Math.min(maxHeight, newHeight));
+    newX = Math.max(0, Math.min(maxWidth - newWidth, newX));
+    newY = Math.max(0, Math.min(maxHeight - newHeight, newY));
+
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        layers: slide.layers.map((l) =>
+          l.id === layerId
+            ? {
+                ...l,
+                width: newWidth,
+                height: newHeight,
+                x: newX,
+                y: newY,
+              }
+            : l,
+        ),
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+    setSelectionBounds({
+      x: newX * scale,
+      y: newY * scale,
+      width: newWidth * scale,
+      height: newHeight * scale,
+    });
+  };
 
   const handleLayerClick = (layer, e) => {
     e.cancelBubble = true;
@@ -1157,6 +1233,87 @@ const handleApplyEnhancedText = (enhancedText) => {
     if (!activeSlide) return null;
     return activeSlide.layers.find((layer) => layer.id === selectedLayerId) || null;
   }, [activeSlide, selectedLayerId]);
+  const slideDuration = activeSlide?.animationDuration ?? DEFAULT_SLIDE_DURATION;
+  useEffect(() => {
+    setIsTimingPanelOpen(false);
+  }, [activeSlideId]);
+
+  useEffect(() => {
+    if (!isTimingPanelOpen) return;
+    const handleClickAway = (event) => {
+      const buttonEl = timingButtonRef.current;
+      const panelEl = timingPanelRef.current;
+      if (
+        buttonEl &&
+        panelEl &&
+        !buttonEl.contains(event.target) &&
+        !panelEl.contains(event.target)
+      ) {
+        setIsTimingPanelOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickAway, true);
+    return () => document.removeEventListener('pointerdown', handleClickAway, true);
+  }, [isTimingPanelOpen]);
+
+  useEffect(() => {
+    if (!previewDropdownOpen) return;
+    const handleClickAway = (event) => {
+      const buttonEl = previewButtonRef.current;
+      const dropdownEl = previewDropdownRef.current;
+      if (
+        buttonEl &&
+        dropdownEl &&
+        !buttonEl.contains(event.target) &&
+        !dropdownEl.contains(event.target)
+      ) {
+        setPreviewDropdownOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickAway, true);
+    return () => document.removeEventListener('pointerdown', handleClickAway, true);
+  }, [previewDropdownOpen]);
+
+  const updateBoundsFromLayer = useCallback(
+    (layer) => {
+      if (!layer) {
+        setSelectionBounds(null);
+        return;
+      }
+      setSelectionBounds({
+        x: layer.x * scale,
+        y: layer.y * scale,
+        width: layer.width * scale,
+        height: layer.height * scale,
+      });
+    },
+    [scale],
+  );
+
+  useEffect(() => {
+    updateBoundsFromLayer(selectedLayer);
+  }, [selectedLayer, updateBoundsFromLayer]);
+
+  const updateLayerById = (layerId, updater) => {
+    if (!layerId) return;
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        layers: slide.layers.map((layer) => {
+          if (layer.id !== layerId) return layer;
+          const patch = typeof updater === 'function' ? updater(layer) : updater;
+          if (!patch) return layer;
+          return {
+            ...layer,
+            ...patch,
+          };
+        }),
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+  };
 
   const handleLayerChange = (patch) => {
     if (!selectedLayer) return;
@@ -1178,6 +1335,181 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
   };
 
+  const handleLayerEditButton = (layer) => {
+    if (!layer) return;
+    setSelectedLayerId(layer.id);
+    setRightSidebarVisible(true);
+    inspectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleLayerEnhance = async (layer) => {
+    if (!layer || enhancingLayerId === layer.id) return;
+    if (layer.type === 'text') {
+      if (!layer.text?.trim()) return;
+      setEnhancingLayerId(layer.id);
+      try {
+        const enhanced = await enhancePresentationText({
+          text: layer.text,
+          isHeading: (layer.fontSize || 16) >= 32,
+        });
+        const framePatch = getAutoSizedTextFrame(layer, enhanced, layout) || {};
+        updateLayerById(layer.id, {
+          text: enhanced,
+          ...framePatch,
+        });
+      } catch (error) {
+        console.error('Failed to enhance text', error);
+      } finally {
+        setEnhancingLayerId(null);
+      }
+      return;
+    }
+
+    if (layer.type === 'image') {
+      setEnhancingLayerId(layer.id);
+      try {
+        updateLayerById(layer.id, (currentLayer) => {
+          const currentEffects = normalizeImageEffects(currentLayer.effects);
+          const nextBrightness = Math.min(1, (currentEffects.brightness || 0) + 0.2);
+          return {
+            effects: {
+              ...currentEffects,
+              brightness: Number(nextBrightness.toFixed(2)),
+            },
+          };
+        });
+      } finally {
+        setEnhancingLayerId(null);
+      }
+    }
+  };
+
+  const handleSlideTimingChange = (value) => {
+    if (!activeSlide) return;
+    const numeric = Number(value);
+    const clamped = Number.isFinite(numeric)
+      ? Math.max(1, Math.min(60, numeric))
+      : DEFAULT_SLIDE_DURATION;
+
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        animationDuration: clamped,
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
+    });
+  };
+
+  const handleApplyTimingToAllSlides = () => {
+    if (!slides.length) return;
+    const duration = activeSlide?.animationDuration ?? DEFAULT_SLIDE_DURATION;
+    const clamped = Math.max(1, Math.min(60, duration));
+    setSlides((prevSlides) => {
+      const updatedSlides = prevSlides.map((slide) => ({
+        ...slide,
+        animationDuration: clamped,
+      }));
+      saveToHistory(updatedSlides);
+      return updatedSlides;
+    });
+    setTimingToast('Timing applied to all slides');
+    setTimeout(() => setTimingToast(null), 4000);
+  };
+
+  const openPreview = (mode) => {
+    setPreviewMode(mode);
+    setIsPreviewMode(true);
+    setPreviewDropdownOpen(false);
+
+    // Try to enter browser fullscreen for a true presentation feel
+    if (typeof document !== 'undefined') {
+      const root =
+        document.fullscreenElement ||
+        document.documentElement ||
+        document.body;
+      const requestFullscreen =
+        root.requestFullscreen ||
+        root.webkitRequestFullscreen ||
+        root.mozRequestFullScreen ||
+        root.msRequestFullscreen;
+      try {
+        requestFullscreen && requestFullscreen.call(root);
+      } catch {
+        // Ignore fullscreen errors (browser may block it)
+      }
+    }
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewMode(false);
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      try {
+        document.exitFullscreen?.();
+      } catch {
+        // Ignore fullscreen errors
+      }
+    }
+  };
+
+  const handleLayerImageUpload = (layer) => {
+    if (!layer || layer.type !== 'image') return;
+    if (typeof window === 'undefined') return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+
+    const cleanup = () => {
+      input.remove();
+    };
+
+    input.onchange = (event) => {
+      const file = event.target?.files?.[0];
+      if (!file) {
+        cleanup();
+        return;
+      }
+      setUploadingLayerId(layer.id);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== 'string') {
+          setUploadingLayerId(null);
+          cleanup();
+          return;
+        }
+        const img = new window.Image();
+        img.onload = () => {
+          updateLayerById(layer.id, {
+            src: result,
+          });
+          registerImageInLibrary(
+            { src: result, width: img.width, height: img.height },
+            { label: layer.name || 'Image', origin: 'upload' },
+          );
+          setUploadingLayerId(null);
+          cleanup();
+        };
+        img.onerror = () => {
+          setUploadingLayerId(null);
+          cleanup();
+        };
+        img.src = result;
+      };
+      reader.onerror = () => {
+        setUploadingLayerId(null);
+        cleanup();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    document.body.appendChild(input);
+    input.click();
+  };
+
   const handleRemoveLayer = (layerId) => {
     updateActiveSlide((slide) => {
       const updatedSlide = {
@@ -1190,6 +1522,12 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
     if (selectedLayerId === layerId) {
       setSelectedLayerId(null);
+    }
+    if (enhancingLayerId === layerId) {
+      setEnhancingLayerId(null);
+    }
+    if (uploadingLayerId === layerId) {
+      setUploadingLayerId(null);
     }
   };
 
@@ -1255,6 +1593,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       name: `Slide ${slides.length + 1}`,
       background: '#ffffff',
       layers: [],
+      animationDuration: DEFAULT_SLIDE_DURATION,
     };
     
     let updatedSlides;
@@ -1403,6 +1742,25 @@ const handleApplyEnhancedText = (enhancedText) => {
             >
               {layout.name}
             </div>
+
+            {timingToast && (
+              <div
+                style={{
+                  position: 'fixed',
+                  bottom: 28,
+                  right: 28,
+                  background: 'rgba(15, 23, 42, 0.92)',
+                  color: '#fff',
+                  padding: '10px 16px',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.35)',
+                  zIndex: 1000,
+                }}
+              >
+                {timingToast}
+              </div>
+            )}
             <div
               style={{
                 fontSize: '0.8rem',
@@ -1442,21 +1800,85 @@ const handleApplyEnhancedText = (enhancedText) => {
               background: 'rgba(15, 23, 42, 0.1)',
             }}
           />
-          <button
-            onClick={() => setIsPreviewMode(true)}
-            style={{
-              border: '1px solid rgba(15, 23, 42, 0.1)',
-              background: 'rgba(15, 23, 42, 0.04)',
-              borderRadius: 10,
-              padding: '6px 14px',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              color: '#0f172a',
-              cursor: 'pointer',
-            }}
-          >
-            Preview
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button
+              ref={previewButtonRef}
+              onClick={() => setPreviewDropdownOpen((prev) => !prev)}
+              style={{
+                border: '1px solid rgba(15, 23, 42, 0.1)',
+                background: 'rgba(15, 23, 42, 0.04)',
+                borderRadius: 10,
+                padding: '6px 14px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                color: '#0f172a',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              Preview
+              <span style={{ fontSize: '0.7rem' }}>▾</span>
+            </button>
+            {previewDropdownOpen && (
+              <div
+                ref={previewDropdownRef}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 6px)',
+                  width: 240,
+                  borderRadius: 14,
+                  background: '#ffffff',
+                  border: '1px solid rgba(15, 23, 42, 0.08)',
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                  padding: '8px 0',
+                  zIndex: 50,
+                }}
+              >
+                <button
+                  onClick={() => openPreview('manual')}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>Present fullscreen</div>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                    Use ← → keys to move through slides.
+                  </p>
+                </button>
+                <div
+                  style={{
+                    height: 1,
+                    background: 'rgba(15, 23, 42, 0.06)',
+                    margin: '4px 0',
+                  }}
+                />
+                <button
+                  onClick={() => openPreview('autoplay')}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>Auto play</div>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                    Plays fullscreen using slide timings.
+                  </p>
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsShareModalOpen(true)}
             style={{
@@ -1678,13 +2100,14 @@ const handleApplyEnhancedText = (enhancedText) => {
           <div
             style={{
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
-              gap: '8px',
+              gap: '12px',
               justifyContent: 'space-between',
               flexShrink: 0,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -1706,6 +2129,98 @@ const handleApplyEnhancedText = (enhancedText) => {
                 Tip: Choose a preset on the right, then click anywhere on the slide.
               </span>
             </div>
+
+            <div style={{ position: 'relative', flex: '0 1 auto' }}>
+              <button
+                ref={timingButtonRef}
+                onClick={() => setIsTimingPanelOpen((prev) => !prev)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  background: '#ffffff',
+                  border: '1px solid rgba(148, 163, 184, 0.18)',
+                  fontWeight: 600,
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  boxShadow: isTimingPanelOpen ? '0 10px 25px rgba(15, 23, 42, 0.12)' : 'none',
+                }}
+              >
+                <Timer size={16} color="#4f46e5" />
+                <span>{slideDuration}s</span>
+              </button>
+              {isTimingPanelOpen && (
+                <div
+                  ref={timingPanelRef}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 10px)',
+                    right: 0,
+                    width: 320,
+                    borderRadius: 16,
+                    background: '#ffffff',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    boxShadow: '0 18px 40px rgba(15, 23, 42, 0.2)',
+                    padding: '14px 16px',
+                    zIndex: 20,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>Slide animation timing</span>
+                    <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 600 }}>
+                      {slideDuration}s
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      type="range"
+                      min={1}
+                      max={60}
+                      value={slideDuration}
+                      onChange={(e) => handleSlideTimingChange(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      max={60}
+                      value={slideDuration}
+                      onChange={(e) => handleSlideTimingChange(e.target.value)}
+                      style={{
+                        width: 60,
+                        borderRadius: 10,
+                        border: '1px solid rgba(148, 163, 184, 0.5)',
+                        padding: '6px 8px',
+                        textAlign: 'center',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleApplyTimingToAllSlides}
+                    style={{
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '8px 12px',
+                      background: '#4f46e5',
+                      color: '#fff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Apply to all slides
+                  </button>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', lineHeight: 1.5 }}>
+                    Determines how long this slide stays visible when animations auto-play.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div
               style={{
                 display: 'inline-flex',
@@ -1748,6 +2263,7 @@ const handleApplyEnhancedText = (enhancedText) => {
             className="custom-scrollbar"
           >
             <div
+              ref={stageWrapperRef}
               style={{
                 width: canvasRenderWidth,
                 height: canvasRenderHeight,
@@ -1805,9 +2321,9 @@ const handleApplyEnhancedText = (enhancedText) => {
                   />
                 </Layer>
                 {activeSlide?.layers.map((layer) => {
+                  const layerRef = getLayerNodeRef(layer.id);
                   if (!layer.visible) return null;
 
-                  const isSelected = layer.id === selectedLayerId;
                   const scaledX = layer.x * scale;
                   const scaledY = layer.y * scale;
                   const scaledWidth = layer.width * scale;
@@ -1818,13 +2334,14 @@ const handleApplyEnhancedText = (enhancedText) => {
                   if (layer.type === 'text') {
                     renderedLayer = (
                       <TextLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -1832,13 +2349,14 @@ const handleApplyEnhancedText = (enhancedText) => {
                   } else if (layer.type === 'image') {
                     renderedLayer = (
                       <ImageLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -1846,13 +2364,14 @@ const handleApplyEnhancedText = (enhancedText) => {
                   } else if (layer.type === 'shape') {
                     renderedLayer = (
                       <ShapeLayer
+                        ref={layerRef}
                         layer={layer}
                         scaledX={scaledX}
                         scaledY={scaledY}
                         scaledWidth={scaledWidth}
                         scaledHeight={scaledHeight}
-                        isSelected={isSelected}
                         scale={scale}
+                        onDragMove={(e) => handleLayerDragMove(layer, e)}
                         onDragEnd={(e) => handleLayerDragEnd(layer, e)}
                         onClick={(e) => handleLayerClick(layer, e)}
                       />
@@ -1861,13 +2380,37 @@ const handleApplyEnhancedText = (enhancedText) => {
 
                   if (!renderedLayer) return null;
 
+                  const isSelected = selectedLayerId === layer.id;
+                  const selectionVersion = isSelected
+                    ? `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${scale}`
+                    : 0;
+
                   return (
-                    <ElementLayer key={layer.id} effects={layer.effects} scale={scale}>
+                    <ElementLayer
+                      key={layer.id}
+                      effects={layer.effects}
+                      scale={scale}
+                      showSelection={isSelected}
+                      selectionTargetRef={layerRef}
+                      onResize={(node) => handleLayerResize(layer.id, node)}
+                      selectionVersion={selectionVersion}
+                    >
                       {renderedLayer}
                     </ElementLayer>
                   );
                 })}
               </Stage>
+              <LayerActionBar
+                layer={selectedLayer}
+                bounds={selectionBounds}
+                onDuplicate={(layer) => handleDuplicateLayer(layer.id)}
+                onEdit={handleLayerEditButton}
+                onDelete={(layer) => handleRemoveLayer(layer.id)}
+                onEnhance={handleLayerEnhance}
+                onUpload={handleLayerImageUpload}
+                enhancing={selectedLayer ? enhancingLayerId === selectedLayer.id : false}
+                uploading={selectedLayer ? uploadingLayerId === selectedLayer.id : false}
+              />
             </div>
           </div>
         </section>
@@ -1966,20 +2509,20 @@ const handleApplyEnhancedText = (enhancedText) => {
             }}
           />
 
-          <div>
-            <span
-              style={{
-                fontSize: '0.78rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.12em',
-                color: '#94a3b8',
-                fontWeight: 700,
-              }}
-            >
-              Inspector
-            </span>
+        <div ref={inspectorRef}>
+          <span
+            style={{
+              fontSize: '0.78rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: '#94a3b8',
+              fontWeight: 700,
+            }}
+          >
+            Inspector
+          </span>
 
-            {selectedLayer ? (
+          {selectedLayer ? (
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div
                   style={{
@@ -2312,10 +2855,12 @@ const handleApplyEnhancedText = (enhancedText) => {
       {/* Preview Modal */}
       <PreviewModal
         isOpen={isPreviewMode}
-        onClose={() => setIsPreviewMode(false)}
+        onClose={handleClosePreview}
         slides={slides}
         layout={layout}
         startSlideIndex={startSlideIndex}
+        mode={previewMode}
+        defaultDuration={DEFAULT_SLIDE_DURATION}
       />
 
       {/* Share Modal */}
