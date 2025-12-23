@@ -232,18 +232,18 @@ const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, o
                       }}
                     />
                   ) : (
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: '0.85rem',
-                        fontWeight: isSelected ? 600 : 500,
-                        color: layer.visible ? '#0f172a' : '#94a3b8',
-                        textDecoration: layer.visible ? 'none' : 'line-through',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: '0.85rem',
+                      fontWeight: isSelected ? 600 : 500,
+                      color: layer.visible ? '#0f172a' : '#94a3b8',
+                      textDecoration: layer.visible ? 'none' : 'line-through',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                         cursor: 'text',
-                      }}
+                    }}
                       onDoubleClick={(e) => startRenameLayer(layer, e)}
                       title="Double-click to rename"
                     >

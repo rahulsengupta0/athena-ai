@@ -647,7 +647,7 @@ const ShareModal = ({ isOpen, onClose, slides, layout }) => {
                     </>
                   ) : (
                     <>
-                      {layout.width} × {layout.height}px • {slides.length} slide{slides.length !== 1 ? 's' : ''}
+                  {layout.width} × {layout.height}px • {slides.length} slide{slides.length !== 1 ? 's' : ''}
                     </>
                   )}
                 </div>

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   X,
   Timer,
+  GripVertical,
 } from 'lucide-react';
 import SelectionTool from './tools/SelectionTool';
 import TextTools from './tools/TextTools';
@@ -31,6 +32,7 @@ import ImageGenerateControls from './ai/ImageGenerateControls';
 import ShapeImageFillControls from './effects/ShapeImageFillControls';
 import ImageLibrary from './controls/ImageLibrary';
 import ResizeHandles from './canvas/ResizeHandles';
+import RotateHandle from './canvas/RotateHandle';
 import LayerActionBar from './canvas/LayerActionBar';
 import FontFamilySelector from './controls/FontFamilySelector';
 import FontStyleControls from './controls/FontStyleControls';
@@ -135,8 +137,11 @@ const ImageLayer = React.forwardRef((
   return (
     <Group
       ref={ref}
-      x={scaledX}
-      y={scaledY}
+      rotation={layer.rotation || 0}
+      offsetX={scaledWidth / 2}
+      offsetY={scaledHeight / 2}
+      x={scaledX + scaledWidth / 2}
+      y={scaledY + scaledHeight / 2}
       draggable
       onDragMove={onDragMove}
       onDragEnd={onDragEnd}
@@ -145,8 +150,8 @@ const ImageLayer = React.forwardRef((
     >
       <KonvaImage
         ref={imageRef}
-        x={0}
-        y={0}
+        x={-scaledWidth / 2}
+        y={-scaledHeight / 2}
         width={scaledWidth}
         height={scaledHeight}
         image={null}
@@ -156,8 +161,8 @@ const ImageLayer = React.forwardRef((
       />
       {!imageLoaded && (
         <Rect
-          x={0}
-          y={0}
+          x={-scaledWidth / 2}
+          y={-scaledHeight / 2}
           width={scaledWidth}
           height={scaledHeight}
           fill="#f1f5f9"
@@ -191,8 +196,11 @@ const TextLayer = React.forwardRef((
   return (
     <Group
       ref={ref}
-      x={scaledX}
-      y={scaledY}
+      rotation={layer.rotation || 0}
+      offsetX={scaledWidth / 2}
+      offsetY={scaledHeight / 2}
+      x={scaledX + scaledWidth / 2}
+      y={scaledY + scaledHeight / 2}
       draggable
       onDragMove={onDragMove}
       onDragEnd={onDragEnd}
@@ -201,8 +209,8 @@ const TextLayer = React.forwardRef((
     >
       <Text
         ref={textRef}
-        x={0}
-        y={0}
+        x={-scaledWidth / 2}
+        y={-scaledHeight / 2}
         width={scaledWidth}
         height={scaledHeight}
         text={layer.text}
@@ -334,13 +342,13 @@ const ShapeLayer = React.forwardRef((
             {/* Render shape outline for effects */}
             {layer.shape === 'circle' && (() => {
               const radius = Math.min(scaledWidth, scaledHeight) / 2;
-              return <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill="transparent" />;
+              return <Circle ref={shapeRef} x={0} y={0} radius={radius} fill="transparent" />;
             })()}
             {layer.shape === 'ellipse' && (
               <Ellipse
                 ref={shapeRef}
-                x={scaledWidth / 2}
-                y={scaledHeight / 2}
+                x={0}
+                y={0}
                 radiusX={scaledWidth / 2}
                 radiusY={scaledHeight / 2}
                 fill="transparent"
@@ -349,8 +357,8 @@ const ShapeLayer = React.forwardRef((
             {layer.shape === 'rectangle' && (
               <Rect
                 ref={shapeRef}
-                x={0}
-                y={0}
+                x={-scaledWidth / 2}
+                y={-scaledHeight / 2}
                 width={scaledWidth}
                 height={scaledHeight}
                 fill="transparent"
@@ -369,15 +377,15 @@ const ShapeLayer = React.forwardRef((
       // Render color fill (normal rendering)
       if (layer.shape === 'circle') {
         const radius = Math.min(scaledWidth, scaledHeight) / 2;
-        return <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill={layer.fillColor} />;
+        return <Circle ref={shapeRef} x={0} y={0} radius={radius} fill={layer.fillColor} />;
       }
       
       if (layer.shape === 'ellipse') {
         return (
           <Ellipse
             ref={shapeRef}
-            x={scaledWidth / 2}
-            y={scaledHeight / 2}
+            x={0}
+            y={0}
             radiusX={scaledWidth / 2}
             radiusY={scaledHeight / 2}
             fill={layer.fillColor}
@@ -389,8 +397,8 @@ const ShapeLayer = React.forwardRef((
         return (
           <Rect
             ref={shapeRef}
-            x={0}
-            y={0}
+            x={-scaledWidth / 2}
+            y={-scaledHeight / 2}
             width={scaledWidth}
             height={scaledHeight}
             fill={layer.fillColor}
@@ -410,8 +418,11 @@ const ShapeLayer = React.forwardRef((
   return (
     <Group
       ref={ref}
-      x={scaledX}
-      y={scaledY}
+      rotation={layer.rotation || 0}
+      offsetX={scaledWidth / 2}
+      offsetY={scaledHeight / 2}
+      x={scaledX + scaledWidth / 2}
+      y={scaledY + scaledHeight / 2}
       draggable
       onDragMove={onDragMove}
       onDragEnd={onDragEnd}
@@ -529,6 +540,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [selectionBounds, setSelectionBounds] = useState(null);
   const [isTimingPanelOpen, setIsTimingPanelOpen] = useState(false);
   const [timingToast, setTimingToast] = useState(null);
+  const [draggedSlideId, setDraggedSlideId] = useState(null);
+  const [dragOverSlideId, setDragOverSlideId] = useState(null);
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const stageWrapperRef = useRef(null);
@@ -1110,9 +1123,14 @@ const handleApplyEnhancedText = (enhancedText) => {
       node = node.getParent();
     }
     if (!node) return;
+    // Node position is now at center, convert to top-left
+    const centerX = node.x();
+    const centerY = node.y();
+    const topLeftX = centerX - (layer.width * scale) / 2;
+    const topLeftY = centerY - (layer.height * scale) / 2;
     setSelectionBounds({
-      x: node.x(),
-      y: node.y(),
+      x: topLeftX,
+      y: topLeftY,
       width: layer.width * scale,
       height: layer.height * scale,
     });
@@ -1126,9 +1144,17 @@ const handleApplyEnhancedText = (enhancedText) => {
     }
     if (!node) return;
     
-    // scale already includes zoom, so we divide by it to get canvas coordinates
-    let newX = node.x() / scale;
-    let newY = node.y() / scale;
+    // Node position is now at center, convert to top-left for storage
+    const centerX = node.x() / scale;
+    const centerY = node.y() / scale;
+    let newX = centerX - layer.width / 2;
+    let newY = centerY - layer.height / 2;
+    
+    // Clamp to canvas bounds
+    const maxWidth = layout.width;
+    const maxHeight = layout.height;
+    newX = Math.max(0, Math.min(maxWidth - layer.width, newX));
+    newY = Math.max(0, Math.min(maxHeight - layer.height, newY));
     
     updateActiveSlide((slide) => {
       const updatedSlide = {
@@ -1149,15 +1175,17 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
     
     // Reset node position to keep it in sync with the new coordinates
-    // scale already includes zoom
-    node.position({ x: newX * scale, y: newY * scale });
+    // Position at center
+    const newCenterX = (newX + layer.width / 2) * scale;
+    const newCenterY = (newY + layer.height / 2) * scale;
+    node.position({ x: newCenterX, y: newCenterY });
     setSelectionBounds({
       x: newX * scale,
       y: newY * scale,
       width: layer.width * scale,
       height: layer.height * scale,
     });
-    };
+  };
 
   const handleLayerResize = (layerId, node) => {
     if (!node || !activeSlide) return;
@@ -1182,13 +1210,19 @@ const handleApplyEnhancedText = (enhancedText) => {
 
     let newWidth = scaledWidth / scale;
     let newHeight = scaledHeight / scale;
-    let newX = node.x() / scale;
-    let newY = node.y() / scale;
+    // Node position is at center, convert to top-left
+    const centerX = node.x() / scale;
+    const centerY = node.y() / scale;
+    let newX = centerX - newWidth / 2;
+    let newY = centerY - newHeight / 2;
 
     if (layer.type === 'shape' && layer.shape === 'circle') {
       const size = Math.max(newWidth, newHeight);
       newWidth = size;
       newHeight = size;
+      // Recalculate position after size change
+      newX = centerX - newWidth / 2;
+      newY = centerY - newHeight / 2;
     }
 
     const maxWidth = layout.width;
@@ -1218,11 +1252,43 @@ const handleApplyEnhancedText = (enhancedText) => {
       saveToHistory(updatedSlides);
       return updatedSlide;
     });
+    
+    // Reset node position to center
+    const newCenterX = (newX + newWidth / 2) * scale;
+    const newCenterY = (newY + newHeight / 2) * scale;
+    node.position({ x: newCenterX, y: newCenterY });
+    // Update offset for rotation center
+    node.offsetX((newWidth * scale) / 2);
+    node.offsetY((newHeight * scale) / 2);
+    
     setSelectionBounds({
       x: newX * scale,
       y: newY * scale,
       width: newWidth * scale,
       height: newHeight * scale,
+    });
+  };
+
+  const handleLayerRotate = (layerId, rotation) => {
+    if (!activeSlide) return;
+    const layer = activeSlide.layers.find((l) => l.id === layerId);
+    if (!layer) return;
+
+    updateActiveSlide((slide) => {
+      const updatedSlide = {
+        ...slide,
+        layers: slide.layers.map((l) =>
+          l.id === layerId
+            ? {
+                ...l,
+                rotation: rotation,
+              }
+            : l,
+        ),
+      };
+      const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+      saveToHistory(updatedSlides);
+      return updatedSlide;
     });
   };
 
@@ -1635,6 +1701,25 @@ const handleApplyEnhancedText = (enhancedText) => {
     setSelectedLayerId(null);
   };
 
+  const handleReorderSlides = (draggedId, targetId) => {
+    if (draggedId === targetId) return;
+    
+    const draggedIndex = slides.findIndex(s => s.id === draggedId);
+    const targetIndex = slides.findIndex(s => s.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const newSlides = [...slides];
+    const [removed] = newSlides.splice(draggedIndex, 1);
+    newSlides.splice(targetIndex, 0, removed);
+    
+    setSlides(newSlides);
+    saveToHistory(newSlides);
+    
+    // Keep the active slide ID the same (it will still be active after reordering)
+    // No need to update activeSlideId as the slide object itself hasn't changed
+  };
+
   const handleDuplicateSlide = (slide) => {
     const duplicate = {
       ...slide,
@@ -1990,24 +2075,66 @@ const handleApplyEnhancedText = (enhancedText) => {
           >
             {slides.map((slide, index) => {
               const isActive = slide.id === activeSlideId;
+              const isDragging = draggedSlideId === slide.id;
+              const isDragOver = dragOverSlideId === slide.id;
+              
               return (
                 <div
                   key={slide.id}
+                  draggable
+                  onDragStart={() => setDraggedSlideId(slide.id)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (draggedSlideId && draggedSlideId !== slide.id) {
+                      setDragOverSlideId(slide.id);
+                    }
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverSlideId === slide.id) {
+                      setDragOverSlideId(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedSlideId && draggedSlideId !== slide.id) {
+                      handleReorderSlides(draggedSlideId, slide.id);
+                    }
+                    setDraggedSlideId(null);
+                    setDragOverSlideId(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedSlideId(null);
+                    setDragOverSlideId(null);
+                  }}
                   style={{
                     borderRadius: 12,
                     padding: '8px',
                     background: isActive ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : '#f8fafc',
                     color: isActive ? '#ffffff' : '#0f172a',
-                    cursor: 'pointer',
+                    cursor: isDragging ? 'grabbing' : 'grab',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 6,
-                    transition: 'transform 150ms ease',
+                    transition: 'transform 150ms ease, opacity 150ms ease',
+                    opacity: isDragging ? 0.5 : 1,
+                    transform: isDragOver ? 'translateY(4px)' : 'translateY(0)',
+                    border: isDragOver ? '2px dashed rgba(79, 70, 229, 0.5)' : '2px solid transparent',
+                    marginBottom: isDragOver ? '8px' : '0',
                   }}
                   onClick={() => setActiveSlideId(slide.id)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.75rem' }}>Slide {index + 1}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <GripVertical 
+                        size={14} 
+                        style={{ 
+                          color: isActive ? 'rgba(255, 255, 255, 0.6)' : '#94a3b8',
+                          cursor: 'grab',
+                          flexShrink: 0,
+                        }} 
+                      />
+                      <span style={{ fontWeight: 600, fontSize: '0.75rem' }}>Slide {index + 1}</span>
+                    </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <button
                       onClick={(event) => {
@@ -2397,7 +2524,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                   })}
                 </Layer>
                 
-                {/* Selection/Transform Layer - For resize handles */}
+                {/* Selection/Transform Layer - For resize handles and rotate handle */}
                 <Layer>
                   {activeSlide?.layers.map((layer) => {
                     if (!layer.visible) return null;
@@ -2405,17 +2532,25 @@ const handleApplyEnhancedText = (enhancedText) => {
                     if (!isSelected) return null;
                     
                     const layerRef = getLayerNodeRef(layer.id);
-                    const selectionVersion = `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${scale}`;
+                    const selectionVersion = `${layer.x}-${layer.y}-${layer.width}-${layer.height}-${layer.rotation}-${scale}`;
                     
                     return (
-                      <ResizeHandles
-                        key={`handles-${layer.id}`}
-                        isVisible={isSelected}
-                        targetRef={layerRef}
-                        scale={scale}
-                        onResize={(node) => handleLayerResize(layer.id, node)}
-                        selectionKey={selectionVersion}
-                      />
+                      <React.Fragment key={`handles-${layer.id}`}>
+                        <ResizeHandles
+                          isVisible={isSelected}
+                          targetRef={layerRef}
+                          scale={scale}
+                          onResize={(node) => handleLayerResize(layer.id, node)}
+                          selectionKey={selectionVersion}
+                        />
+                        <RotateHandle
+                          isVisible={isSelected}
+                          targetRef={layerRef}
+                          scale={scale}
+                          layer={layer}
+                          onRotate={(rotation) => handleLayerRotate(layer.id, rotation)}
+                        />
+                      </React.Fragment>
                     );
                   })}
                 </Layer>
