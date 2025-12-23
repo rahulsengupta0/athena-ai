@@ -71,7 +71,7 @@ const BrandKitDetail = () => {
         if (found) {
           setBrandKit(found);
         }
-        
+
         // Find matching database brand kit
         const thisName = extractBrandName(kitFolderToLoad);
         const normalized = (thisName || "").toLowerCase().replace(/ /g, "-");
@@ -80,12 +80,12 @@ const BrandKitDetail = () => {
         );
         if (matched) {
           setBrandKitDb(matched);
-          
+
           // Fetch collaborators info if there are any
           if (matched.collaborators && matched.collaborators.length > 0) {
             const members = await api.getTeamMembers();
             const collabInfo = matched.collaborators.map(collabId => {
-              const member = members.find(m => 
+              const member = members.find(m =>
                 String(m.userId?._id || m.userId || m._id) === String(collabId)
               );
               if (member) {
@@ -182,10 +182,10 @@ const BrandKitDetail = () => {
   const saveShare = async () => {
     try {
       setSavingShare(true);
-      
+
       // First, try to use the brandKitDb if it exists
       let brandKitId = brandKitDb?._id;
-      
+
       // If not found, try to find it in the database
       if (!brandKitId) {
         const kits = await api.getBrandKits();
@@ -194,13 +194,13 @@ const BrandKitDetail = () => {
         const matched = (kits || []).find(
           (k) => (k.name || "").toLowerCase().replace(/ /g, "-") === normalized
         );
-        
+
         if (matched?._id) {
           brandKitId = matched._id;
           setBrandKitDb(matched);
         }
       }
-      
+
       // If still not found, create a new brand kit entry in the database
       if (!brandKitId) {
         const thisName = extractBrandName(brandKit?.kitFolder || "");
@@ -208,7 +208,7 @@ const BrandKitDetail = () => {
           alert("Could not determine brand kit name. Please try again.");
           return;
         }
-        
+
         // Create the brand kit in the database
         const newBrandKit = await api.createBrandKit({
           name: thisName,
@@ -217,11 +217,11 @@ const BrandKitDetail = () => {
           secondaryColor: '',
           logoUrl: brandKit?.files?.logo?.url || ''
         });
-        
+
         brandKitId = newBrandKit._id;
         setBrandKitDb(newBrandKit);
       }
-      
+
       // Get current collaborators - fetch fresh to ensure we have the latest state
       const allKits = await api.getBrandKits();
       const currentKit = allKits.find(k => String(k._id) === String(brandKitId));
@@ -235,7 +235,7 @@ const BrandKitDetail = () => {
       for (const remId of toRemove) {
         await api.removeBrandKitCollaborator(brandKitId, remId);
       }
-      
+
       // Refresh collaborators info
       const updatedKits = await api.getBrandKits();
       const thisName = extractBrandName(brandKit?.kitFolder || "");
@@ -248,7 +248,7 @@ const BrandKitDetail = () => {
         if (updated.collaborators && updated.collaborators.length > 0) {
           const members = await api.getTeamMembers();
           const collabInfo = updated.collaborators.map(collabId => {
-            const member = members.find(m => 
+            const member = members.find(m =>
               String(m.userId?._id || m.userId || m._id) === String(collabId)
             );
             if (member) {
@@ -267,7 +267,7 @@ const BrandKitDetail = () => {
           setCollaboratorsInfo([]);
         }
       }
-      
+
       alert("Share settings updated.");
       setShareOpen(false);
     } catch (e) {
@@ -309,14 +309,14 @@ const BrandKitDetail = () => {
         const fileName = `${selectedCategory}-${timestamp}.png`;
         await api.addImageToBrandKit(brandKit.kitFolder, image.url, selectedCategory, fileName);
       }
-      
+
       // Refresh brand kit data
       const folders = await api.getBrandKitFolders();
       const updated = folders.find(f => f.kitFolder === brandKit.kitFolder);
       if (updated) {
         setBrandKit(updated);
       }
-      
+
       alert(`Successfully added ${selectedImages.length} image(s) to ${selectedCategory} category!`);
       closeUploadModal();
     } catch (error) {
@@ -365,14 +365,14 @@ const BrandKitDetail = () => {
 
     try {
       await api.deleteImageFromBrandKit(kitFolder, fileName);
-      
+
       // Refresh brand kit data
       const folders = await api.getBrandKitFolders();
       const updated = folders.find(f => f.kitFolder === kitFolder);
       if (updated) {
         setBrandKit(updated);
       }
-      
+
       alert('Image deleted successfully!');
     } catch (error) {
       console.error('Error deleting image:', error);

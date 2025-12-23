@@ -13,18 +13,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // 🧠 Step 1: Create AI prompts
 function getPrompts({ name, tagline, primaryColor, secondaryColor, logoDescription, bannerDescription, posterDescription }) {
   // Use individual descriptions if provided, otherwise fall back to default prompts
-  const logoPrompt = logoDescription 
+  const logoPrompt = logoDescription
     ? `${logoDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
     : `${name} logo in ${primaryColor} and ${secondaryColor}, modern, flat style. Tagline: ${tagline}`;
-  
+
   const bannerPrompt = bannerDescription
     ? `${bannerDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
     : `${name} brand banner using ${primaryColor}, tagline: ${tagline}, clean abstract design`;
-  
+
   const posterPrompt = posterDescription
     ? `${posterDescription}. Brand name: ${name}. Colors: ${primaryColor} and ${secondaryColor}. ${tagline ? `Tagline: ${tagline}` : ''}`
     : `Promotional poster for ${name}, tagline: "${tagline}", colors: ${primaryColor} and ${secondaryColor}, professional and attractive`;
-  
+
   return {
     logo: logoPrompt,
     banner: bannerPrompt,
@@ -63,27 +63,27 @@ async function uploadToS3(imageUrl, userId, kitFolder, type) {
 router.post("/generate-brandkit", authMiddleware, async (req, res) => {
   try {
     const { name, tagline, primaryColor, secondaryColor, logoDescription, bannerDescription, posterDescription } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({ error: "Brand name is required" });
     }
-    
+
     if (!logoDescription || !bannerDescription || !posterDescription) {
       return res.status(400).json({ error: "Logo, banner, and poster descriptions are required" });
     }
-    
+
     const userId = req.user.id; // comes from decoded JWT
     const kitFolder = name.toLowerCase().replace(/ /g, "-") + "-" + Date.now();
 
     // Build prompts using individual descriptions
-    const prompts = getPrompts({ 
-      name, 
-      tagline, 
-      primaryColor, 
-      secondaryColor, 
-      logoDescription, 
-      bannerDescription, 
-      posterDescription 
+    const prompts = getPrompts({
+      name,
+      tagline,
+      primaryColor,
+      secondaryColor,
+      logoDescription,
+      bannerDescription,
+      posterDescription
     });
 
     // Generate all 3 images
@@ -170,13 +170,13 @@ router.get("/brandkit-list", authMiddleware, async (req, res) => {
 
     // Get shared brand kits and their folders
     const sharedBrandKits = await BrandKit.find({ collaborators: userId }).populate('userId', 'firstName lastName email');
-    
+
     // Fetch folders for each shared brand kit
     for (const sharedKit of sharedBrandKits) {
       const ownerId = sharedKit.userId._id.toString();
       const sharedPrefix = `${ownerId}/brandkit/`;
       let sharedContinuationToken = undefined;
-      
+
       do {
         try {
           const resp = await s3
@@ -210,7 +210,7 @@ router.post("/brandkit/:kitFolder/add-image", authMiddleware, async (req, res) =
     let { kitFolder } = req.params;
     kitFolder = decodeURIComponent(kitFolder);
     const { imageUrl, category, fileName } = req.body;
-    
+
     if (!imageUrl || !category) {
       return res.status(400).json({ error: "Image URL and category are required" });
     }
@@ -223,11 +223,11 @@ router.post("/brandkit/:kitFolder/add-image", authMiddleware, async (req, res) =
     // Download image from URL
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     const buffer = Buffer.from(response.data, "binary");
-    
+
     // Determine file extension from URL or use png as default
     const urlExtension = imageUrl.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i)?.[1] || 'png';
     const finalFileName = fileName || `${category}.${urlExtension}`;
-    
+
     // Upload to S3
     const params = {
       Bucket,
@@ -237,7 +237,7 @@ router.post("/brandkit/:kitFolder/add-image", authMiddleware, async (req, res) =
     };
 
     const uploadResult = await s3.upload(params).promise();
-    
+
     res.json({
       success: true,
       url: uploadResult.Location,
@@ -258,21 +258,21 @@ router.delete("/brandkit/:kitFolder", authMiddleware, async (req, res) => {
     const userId = req.user.id;
     // Get kitFolder from params or query
     let kitFolder = req.params.kitFolder || req.query.kitFolder;
-    
+
     if (!kitFolder) {
       return res.status(400).json({ error: "Kit folder name is required" });
     }
-    
+
     // Decode the kitFolder parameter in case it was URL encoded
     kitFolder = decodeURIComponent(kitFolder);
     const Bucket = process.env.AWS_S3_BUCKET;
-    
+
     if (!Bucket) {
       return res.status(500).json({ error: "Missing AWS_S3_BUCKET" });
     }
 
     const Prefix = `${userId}/brandkit/${kitFolder}/`;
-    
+
     // List all objects in the folder
     let ContinuationToken = undefined;
     const objectsToDelete = [];
@@ -281,13 +281,13 @@ router.delete("/brandkit/:kitFolder", authMiddleware, async (req, res) => {
       const resp = await s3
         .listObjectsV2({ Bucket, Prefix, ContinuationToken })
         .promise();
-      
+
       if (resp.Contents && resp.Contents.length > 0) {
         resp.Contents.forEach((obj) => {
           objectsToDelete.push({ Key: obj.Key });
         });
       }
-      
+
       ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
     } while (ContinuationToken);
 
@@ -318,20 +318,20 @@ router.delete("/brandkit/:kitFolder/image/:fileName", authMiddleware, async (req
     let { kitFolder, fileName } = req.params;
     kitFolder = decodeURIComponent(kitFolder);
     fileName = decodeURIComponent(fileName);
-    
+
     const Bucket = process.env.AWS_S3_BUCKET;
     if (!Bucket) {
       return res.status(500).json({ error: "Missing AWS_S3_BUCKET" });
     }
 
     const Key = `${userId}/brandkit/${kitFolder}/${fileName}`;
-    
+
     // Delete the object from S3
     await s3.deleteObject({ Bucket, Key }).promise();
-    
-    res.json({ 
+
+    res.json({
       success: true,
-      msg: "Image deleted successfully" 
+      msg: "Image deleted successfully"
     });
   } catch (err) {
     console.error("❌ BrandKit delete image error:", err);

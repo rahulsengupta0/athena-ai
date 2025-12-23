@@ -63,7 +63,7 @@ const EmailSupport = ({ onClose }) => {
       formData.append("category", category);
       formData.append("subject", subject);
       formData.append("message", message);
-      
+
       files.forEach((file, index) => {
         formData.append(`attachments`, file);
       });
