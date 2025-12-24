@@ -138,6 +138,10 @@ const ImageLayer = React.forwardRef((
     <Group
       ref={ref}
       rotation={layer.rotation || 0}
+      scaleX={1}
+      scaleY={1}
+      width={scaledWidth}
+      height={scaledHeight}
       offsetX={scaledWidth / 2}
       offsetY={scaledHeight / 2}
       x={scaledX + scaledWidth / 2}
@@ -197,6 +201,10 @@ const TextLayer = React.forwardRef((
     <Group
       ref={ref}
       rotation={layer.rotation || 0}
+      scaleX={1}
+      scaleY={1}
+      width={scaledWidth}
+      height={scaledHeight}
       offsetX={scaledWidth / 2}
       offsetY={scaledHeight / 2}
       x={scaledX + scaledWidth / 2}
@@ -419,6 +427,10 @@ const ShapeLayer = React.forwardRef((
     <Group
       ref={ref}
       rotation={layer.rotation || 0}
+      scaleX={1}
+      scaleY={1}
+      width={scaledWidth}
+      height={scaledHeight}
       offsetX={scaledWidth / 2}
       offsetY={scaledHeight / 2}
       x={scaledX + scaledWidth / 2}
@@ -1192,14 +1204,18 @@ const handleApplyEnhancedText = (enhancedText) => {
     const layer = activeSlide.layers.find((l) => l.id === layerId);
     if (!layer) return;
 
-    const rect = node.getClientRect({ skipStroke: false });
+    // CRITICAL: Use actual node dimensions, NOT bounding box
+    // getClientRect() includes rotation, which inflates size for rotated elements
+    // We must use node.width() and node.height() which return actual dimensions
     const rawWidth = node.width();
     const rawHeight = node.height();
     const scaleX = node.scaleX() || 1;
     const scaleY = node.scaleY() || 1;
 
-    const widthSource = rawWidth ? rawWidth * scaleX : rect.width;
-    const heightSource = rawHeight ? rawHeight * scaleY : rect.height;
+    // Calculate actual size from node dimensions, not bounding box
+    // This prevents rotated elements from appearing to grow
+    const widthSource = rawWidth * scaleX;
+    const heightSource = rawHeight * scaleY;
 
     const scaledWidth = Math.max(12, widthSource);
     const scaledHeight = Math.max(12, heightSource);
@@ -1274,6 +1290,17 @@ const handleApplyEnhancedText = (enhancedText) => {
     const layer = activeSlide.layers.find((l) => l.id === layerId);
     if (!layer) return;
 
+    // CRITICAL: Reset scale immediately to prevent accumulation
+    // Rotation must never leave scale transforms behind
+    const nodeRef = getLayerNodeRef(layerId);
+    if (nodeRef?.current) {
+      const node = nodeRef.current;
+      // Explicitly reset scale to 1 - rotation should never affect scale
+      node.scaleX(1);
+      node.scaleY(1);
+      node.getLayer()?.batchDraw();
+    }
+
     updateActiveSlide((slide) => {
       const updatedSlide = {
         ...slide,
@@ -1281,7 +1308,7 @@ const handleApplyEnhancedText = (enhancedText) => {
           l.id === layerId
             ? {
                 ...l,
-                rotation: rotation,
+                rotation: rotation, // CSS transform: rotate equivalent - no scale involved
               }
             : l,
         ),
@@ -2540,6 +2567,8 @@ const handleApplyEnhancedText = (enhancedText) => {
                           isVisible={isSelected}
                           targetRef={layerRef}
                           scale={scale}
+                          expectedWidth={layer.width}
+                          expectedHeight={layer.height}
                           onResize={(node) => handleLayerResize(layer.id, node)}
                           selectionKey={selectionVersion}
                         />
