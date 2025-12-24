@@ -12,6 +12,7 @@ const ProjectSchema = new mongoose.Schema({
   date: { type: String, default: () => new Date().toLocaleDateString() },
   size: { type: String },
   favorite: { type: Boolean, default: false },
+  design: { type: Object },
   // Per-item collaborators (additional users with access)
   collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }]
 }, { timestamps: true });

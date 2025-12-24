@@ -25,6 +25,22 @@ router.get('/projects', auth, async (req, res) => {
   }
 });
 
+// Get a single project by ID
+router.get('/projects/:id', auth, async (req, res) => {
+  try {
+    const project = await Project.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!project) {
+      // Also check if the user is a collaborator
+      const sharedProject = await Project.findOne({ _id: req.params.id, collaborators: req.user.id });
+      if (!sharedProject) return res.status(404).json({ msg: 'Project not found' });
+      return res.json(sharedProject);
+    }
+    res.json(project);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
 // Create project
 router.post('/projects', auth, async (req, res) => {
   try {
@@ -42,6 +58,21 @@ router.put('/projects/:id', auth, async (req, res) => {
     const project = await Project.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       req.body,
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ msg: 'Project not found' });
+    res.json(project);
+  } catch (err) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// Update project design (owner only)
+router.put('/projects/:id/design', auth, async (req, res) => {
+  try {
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { design: req.body },
       { new: true }
     );
     if (!project) return res.status(404).json({ msg: 'Project not found' });
