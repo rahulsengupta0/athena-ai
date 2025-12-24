@@ -18,6 +18,7 @@ const TopToolbar = ({
   canvasSize,
   selectedTool,
   onSave,
+  onExport,
   onDuplicate,
   hasSelection
 }) => {
@@ -121,7 +122,7 @@ const TopToolbar = ({
         <FiSave size={16} />
         Save
       </button>
-      <button style={styles.toolbarButton}>
+      <button style={styles.toolbarButton} onClick={onExport}>
         <FiDownload size={16} />
         Export
       </button>

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import api from '../../services/api';
 import { BrightnessControl, ContrastControl, BlurControl, ShadowsControl, OpacityControl } from './controls';
 import { getFilterCSS, getShadowCSS, hexToRgba } from '../../utils/styleUtils';
 import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
@@ -11,6 +13,7 @@ import TextEnhanceButton from './TextEnhanceButton';
 import { enhanceText } from './TextEnhanceService';
 
 const CanvaEditor = () => {
+  const { id: projectId } = useParams();
   const [selectedTool, setSelectedTool] = useState('select');
   const [layers, setLayers] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -25,6 +28,23 @@ const CanvaEditor = () => {
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
   const [isRotating, setIsRotating] = useState(false);
   const [rotateStart, setRotateStart] = useState({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
+  
+  useEffect(() => {
+    if (projectId) {
+      api.getProject(projectId).then(project => {
+        if (project && project.design) {
+          setLayers(project.design.layers || []);
+          setCanvasSize(project.design.canvasSize || { width: 800, height: 600 });
+          setZoom(project.design.zoom || 100);
+          setPan(project.design.pan || { x: 0, y: 0 });
+        }
+      }).catch(error => {
+        console.error("Failed to load project", error);
+        // Optionally, show an error message to the user
+      });
+    }
+  }, [projectId]);
+
   
   // Drag and drop for layers panel
   const [draggedLayer, setDraggedLayer] = useState(null);
@@ -647,9 +667,24 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     setIsLayerDragging(false);
   };
 
-  // Save: open modal with export options
-  const handleSaveDesign = () => {
+  // Export: open modal with export options
+  const handleExport = () => {
     setIsSaveModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!projectId) {
+      console.error("No project ID found in URL");
+      return;
+    }
+    const design = { layers, canvasSize, zoom, pan };
+    try {
+      await api.updateProjectDesign(projectId, design);
+      alert('Design saved successfully!');
+    } catch (error) {
+      console.error('Failed to save design:', error);
+      alert('Error saving design. Please try again.');
+    }
   };
 
   // Duplicate currently selected layer (if any)
@@ -3602,7 +3637,8 @@ canvasArea: {
   setShowGrid={setShowGrid}
   canvasSize={canvasSize}
   selectedTool={selectedTool}
-  onSave={handleSaveDesign}
+  onSave={handleSave}
+  onExport={handleExport}
   onDuplicate={handleDuplicateSelected}
   hasSelection={!!selectedLayer}
 />

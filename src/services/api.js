@@ -112,6 +112,12 @@ class ApiService {
     });
   }
 
+  async getProject(id) {
+    return this.request(`/api/user-data/projects/${id}`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
   async createProject(projectData) {
     return this.request('/api/user-data/projects', {
       method: 'POST',
@@ -125,6 +131,14 @@ class ApiService {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(projectData),
+    });
+  }
+
+  async updateProjectDesign(id, designData) {
+    return this.request(`/api/user-data/projects/${id}/design`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(designData),
     });
   }
 
