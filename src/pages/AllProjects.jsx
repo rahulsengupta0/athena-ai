@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiMoreHorizontal,
   FiStar,
@@ -62,7 +63,16 @@ export const AllProjects = () => {
   const [preview, setPreview] = useState(null); // { list: filesOnly[], index: number }
   const [currentPage, setCurrentPage] = useState(0);
   const [favoritePending, setFavoritePending] = useState({});
+  const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
   const itemsPerPage = 4;
+  const navigate = useNavigate();
+
+  const handleOpenCustomizeModal = (project) => {
+    setSelectedProject(project);
+    setCustomizeModalOpen(true);
+  };
+
 
   // Fetch projects and generated files from backend
   useEffect(() => {
@@ -159,7 +169,8 @@ export const AllProjects = () => {
     hashtags: p.hashtags || [],
     favorite: p.favorite,
     size: p.size,
-    _id: p._id
+    _id: p._id,
+    design: p.design,
   }));
 
   // Combine and sort by date
@@ -747,6 +758,25 @@ export const AllProjects = () => {
                     <span>{item.size}</span>
                   </div>
                 )}
+                {item.design && (
+                  <button
+                    onClick={() => handleOpenCustomizeModal(item)}
+                    style={{
+                      marginTop: '12px',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #8a5bff',
+                      background: 'transparent',
+                      color: '#8a5bff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    View Design
+                  </button>
+                )}
               </>
             ) : (
               // Non-image file display
@@ -1203,6 +1233,72 @@ export const AllProjects = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {customizeModalOpen && selectedProject && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCustomizeModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              padding: '24px',
+              borderRadius: '12px',
+              textAlign: 'center',
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#1f1b2d' }}>
+              {selectedProject.title}
+            </h3>
+            <p style={{ margin: '8px 0 24px', fontSize: '1rem', color: '#6f6b80' }}>
+              What would you like to do with this design?
+            </p>
+            <button
+              onClick={() => navigate(`/canva-clone/${selectedProject.id}`)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#8a5bff',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '1rem',
+                marginRight: '12px',
+              }}
+            >
+              Customize
+            </button>
+            <button
+              onClick={() => setCustomizeModalOpen(false)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: '1px solid #e0e0e0',
+                background: 'transparent',
+                color: '#1f1b2d',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
