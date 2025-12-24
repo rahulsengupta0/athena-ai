@@ -101,6 +101,7 @@ const AppContent = () => {
           <Route path="/bgremove" element={<BackgroundRemover />} />
           <Route path="/imageeditor" element={<ImageEditor />} />
           <Route path="/canva-clone" element={<CanvaClone />} />
+          <Route path="/canva-clone/:id" element={<CanvaClone />} />
           <Route path="/brand-kit" element={<Brandkit />} />
           <Route path="/brand-kit-result" element={<BrandKitResult/>} />
           <Route path="/brand-kit-detail" element={<BrandKitDetail />} />
