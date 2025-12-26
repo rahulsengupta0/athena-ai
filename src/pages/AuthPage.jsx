@@ -51,11 +51,11 @@ const AuthPage = () => {
             // New user - show welcome message before redirecting
             setMessage('Account created and authenticated! Redirecting...');
             setTimeout(() => {
-              navigate('/create', { replace: true });
+              navigate('/home', { replace: true });
             }, 1000);
           } else {
             // Existing user - redirect immediately to Create page
-            navigate('/create', { replace: true });
+            navigate('/home', { replace: true });
           }
         } else {
           setError(response.msg || 'Invalid or expired session');
@@ -99,7 +99,7 @@ const AuthPage = () => {
 
       const res = await axios.post(url, formData);
       await login(res.data.token);
-      navigate('/create');
+      navigate('/home');
     } catch (err) {
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
