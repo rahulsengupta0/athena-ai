@@ -1,12 +1,25 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
+const OpenAI = require("openai");
+require("dotenv").config();
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export const generatePresentationData = async (topic) => {
+/**
+ * Generate AI presentation data
+ * @param {string} topic - Presentation topic
+ * @param {object} options - { tone, length, mediaStyle, useBrandStyle, outlineText }
+ */
+
+const generatePresentationData = async (topic, options = {}) => {
+  const { tone = 'Professional', length = '10', mediaStyle = 'AI Graphics', useBrandStyle = false, outlineText = '' } = options;
+  
   const prompt = `
-You are an AI presentation designer. Create a professional, modern presentation about "${topic}".
+You are an expert AI presentation designer. Create a professional, modern presentation about "${topic}".
+Tone: ${tone}
+Length: ${length} slides
+Media Style: ${mediaStyle}
+Use Brand Style: ${useBrandStyle}
+Outline (if provided): ${outlineText}
+
 Return ONLY valid JSON with this structure:
 {
   "theme": {
@@ -24,6 +37,7 @@ Return ONLY valid JSON with this structure:
     }
   ]
 }
+
 `;
 
   try {
@@ -67,7 +81,39 @@ Return ONLY valid JSON with this structure:
     };
 
   } catch (error) {
-    console.error("❌ OpenAI Error:", error);
+    console.error("OpenAI Error:", error);
     throw new Error("Failed to generate presentation data");
   }
+};
+
+/**
+ * Rewrite slide content based on instruction
+ * @param {string} slideContent - Current slide text
+ * @param {string} instruction - Instruction to rewrite
+ */
+
+const rewriteContent = async (slideContent, instruction) => {
+  const prompt = `
+Rewrite the following slide content according to the instruction:
+Instruction: ${instruction}
+Content:
+${slideContent}
+Return only the rewritten content as plain text.
+`;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }]
+    });
+    return { rewrittenContent: completion.choices[0].message.content.trim() };
+  } catch (error) {
+    console.error(" OpenAI Rewrite Error:", error);
+    throw new Error("Failed to rewrite slide content");
+  }
+};
+
+module.exports = {
+  generatePresentationData,
+  rewriteContent
 };

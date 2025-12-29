@@ -16,6 +16,7 @@ export const generateImageDataUri = async (prompt) => {
   return result.data[0].b64_json;
 };
 
+// Generate all images for slides
 export const generateAllImages = async (slides) => {
   const imageSlides = slides.filter(s => s.type === "image" && s.imagePrompt);
   const results = await Promise.allSettled(imageSlides.map(async s => {
@@ -58,4 +59,10 @@ export const addSafeImage = async (slide, slideData, imageMap) => {
     console.error("Image add failed:", slideData.title, err);
     slide.addText("Image unavailable", { x:0.7, y:1.8, w:8.5, h:4.8, fontSize:20, color:"#FF0000", fontFace:"Arial", align:"center" });
   }
+};
+
+// New function: Generate single image for a slide
+export const generateSingleImage = async (prompt) => {
+  const base64 = await generateImageDataUri(prompt);
+  return base64;
 };

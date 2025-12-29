@@ -2,8 +2,12 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const PptxGenJS = require("pptxgenjs");
-const { generatePresentationData } = require("../utils/ppt_openai_utils.js");
-const { generateAllImages, addSafeChart, addSafeImage } = require("../utils/ppt_image_utils.js");
+const {
+  generatePresentationData,
+  rewriteContent
+} = require("../utils/ppt_openai_utils.js");
+
+const { generateAllImages, addSafeChart, addSafeImage, generateSingleImage } = require("../utils/ppt_image_utils.js");
 
 const app = express();
 
@@ -13,9 +17,11 @@ app.use((req,res,next)=>{ req.setTimeout(300000); res.setTimeout(300000); next()
 
 app.post("/get-presentation-data", async (req,res)=>{
   try {
-    const { topic } = req.body;
+    const { topic, tone, length, mediaStyle, useBrandStyle, outlineText } = req.body;
     if(!topic) return res.status(400).json({ error:"Topic required!" });
-    const data = await generatePresentationData(topic);
+    
+    const options = { tone, length, mediaStyle, useBrandStyle, outlineText };
+    const data = await generatePresentationData(topic, options);
     res.json(data);
   } catch(e) { res.status(500).json({ error:"Failed to get presentation data", details:e.message }); }
 });
@@ -50,6 +56,25 @@ app.post("/generate-ppt", async (req,res)=>{
     res.setHeader('Content-Disposition',`attachment; filename=presentation_${Date.now()}.pptx`);
     res.send(buffer);
   } catch(e){ res.status(500).json({ error:"PPT creation failed", details:e.message }); }
+});
+// Rewrite slide
+app.post("/rewrite-slide", async (req, res) => {
+  try {
+    const { slideContent, instruction } = req.body;
+    if (!slideContent || !instruction) return res.status(400).json({ error: "Missing fields" });
+    const result = await rewriteContent(slideContent, instruction);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Generate single slide image
+app.post("/generate-slide-image", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt required" });
+    const imageBase64 = await generateSingleImage(prompt);
+    res.json({ imageBase64 });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = app;
