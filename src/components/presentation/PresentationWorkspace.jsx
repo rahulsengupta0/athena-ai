@@ -373,10 +373,15 @@ const ShapeLayer = React.forwardRef((
                 cornerRadius={layer.borderRadius * scale}
               />
             )}
-            {!['circle', 'ellipse', 'rectangle'].includes(layer.shape) && (() => {
+            {!['circle', 'ellipse', 'rectangle', 'line'].includes(layer.shape) && (() => {
               const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
               if (points.length === 0) return null;
               return <Line ref={shapeRef} points={points} closed fill="transparent" stroke="transparent" />;
+            })()}
+            {layer.shape === 'line' && (() => {
+              const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+              if (points.length === 0) return null;
+              return <Line ref={shapeRef} points={points} closed={false} fill="transparent" stroke="transparent" strokeWidth={scaledHeight} />;
             })()}
           </Group>
         );
@@ -415,6 +420,22 @@ const ShapeLayer = React.forwardRef((
         );
       }
       
+      if (layer.shape === 'line') {
+        const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
+        if (points.length === 0) return null;
+        return (
+          <Line
+            ref={shapeRef}
+            points={points}
+            closed={false}
+            fill="transparent"
+            stroke={layer.fillColor}
+            strokeWidth={scaledHeight}
+            lineCap="round"
+          />
+        );
+      }
+      
       const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
       if (points.length === 0) return null;
       return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
@@ -446,6 +467,45 @@ const ShapeLayer = React.forwardRef((
   );
 });
 ShapeLayer.displayName = 'ShapeLayer';
+
+const GroupLayer = React.forwardRef((
+  {
+    layer,
+    scaledX,
+    scaledY,
+    scaledWidth,
+    scaledHeight,
+    scale,
+    onDragMove,
+    onDragEnd,
+    onClick,
+    children,
+  },
+  ref,
+) => {
+  return (
+    <Group
+      ref={ref}
+      rotation={layer.rotation || 0}
+      scaleX={1}
+      scaleY={1}
+      width={scaledWidth}
+      height={scaledHeight}
+      offsetX={scaledWidth / 2}
+      offsetY={scaledHeight / 2}
+      x={scaledX + scaledWidth / 2}
+      y={scaledY + scaledHeight / 2}
+      draggable
+      onDragMove={onDragMove}
+      onDragEnd={onDragEnd}
+      onClick={onClick}
+      onTap={onClick}
+    >
+      {children}
+    </Group>
+  );
+});
+GroupLayer.displayName = 'GroupLayer';
 
 const createLayer = (definition, coordinates) => {
   const preset = definition.preset;
@@ -492,6 +552,7 @@ const createLayer = (definition, coordinates) => {
       'arrow-left': 'Arrow Left',
       'arrow-up': 'Arrow Up',
       'arrow-down': 'Arrow Down',
+      'line': 'Line',
     };
     
     return {
@@ -538,6 +599,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const [selectedTool, setSelectedTool] = useState('select');
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [selectedLayerId, setSelectedLayerId] = useState(null);
+  const [selectedLayerIds, setSelectedLayerIds] = useState([]);
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [leftSidebarVisible, setLeftSidebarVisible] = useState(true);
   const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -698,6 +761,187 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     () => slides.find((slide) => slide.id === activeSlideId) || slides[0],
     [slides, activeSlideId],
   );
+
+  // Group and ungroup functions
+  const handleGroupLayers = useCallback(() => {
+    if (!activeSlide || selectedLayerIds.length < 2) return;
+
+    // Get all layers to be grouped
+    const layersToGroup = activeSlide.layers.filter((layer) => 
+      selectedLayerIds.includes(layer.id) && layer.type !== 'group' && !layer.parentId
+    );
+
+    if (layersToGroup.length < 2) return;
+
+    // Calculate group bounds
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    layersToGroup.forEach((layer) => {
+      const layerRight = layer.x + layer.width;
+      const layerBottom = layer.y + layer.height;
+      minX = Math.min(minX, layer.x);
+      minY = Math.min(minY, layer.y);
+      maxX = Math.max(maxX, layerRight);
+      maxY = Math.max(maxY, layerBottom);
+    });
+
+    const groupWidth = maxX - minX;
+    const groupHeight = maxY - minY;
+
+    // Create group layer
+    const groupLayer = {
+      id: `layer-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      type: 'group',
+      name: 'Group',
+      x: minX,
+      y: minY,
+      width: groupWidth,
+      height: groupHeight,
+      rotation: 0,
+      visible: true,
+      effects: normalizeImageEffects(),
+      children: layersToGroup.map((layer) => {
+        // Store relative positions within the group
+        return {
+          id: layer.id,
+          relativeX: layer.x - minX,
+          relativeY: layer.y - minY,
+        };
+      }),
+    };
+
+    // Update child layers to be relative to group
+    const updatedLayers = activeSlide.layers.map((layer) => {
+      if (selectedLayerIds.includes(layer.id) && layer.type !== 'group' && !layer.parentId) {
+        return {
+          ...layer,
+          parentId: groupLayer.id,
+          x: layer.x - minX,
+          y: layer.y - minY,
+        };
+      }
+      return layer;
+    });
+
+    // Add group layer and update children
+    const updatedSlide = {
+      ...activeSlide,
+      layers: [...updatedLayers, groupLayer],
+    };
+
+    const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+    saveToHistory(updatedSlides);
+    setSlides(updatedSlides);
+
+    // Select the new group
+    setSelectedLayerId(groupLayer.id);
+    setSelectedLayerIds([groupLayer.id]);
+  }, [activeSlide, selectedLayerIds, slides, activeSlideId, saveToHistory]);
+
+  const handleUngroupLayer = useCallback((layerId) => {
+    if (!activeSlide) return;
+
+    const groupLayer = activeSlide.layers.find((l) => l.id === layerId && l.type === 'group');
+    if (!groupLayer || !groupLayer.children) return;
+
+    // Find all child layers
+    const childLayers = activeSlide.layers.filter((layer) => layer.parentId === layerId);
+
+    // Update child layers to absolute positions and remove parent reference
+    const updatedLayers = activeSlide.layers.map((layer) => {
+      if (layer.parentId === layerId) {
+        return {
+          ...layer,
+          x: groupLayer.x + layer.x,
+          y: groupLayer.y + layer.y,
+          parentId: undefined,
+        };
+      }
+      return layer;
+    });
+
+    // Remove group layer
+    const filteredLayers = updatedLayers.filter((layer) => layer.id !== layerId);
+
+    const updatedSlide = {
+      ...activeSlide,
+      layers: filteredLayers,
+    };
+
+    const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
+    saveToHistory(updatedSlides);
+    setSlides(updatedSlides);
+
+    // Select first child or deselect
+    if (childLayers.length > 0) {
+      setSelectedLayerId(childLayers[0].id);
+      setSelectedLayerIds([childLayers[0].id]);
+    } else {
+      setSelectedLayerId(null);
+      setSelectedLayerIds([]);
+    }
+  }, [activeSlide, slides, activeSlideId, saveToHistory]);
+
+  // Track Ctrl/Cmd key state for multi-select
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(false);
+      }
+    };
+
+    const handleBlur = () => {
+      // Reset when window loses focus
+      setIsCtrlPressed(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
+
+  // Keyboard shortcuts for grouping
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only handle shortcuts when not typing in an input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Ctrl+G or Cmd+G to group
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g' && !e.shiftKey) {
+        e.preventDefault();
+        if (selectedLayerIds.length >= 2) {
+          handleGroupLayers();
+        }
+      }
+
+      // Ctrl+Shift+G or Cmd+Shift+G to ungroup
+      if ((e.ctrlKey || e.metaKey) && e.key === 'G' && e.shiftKey) {
+        e.preventDefault();
+        if (selectedLayerId) {
+          handleUngroupLayer(selectedLayerId);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedLayerIds, selectedLayerId, handleGroupLayers, handleUngroupLayer]);
 
   useEffect(() => {
     if (!activeSlide) return;
@@ -989,6 +1233,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
       // If clicking on empty space, deselect
       if (e.target === stage || e.target.name() === 'background') {
         setSelectedLayerId(null);
+        setSelectedLayerIds([]);
       }
       return;
     }
@@ -1168,18 +1413,30 @@ const handleApplyEnhancedText = (enhancedText) => {
     newX = Math.max(0, Math.min(maxWidth - layer.width, newX));
     newY = Math.max(0, Math.min(maxHeight - layer.height, newY));
     
+    const deltaX = newX - layer.x;
+    const deltaY = newY - layer.y;
+    
     updateActiveSlide((slide) => {
       const updatedSlide = {
         ...slide,
-        layers: slide.layers.map((l) =>
-          l.id === layer.id
-            ? {
-                ...l,
-                x: newX,
-                y: newY,
-              }
-            : l,
-        ),
+        layers: slide.layers.map((l) => {
+          if (l.id === layer.id) {
+            return {
+              ...l,
+              x: newX,
+              y: newY,
+            };
+          }
+          // If this is a child of the dragged group, move it too
+          if (layer.type === 'group' && l.parentId === layer.id) {
+            return {
+              ...l,
+              x: l.x + deltaX,
+              y: l.y + deltaY,
+            };
+          }
+          return l;
+        }),
       };
       const updatedSlides = slides.map((s) => (s.id === activeSlideId ? updatedSlide : s));
       saveToHistory(updatedSlides);
@@ -1229,25 +1486,36 @@ const handleApplyEnhancedText = (enhancedText) => {
     // Node position is at center, convert to top-left
     const centerX = node.x() / scale;
     const centerY = node.y() / scale;
-    let newX = centerX - newWidth / 2;
-    let newY = centerY - newHeight / 2;
+
+    const maxWidth = layout.width;
+    const maxHeight = layout.height;
+
+    // Clamp width/height first
+    newWidth = Math.max(8, Math.min(maxWidth, newWidth));
+    newHeight = Math.max(8, Math.min(maxHeight, newHeight));
 
     if (layer.type === 'shape' && layer.shape === 'circle') {
       const size = Math.max(newWidth, newHeight);
       newWidth = size;
       newHeight = size;
-      // Recalculate position after size change
-      newX = centerX - newWidth / 2;
-      newY = centerY - newHeight / 2;
+      // Re-clamp after circle size adjustment
+      newWidth = Math.max(8, Math.min(maxWidth, newWidth));
+      newHeight = Math.max(8, Math.min(maxHeight, newHeight));
     }
 
-    const maxWidth = layout.width;
-    const maxHeight = layout.height;
-
-    newWidth = Math.max(8, Math.min(maxWidth, newWidth));
-    newHeight = Math.max(8, Math.min(maxHeight, newHeight));
-    newX = Math.max(0, Math.min(maxWidth - newWidth, newX));
-    newY = Math.max(0, Math.min(maxHeight - newHeight, newY));
+    // Clamp the center position first, then calculate newX from clamped center
+    // This prevents elements from sticking to edges when resized
+    const minCenterX = newWidth / 2;
+    const maxCenterX = maxWidth - newWidth / 2;
+    const clampedCenterX = Math.max(minCenterX, Math.min(maxCenterX, centerX));
+    
+    const minCenterY = newHeight / 2;
+    const maxCenterY = maxHeight - newHeight / 2;
+    const clampedCenterY = Math.max(minCenterY, Math.min(maxCenterY, centerY));
+    
+    // Calculate top-left position from clamped center
+    let newX = clampedCenterX - newWidth / 2;
+    let newY = clampedCenterY - newHeight / 2;
 
     updateActiveSlide((slide) => {
       const updatedSlide = {
@@ -1321,7 +1589,49 @@ const handleApplyEnhancedText = (enhancedText) => {
 
   const handleLayerClick = (layer, e) => {
     e.cancelBubble = true;
-    setSelectedLayerId(layer.id);
+    
+    // Support multi-select with Ctrl/Cmd key
+    // Check multiple ways to detect modifier keys (Konva events can vary)
+    const nativeEvent = e.evt || e;
+    const ctrlPressed = isCtrlPressed || nativeEvent?.ctrlKey || nativeEvent?.metaKey;
+    
+    if (ctrlPressed) {
+      setSelectedLayerIds((prev) => {
+        if (prev.includes(layer.id)) {
+          // Deselect if already selected
+          const newIds = prev.filter((id) => id !== layer.id);
+          setSelectedLayerId(newIds.length > 0 ? newIds[newIds.length - 1] : null);
+          return newIds;
+        } else {
+          // Add to selection (only if not a child of a group, or if the group itself)
+          if (layer.parentId && !prev.includes(layer.parentId)) {
+            // If clicking a child, select the parent group instead
+            const parentLayer = activeSlide?.layers.find((l) => l.id === layer.parentId);
+            if (parentLayer) {
+              setSelectedLayerId(parentLayer.id);
+              return [parentLayer.id];
+            }
+          }
+          // Add to selection
+          const newIds = [...prev, layer.id];
+          setSelectedLayerId(layer.id);
+          return newIds;
+        }
+      });
+    } else {
+      // Single select
+      // If clicking a child layer, select the parent group instead
+      if (layer.parentId) {
+        const parentLayer = activeSlide?.layers.find((l) => l.id === layer.parentId);
+        if (parentLayer) {
+          setSelectedLayerId(parentLayer.id);
+          setSelectedLayerIds([parentLayer.id]);
+          return;
+        }
+      }
+      setSelectedLayerId(layer.id);
+      setSelectedLayerIds([layer.id]);
+    }
   };
 
   const selectedLayer = useMemo(() => {
@@ -1648,6 +1958,7 @@ const handleApplyEnhancedText = (enhancedText) => {
     });
     setSelectedLayerId(duplicated.id);
   };
+
 
   const handleToggleLayerVisibility = (layerId) => {
     updateActiveSlide((slide) => {
@@ -2482,6 +2793,9 @@ const handleApplyEnhancedText = (enhancedText) => {
                   {activeSlide?.layers.map((layer) => {
                     const layerRef = getLayerNodeRef(layer.id);
                     if (!layer.visible) return null;
+                    
+                    // Skip child layers (they're rendered as part of their parent group)
+                    if (layer.parentId) return null;
 
                     const scaledX = layer.x * scale;
                     const scaledY = layer.y * scale;
@@ -2490,7 +2804,83 @@ const handleApplyEnhancedText = (enhancedText) => {
 
                     let renderedLayer = null;
 
-                    if (layer.type === 'text') {
+                    if (layer.type === 'group') {
+                      // Render group with its children
+                      const childLayers = activeSlide.layers.filter((l) => l.parentId === layer.id);
+                      const childElements = childLayers.map((childLayer) => {
+                        const childRef = getLayerNodeRef(childLayer.id);
+                        const childScaledX = childLayer.x * scale;
+                        const childScaledY = childLayer.y * scale;
+                        const childScaledWidth = childLayer.width * scale;
+                        const childScaledHeight = childLayer.height * scale;
+
+                        let childRendered = null;
+                        if (childLayer.type === 'text') {
+                          childRendered = (
+                            <TextLayer
+                              ref={childRef}
+                              layer={childLayer}
+                              scaledX={childScaledX}
+                              scaledY={childScaledY}
+                              scaledWidth={childScaledWidth}
+                              scaledHeight={childScaledHeight}
+                              scale={scale}
+                              onDragMove={(e) => handleLayerDragMove(childLayer, e)}
+                              onDragEnd={(e) => handleLayerDragEnd(childLayer, e)}
+                              onClick={(e) => handleLayerClick(childLayer, e)}
+                            />
+                          );
+                        } else if (childLayer.type === 'image') {
+                          childRendered = (
+                            <ImageLayer
+                              ref={childRef}
+                              layer={childLayer}
+                              scaledX={childScaledX}
+                              scaledY={childScaledY}
+                              scaledWidth={childScaledWidth}
+                              scaledHeight={childScaledHeight}
+                              scale={scale}
+                              onDragMove={(e) => handleLayerDragMove(childLayer, e)}
+                              onDragEnd={(e) => handleLayerDragEnd(childLayer, e)}
+                              onClick={(e) => handleLayerClick(childLayer, e)}
+                            />
+                          );
+                        } else if (childLayer.type === 'shape') {
+                          childRendered = (
+                            <ShapeLayer
+                              ref={childRef}
+                              layer={childLayer}
+                              scaledX={childScaledX}
+                              scaledY={childScaledY}
+                              scaledWidth={childScaledWidth}
+                              scaledHeight={childScaledHeight}
+                              scale={scale}
+                              onDragMove={(e) => handleLayerDragMove(childLayer, e)}
+                              onDragEnd={(e) => handleLayerDragEnd(childLayer, e)}
+                              onClick={(e) => handleLayerClick(childLayer, e)}
+                            />
+                          );
+                        }
+                        return childRendered;
+                      });
+
+                      renderedLayer = (
+                        <GroupLayer
+                          ref={layerRef}
+                          layer={layer}
+                          scaledX={scaledX}
+                          scaledY={scaledY}
+                          scaledWidth={scaledWidth}
+                          scaledHeight={scaledHeight}
+                          scale={scale}
+                          onDragMove={(e) => handleLayerDragMove(layer, e)}
+                          onDragEnd={(e) => handleLayerDragEnd(layer, e)}
+                          onClick={(e) => handleLayerClick(layer, e)}
+                        >
+                          {childElements}
+                        </GroupLayer>
+                      );
+                    } else if (layer.type === 'text') {
                       renderedLayer = (
                         <TextLayer
                           ref={layerRef}
