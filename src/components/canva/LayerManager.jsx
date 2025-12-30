@@ -6,6 +6,8 @@ import {
 
 const LayerManager = ({ layers, selectedLayer, onLayerSelect, onLayerUpdate, onLayerDelete, onLayerDuplicate }) => {
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const [renamingLayerId, setRenamingLayerId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const styles = {
     container: {
@@ -195,6 +197,27 @@ const LayerManager = ({ layers, selectedLayer, onLayerSelect, onLayerUpdate, onL
     onLayerDelete(layer.id);
   };
 
+  const startRenameLayer = (layer, e) => {
+    if (e) e.stopPropagation();
+    setRenamingLayerId(layer.id);
+    setRenameValue(layer.name || '');
+  };
+
+  const commitRenameLayer = () => {
+    if (!renamingLayerId) return;
+    const trimmed = renameValue.trim();
+    if (trimmed) {
+      onLayerUpdate(renamingLayerId, { name: trimmed });
+    }
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
+  const cancelRenameLayer = () => {
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
   const handleGroupToggle = (groupId) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupId)) {
@@ -265,7 +288,43 @@ const LayerManager = ({ layers, selectedLayer, onLayerSelect, onLayerUpdate, onL
           </div>
           
           <div style={styles.layerInfo}>
-            <p style={styles.layerName}>{layer.name}</p>
+            {renamingLayerId === layer.id ? (
+              <input
+                autoFocus
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={commitRenameLayer}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitRenameLayer();
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelRenameLayer();
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  padding: '4px 6px',
+                  border: '1px solid #3182ce',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  outline: 'none',
+                  backgroundColor: 'white'
+                }}
+              />
+            ) : (
+              <p 
+                style={styles.layerName}
+                onDoubleClick={(e) => startRenameLayer(layer, e)}
+                title="Double-click to rename"
+              >
+                {layer.name}
+              </p>
+            )}
             <p style={styles.layerType}>
               {layer.type} • {layer.width}×{layer.height}
             </p>

@@ -57,6 +57,9 @@ export const getShapePoints = (shape, width, height) => {
       return [w * 0.3, h, w * 0.3, h * 0.3, 0, h * 0.3, cx, 0, w, h * 0.3, w * 0.7, h * 0.3, w * 0.7, h];
     case 'arrow-down':
       return [w * 0.3, 0, w * 0.3, h * 0.7, 0, h * 0.7, cx, h, w, h * 0.7, w * 0.7, h * 0.7, w * 0.7, 0];
+    case 'line':
+      // Horizontal line from left-center to right-center
+      return [-w / 2, 0, w / 2, 0];
     default:
       return [];
   }
