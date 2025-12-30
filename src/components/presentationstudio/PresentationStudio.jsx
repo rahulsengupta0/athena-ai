@@ -30,12 +30,21 @@ const PresentationStudio = () => {
     setGenerationStep(0);
 
     try {
-      const data = await generatePresentation({ prompt });
+      const data = await generatePresentation({ 
+        prompt,
+        tone,
+        length,
+        mediaStyle,
+        useBrandStyle,
+        outlineText 
+      });
 
       const normalizedSlides = data.slides.map((slide, index) => ({
         id: Date.now() + index,
         title: slide.title || `Slide ${index + 1}`,
+        bullets: Array.isArray(slide.bullets) ? slide.bullets : (slide.bullets ? [slide.bullets] : []),
         content: Array.isArray(slide.bullets) ? slide.bullets.join('\n') : slide.bullets || '',
+        type: slide.type || 'bullet',
         image: slide.image || null
       }));
 
@@ -54,9 +63,19 @@ const PresentationStudio = () => {
     try {
       const updatedSlides = [...generatedSlides];
       const currentSlide = updatedSlides[selectedSlide];
-
-      const result = await rewriteContent(currentSlide.content, instruction);
-      currentSlide.content = result.rewrittenContent;
+      
+      // Convert bullets array to string for AI processing if needed
+      const contentToProcess = Array.isArray(currentSlide.bullets) ? 
+        currentSlide.bullets.join('\n') : currentSlide.content || '';
+      
+      const result = await rewriteContent(contentToProcess, instruction);
+      
+      // If the slide has bullets array, update it as array, otherwise update content
+      if (Array.isArray(currentSlide.bullets)) {
+        currentSlide.bullets = result.rewrittenContent.split('\n');
+      } else {
+        currentSlide.content = result.rewrittenContent;
+      }
 
       setGeneratedSlides(updatedSlides);
     } catch (error) {
@@ -69,7 +88,12 @@ const PresentationStudio = () => {
   const handleAddImage = async () => {
     try {
       const currentSlide = generatedSlides[selectedSlide];
-      const result = await generateImage(`${currentSlide.title}. ${currentSlide.content.substring(0, 100)}...`);
+      
+      // Use content or bullets for image generation
+      const contentForImage = Array.isArray(currentSlide.bullets) ? 
+        currentSlide.bullets.join(' ') : currentSlide.content || '';
+      
+      const result = await generateImage(`${currentSlide.title}. ${contentForImage.substring(0, 100)}...`);
 
       const updatedSlides = [...generatedSlides];
       updatedSlides[selectedSlide].image = result.imageUrl;
@@ -168,7 +192,9 @@ const PresentationStudio = () => {
       {
         id: Date.now() + Math.random(), // Ensure unique ID
         title: 'New Slide',
+        bullets: [],
         content: '',
+        type: 'bullet',
         image: null
       };
     setGeneratedSlides([...generatedSlides, newSlide]);
@@ -203,10 +229,14 @@ const PresentationStudio = () => {
     setGeneratedSlides(updatedSlides);
   };
 
-  const handleEditSlide = (index, updatedSlideData) => {
-    const updatedSlides = [...generatedSlides];
-    updatedSlides[index] = { ...updatedSlides[index], ...updatedSlideData };
-    setGeneratedSlides(updatedSlides);
+  const handleEditSlide = (index, field, value) => {
+    const updated = [...generatedSlides];
+    if (Array.isArray(updated[index][field]) && Array.isArray(value)) {
+      updated[index][field] = value;
+    } else {
+      updated[index][field] = value;
+    }
+    setGeneratedSlides(updated);
   };
 
   return (
@@ -251,6 +281,7 @@ const PresentationStudio = () => {
             handleAddChart={() => alert('Chart added to slide!')}
             handleAddSlide={handleAddSlide}
             setSelectedSlide={setSelectedSlide}
+            presentationTheme={{ backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' }}
           />
         )}
       </div>

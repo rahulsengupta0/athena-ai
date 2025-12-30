@@ -10,7 +10,14 @@ export const generatePresentation = async (params) => {
   const response = await fetch(`${API_BASE_URL}/get-presentation-data`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ topic: params.prompt })
+    body: JSON.stringify({ 
+      topic: params.prompt,
+      tone: params.tone,
+      length: params.length,
+      mediaStyle: params.mediaStyle,
+      useBrandStyle: params.useBrandStyle,
+      outlineText: params.outlineText
+    })
   });
   if (!response.ok) throw new Error(`Failed to generate presentation: ${response.status}`);
   return response.json();
