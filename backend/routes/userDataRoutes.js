@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middlewares/auth');
 const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
+const Presentation = require('../model/Presentation');
 const BrandKit = require('../model/BrandKit');
 const User = require('../model/User');
 const UserFile = require('../model/UserFile');
@@ -208,7 +209,7 @@ router.get('/brandkits', auth, async (req, res) => {
       BrandKit.find({ userId: req.user.id }),
       BrandKit.find({ collaborators: req.user.id }).populate('userId', 'firstName lastName email')
     ]);
-    
+
     // Mark shared kits and add owner info
     const ownKits = own.map(kit => ({ ...kit.toObject(), isShared: false, sharedBy: null }));
     const sharedKits = shared.map(kit => {
@@ -225,7 +226,7 @@ router.get('/brandkits', auth, async (req, res) => {
         }
       };
     });
-    
+
     const brandKits = [...ownKits, ...sharedKits].sort((a, b) => b.createdAt - a.createdAt);
     res.json(brandKits);
   } catch (err) {
@@ -276,22 +277,22 @@ router.post('/brandkits/:id/collaborators', auth, async (req, res) => {
     const kit = await BrandKit.findOne({ _id: req.params.id, userId: req.user.id });
     if (!kit) return res.status(404).json({ msg: 'Brand kit not found' });
     if (!Array.isArray(kit.collaborators)) kit.collaborators = [];
-    
+
     // Check if already a collaborator
     if (kit.collaborators.find((id) => String(id) === String(userId))) {
       return res.json(kit);
     }
-    
+
     kit.collaborators.push(userId);
     await kit.save();
-    
+
     // Send email notification to the new collaborator
     try {
       const collaborator = await User.findById(userId);
       if (collaborator && collaborator.email) {
         const owner = await User.findById(req.user.id);
         const ownerName = owner ? `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email : 'Team Owner';
-        
+
         await sendBrandKitShareEmail(
           collaborator.email,
           kit.name,
@@ -303,7 +304,7 @@ router.post('/brandkits/:id/collaborators', auth, async (req, res) => {
       console.error('Error sending brand kit share email:', emailError);
       // Don't fail the request if email fails, just log it
     }
-    
+
     res.json(kit);
   } catch (err) {
     res.status(500).send('Server Error');
@@ -334,7 +335,7 @@ async function deleteS3Folder(userId, kitFolder) {
     }
 
     const Prefix = `${userId}/brandkit/${kitFolder}/`;
-    
+
     // List all objects in the folder
     let ContinuationToken = undefined;
     const objectsToDelete = [];
@@ -343,13 +344,13 @@ async function deleteS3Folder(userId, kitFolder) {
       const resp = await s3
         .listObjectsV2({ Bucket, Prefix, ContinuationToken })
         .promise();
-      
+
       if (resp.Contents && resp.Contents.length > 0) {
         resp.Contents.forEach((obj) => {
           objectsToDelete.push({ Key: obj.Key });
         });
       }
-      
+
       ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
     } while (ContinuationToken);
 
@@ -384,12 +385,12 @@ router.delete('/brandkits/:id', auth, async (req, res) => {
 
     const userId = req.user.id;
     const Bucket = process.env.AWS_S3_BUCKET;
-    
+
     // Search for S3 folders matching this brandkit
     // KitFolder format: name.toLowerCase().replace(/ /g, "-") + "-" + Date.now()
     const normalizedName = brandKit.name.toLowerCase().replace(/ /g, '-');
     const Prefix = `${userId}/brandkit/`;
-    
+
     let ContinuationToken = undefined;
     const foldersToDelete = new Set();
 
@@ -398,7 +399,7 @@ router.delete('/brandkits/:id', auth, async (req, res) => {
       const resp = await s3
         .listObjectsV2({ Bucket, Prefix, ContinuationToken, Delimiter: '/' })
         .promise();
-      
+
       // Check common prefixes (folders)
       if (resp.CommonPrefixes) {
         resp.CommonPrefixes.forEach((prefix) => {
@@ -410,7 +411,7 @@ router.delete('/brandkits/:id', auth, async (req, res) => {
           }
         });
       }
-      
+
       ContinuationToken = resp.IsTruncated ? resp.NextContinuationToken : undefined;
     } while (ContinuationToken);
 
@@ -426,11 +427,78 @@ router.delete('/brandkits/:id', auth, async (req, res) => {
 
     // Delete from database
     await BrandKit.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    
+
     res.json({ msg: 'Brand kit deleted successfully' });
   } catch (err) {
     console.error('Delete brand kit error:', err);
     res.status(500).json({ error: 'Server Error', msg: err.message });
+  }
+});
+
+// ============= PRESENTATION ROUTES =============
+
+// Get all presentations for a user
+router.get('/presentation', auth, async (req, res) => {
+  try {
+    const presentations = await Presentation.find({ user: req.user.id }).sort({ updatedAt: -1 });
+    res.json(presentations);
+  } catch (err) {
+    console.error('Get presentations error:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Get a single presentation by ID
+router.get('/presentation/:id', auth, async (req, res) => {
+  try {
+    const presentation = await Presentation.findOne({ _id: req.params.id, user: req.user.id });
+    if (!presentation) {
+      return res.status(404).json({ msg: 'Presentation not found' });
+    }
+    res.json(presentation);
+  } catch (err) {
+    console.error('Get presentation by ID error:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Create a new presentation
+router.post('/presentation', auth, async (req, res) => {
+  try {
+    const { name, layout, slides } = req.body;
+    const newPresentation = new Presentation({
+      name: name || 'Untitled Presentation',
+      user: req.user.id,
+      layout,
+      slides,
+    });
+    await newPresentation.save();
+    console.log("Presentation Saved.")
+    res.status(201).json(newPresentation);
+  } catch (err) {
+    console.error('Create presentation error:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Update an existing presentation
+router.put('/presentation/:id', auth, async (req, res) => {
+  try {
+    const { name, layout, slides } = req.body;
+    const presentation = await Presentation.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
+      { name, layout, slides, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    if (!presentation) {
+      return res.status(404).json({ msg: 'Presentation not found' });
+    }
+
+    res.json(presentation);
+  } catch (err) {
+    console.error('Update presentation error:', err);
+    res.status(500).send('Server Error');
   }
 });
 

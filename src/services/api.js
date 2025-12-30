@@ -165,6 +165,35 @@ class ApiService {
     });
   }
 
+  // Presentations
+  async getPresentations() {
+    return this.request('/api/user-data/presentation', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getPresentation(id) {
+    return this.request(`/api/user-data/presentation/${id}`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async createPresentation(presentationData) {
+    return this.request('/api/user-data/presentation', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(presentationData),
+    });
+  }
+
+  async updatePresentation(id, presentationData) {
+    return this.request(`/api/user-data/presentation/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(presentationData),
+    });
+  }
+
   // Favorites
   async getFavorites() {
     return this.request('/api/user-data/favorites', {
@@ -421,7 +450,7 @@ class ApiService {
       headers: getAuthHeaders(),
     });
   }
-  
+
 
   async deleteTemplate(id) {
     return this.request(`/api/templates/${id}`, {

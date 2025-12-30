@@ -13,6 +13,7 @@ import {
   ChevronRight,
   X,
   Timer,
+  HardDrive,
 } from 'lucide-react';
 import SelectionTool from './tools/SelectionTool';
 import TextTools from './tools/TextTools';
@@ -1647,6 +1648,12 @@ const handleApplyEnhancedText = (enhancedText) => {
     setActiveSlideId(duplicate.id);
   };
 
+  const handleSave = () => {
+    // TODO: Implement actual save logic (e.g., API call)
+    console.log('Saving presentation...', { slides, layout });
+    alert('Presentation data saved to console. This is a placeholder for actual save functionality.');
+  };
+
   const baseBackground = 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)';
 
   return (
@@ -1773,6 +1780,26 @@ const handleApplyEnhancedText = (enhancedText) => {
           </div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={handleSave}
+            title="Save presentation"
+            style={{
+              border: '1px solid rgba(15, 23, 42, 0.1)',
+              background: 'rgba(15, 23, 42, 0.04)',
+              borderRadius: 10,
+              padding: '6px 14px',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              color: '#0f172a',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <HardDrive size={16} style={{ marginRight: '6px' }} />
+            Save
+          </button>
           <UndoRedoControls
             historyIndex={historyIndex}
             historyLength={historyLength}
