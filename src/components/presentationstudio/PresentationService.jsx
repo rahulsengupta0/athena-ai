@@ -46,7 +46,7 @@ export const exportPresentation = async (slides, format) => {
  * @returns {Promise<Object>} - { rewrittenContent: string }
  */
 export const rewriteContent = async (content, instruction) => {
-  const response = await fetch(`${API_BASE_URL}/rewrite`, {
+  const response = await fetch(`${API_BASE_URL}/rewrite-slide`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content, instruction })
@@ -61,7 +61,7 @@ export const rewriteContent = async (content, instruction) => {
  * @returns {Promise<Object>} - { imageUrl: string }
  */
 export const generateImage = async (prompt) => {
-  const response = await fetch(`${API_BASE_URL}/generate-image`, {
+  const response = await fetch(`${API_BASE_URL}/generate-slide-image`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt })

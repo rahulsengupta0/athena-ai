@@ -22,6 +22,7 @@ const PresentationStudio = () => {
   const [generationStep, setGenerationStep] = useState(0);
   const [generatedSlides, setGeneratedSlides] = useState([]);
   const [selectedSlide, setSelectedSlide] = useState(0);
+  const [presentationTheme, setPresentationTheme] = useState({ backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
 
 // ----------------- handleGenerate -----------------
   const handleGenerate = async () => {
@@ -38,6 +39,9 @@ const PresentationStudio = () => {
         useBrandStyle,
         outlineText 
       });
+
+      // Update the theme with the one from the backend
+      setPresentationTheme(data.theme || { backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
 
       const normalizedSlides = data.slides.map((slide, index) => ({
         id: Date.now() + index,
@@ -281,7 +285,7 @@ const PresentationStudio = () => {
             handleAddChart={() => alert('Chart added to slide!')}
             handleAddSlide={handleAddSlide}
             setSelectedSlide={setSelectedSlide}
-            presentationTheme={{ backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' }}
+            presentationTheme={presentationTheme}
           />
         )}
       </div>

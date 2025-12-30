@@ -23,10 +23,10 @@ Outline (if provided): ${outlineText}
 Return ONLY valid JSON with this structure:
 {
   "theme": {
-    "backgroundColor": "#0F172A",
-    "textColor": "#F1F5F9",
-    "accentColor": "#00FFFF",
-    "font": "Segoe UI"
+    "backgroundColor": "bgcolour acc to the topic",
+    "textColor": "textcolour acc to the topic",
+    "accentColor": "accent colour acc to the topic ",
+    "font": "font colour acc to the topic"
   },
   "slides": [
     {

@@ -12,7 +12,8 @@ const EditorSection = ({
   handleAddImage, 
   handleAddChart,
   handleAddSlide,
-  setSelectedSlide
+  setSelectedSlide,
+  presentationTheme
 }) => {
   const [slideTemplates] = useState([
     { title: 'Title Slide', content: '', image: null, isTitleSlide: true },
@@ -25,6 +26,8 @@ const EditorSection = ({
   const [selectedTheme, setSelectedTheme] = useState('Default');
   const [selectedLayout, setSelectedLayout] = useState('Title & Content');
   const [aiInput, setAiInput] = useState('');
+
+  const currentTheme = presentationTheme || { backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' };
 
   return (
     <div className="presentation-studio-editor">
@@ -115,7 +118,14 @@ const EditorSection = ({
 
       {/* Slide Preview */}
       <div className="presentation-studio-preview-container">
-        <div className="presentation-studio-preview">
+        <div 
+          className="presentation-studio-preview"
+          style={{
+            background: currentTheme.backgroundColor,
+            color: currentTheme.textColor,
+            fontFamily: currentTheme.font
+          }}
+        >
           <div className="presentation-studio-preview-header">
             <h3 className="presentation-studio-preview-title">
               Slide {selectedSlide + 1}: {generatedSlides[selectedSlide]?.title || 'Untitled'}
@@ -140,14 +150,35 @@ const EditorSection = ({
               onChange={(e) => handleEditSlide(selectedSlide, 'title', e.target.value)}
               className="presentation-studio-slide-title"
               placeholder="Slide Title"
+              style={{
+                background: currentTheme.backgroundColor,
+                color: currentTheme.textColor,
+                fontFamily: currentTheme.font
+              }}
             />
-            <textarea
-              value={generatedSlides[selectedSlide]?.content || ''}
-              onChange={(e) => handleEditSlide(selectedSlide, 'content', e.target.value)}
-              className="presentation-studio-slide-content"
-              placeholder="Slide content..."
-              style={{ whiteSpace: 'pre-wrap' }}
-            />
+            {generatedSlides[selectedSlide]?.type === "bullet" && (
+              <div>
+                {generatedSlides[selectedSlide].bullets.map((bullet, i) => (
+                  <input
+                    key={i}
+                    value={bullet}
+                    onChange={(e) =>
+                      handleEditSlide(selectedSlide, "bullets", {
+                        index: i,
+                        value: e.target.value
+                      })
+                    }
+                    className="presentation-studio-slide-bullet"
+                    style={{
+                      background: currentTheme.backgroundColor,
+                      color: currentTheme.textColor,
+                      fontFamily: currentTheme.font
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
             
             {generatedSlides[selectedSlide]?.image ? (
               <div className="presentation-studio-slide-image-container">

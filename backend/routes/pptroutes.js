@@ -26,6 +26,28 @@ app.post("/get-presentation-data", async (req,res)=>{
   } catch(e) { res.status(500).json({ error:"Failed to get presentation data", details:e.message }); }
 });
 
+// Save presentation endpoint
+app.post("/save", async (req, res) => {
+  try {
+    const { slides } = req.body;
+    if (!slides || !Array.isArray(slides)) {
+      return res.status(400).json({ error: "Slides array required!" });
+    }
+    
+    // In a real implementation, you would save the presentation to a database
+    // For now, we'll just return a success response with a mock ID
+    const presentationId = `presentation_${Date.now()}`;
+    
+    res.json({ 
+      id: presentationId,
+      message: "Presentation saved successfully"
+    });
+  } catch (e) {
+    console.error("Save presentation error:", e);
+    res.status(500).json({ error: "Failed to save presentation", details: e.message });
+  }
+});
+
 app.post("/generate-ppt", async (req,res)=>{
   try {
     const { topic, editedData } = req.body;
