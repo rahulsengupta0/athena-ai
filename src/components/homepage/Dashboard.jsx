@@ -84,10 +84,6 @@ const Dashboard = () => {
   const [hoveredButton, setHoveredButton] = useState(null);
   const [clickedButton, setClickedButton] = useState(null);
   const [isPhone, setIsPhone] = useState(false);
-<<<<<<< HEAD
-  const [isTablet, setIsTablet] = useState(false);
-=======
->>>>>>> rc
   const [isSmallMobile, setIsSmallMobile] = useState(false);
 
   React.useEffect(() => {
@@ -95,17 +91,11 @@ const Dashboard = () => {
       const width = window.innerWidth;
       setIsSmallMobile(width <= 360);
       setIsPhone(width <= 768);
-<<<<<<< HEAD
-      setIsTablet(width > 768 && width <= 1024);
-=======
->>>>>>> rc
     };
     handle();
     window.addEventListener("resize", handle);
     return () => window.removeEventListener("resize", handle);
   }, []);
-<<<<<<< HEAD
-=======
 
 
   const [inputText, setInputText] = useState("");
@@ -324,7 +314,6 @@ const handleCreateClick = async () => {
   }
 };
 
->>>>>>> rc
 
   return (
     <div
@@ -334,11 +323,7 @@ const handleCreateClick = async () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-<<<<<<< HEAD
-        padding: isSmallMobile ? "16px 12px 12px 12px" : isPhone ? "24px 16px 12px 16px" : "44px 8px 12px 8px",
-=======
         padding: isSmallMobile ? "16px 12px 12px 12px" : isPhone ? "24px 16px 12px 16px" : "48px 8px 16px 8px",
->>>>>>> rc
         width: "100%",
         overflowX: "hidden",
         boxSizing: "border-box",
@@ -346,17 +331,10 @@ const handleCreateClick = async () => {
     >
       <h1
         style={{
-<<<<<<< HEAD
-          fontSize: isSmallMobile ? "1.6rem" : isPhone ? "clamp(1.8rem,6vw,2.8rem)" : "clamp(1.8rem,6vw,3.5rem)",
-          fontWeight: 800,
-          margin: isSmallMobile ? "0 0 12px 0" : isPhone ? "0 0 16px 0" : "0 0 20px 0",
-          background: "linear-gradient(90deg,#a08afc 0%,#3dcaff 60%,#d32f93 100%)",
-=======
           fontSize: isSmallMobile ? "1.55rem" : isPhone ? "clamp(1.8rem,6vw,2.6rem)" : "clamp(2rem,5vw,3rem)",
           fontWeight: 800,
           margin: isSmallMobile ? "0 0 10px 0" : isPhone ? "0 0 14px 0" : "0 0 18px 0",
           background: "linear-gradient(90deg,#6b8cff 0%,#9b8bfd 50%,#f472b6 100%)",
->>>>>>> rc
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           textAlign: "center",
@@ -386,20 +364,6 @@ const handleCreateClick = async () => {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-<<<<<<< HEAD
-              padding: isSmallMobile ? "6px 16px" : isPhone ? "7px 18px" : "8px 22px",
-              borderRadius: isSmallMobile ? "18px" : "22px",
-              background:
-                activeTab === tab.key
-                  ? "linear-gradient(90deg,#b692f6,#80c7fb)"
-                  : "#fff",
-              color: activeTab === tab.key ? "#fff" : "#52576d",
-              fontWeight: 600,
-              fontSize: isSmallMobile ? "0.85rem" : isPhone ? "0.95rem" : "clamp(0.95rem,2.5vw,1.13rem)",
-              border: activeTab === tab.key ? "none" : "1.5px solid #eee",
-              boxShadow:
-                activeTab === tab.key ? "0 4px 28px 0 #c5bdf93d" : "none",
-=======
               padding: "8px 24px",
               borderRadius: "20px",
               background: activeTab === tab.key ? "#0f172a" : "rgba(255,255,255,0.7)",
@@ -408,7 +372,6 @@ const handleCreateClick = async () => {
               fontSize: isSmallMobile ? "0.84rem" : isPhone ? "0.95rem" : "clamp(0.95rem,2.5vw,1.05rem)",
               border: activeTab === tab.key ? "1px solid #0f172a" : "1px solid #e5e7eb",
               boxShadow: activeTab === tab.key ? "0 8px 24px rgba(15,23,42,0.18)" : "0 2px 10px rgba(2,6,23,0.06)",
->>>>>>> rc
               transition: "all 0.18s",
               cursor: "pointer",
               minHeight: isSmallMobile ? "36px" : isPhone ? "40px" : "auto",
@@ -423,35 +386,21 @@ const handleCreateClick = async () => {
 
       <div
         style={{
-<<<<<<< HEAD
-          background: "#fff",
-          borderRadius: isSmallMobile ? "20px" : "24px",
-          boxShadow: "0 2px 32px #c9c6f211",
-          padding: isSmallMobile ? "12px 12px" : isPhone ? "16px 14px" : "26px 28px 22px 28px",
-=======
           background: "rgba(255,255,255,0.7)",
           backdropFilter: "saturate(180%) blur(10px)",
           borderRadius: isSmallMobile ? "18px" : "22px",
           boxShadow: "0 10px 40px rgba(2,6,23,0.06)",
           padding: isSmallMobile ? "12px 12px" : isPhone ? "18px 16px" : "28px 28px 24px 28px",
->>>>>>> rc
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           width: isSmallMobile ? "100%" : isPhone ? "92vw" : "100%",
-<<<<<<< HEAD
-          maxWidth: isSmallMobile ? "100%" : isPhone ? 420 : 740,
-          marginBottom: isSmallMobile ? 16 : isPhone ? 20 : 26,
-          border: "1.5px solid #f1eeff",
-          boxSizing: "border-box",
-=======
           maxWidth: isSmallMobile ? "100%" : isPhone ? 420 : isCodeMode ? 900 : 740,
           marginBottom: isSmallMobile ? 16 : isPhone ? 20 : 26,
           border: "1px solid rgba(2,6,23,0.06)",
           boxSizing: "border-box",
           height: isCodeMode ? (isSmallMobile ? "75vh" : isPhone ? "80vh" : "82vh") : "auto",
           transition: "height 220ms ease, max-width 220ms ease, padding 220ms ease",
->>>>>>> rc
         }}
       >
         {isCodeMode ? (
@@ -742,15 +691,6 @@ const handleCreateClick = async () => {
         >
           <button
             style={{
-<<<<<<< HEAD
-              border: "2px dashed #eae4ff",
-              background: "transparent",
-              borderRadius: "50%",
-              width: isSmallMobile ? 36 : isPhone ? 38 : 44,
-              height: isSmallMobile ? 36 : isPhone ? 38 : 44,
-              fontSize: isSmallMobile ? "1.1rem" : isPhone ? "1.2rem" : "1.4rem",
-              color: "#d1c4ff",
-=======
               border: "1px dashed #cbd5e1",
               background: "#ffffff",
               borderRadius: "12px",
@@ -758,7 +698,6 @@ const handleCreateClick = async () => {
               height: isSmallMobile ? 40 : isPhone ? 42 : 46,
               fontSize: isSmallMobile ? "1.1rem" : isPhone ? "1.2rem" : "1.3rem",
               color: "#64748b",
->>>>>>> rc
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -774,20 +713,6 @@ const handleCreateClick = async () => {
           </button>
           <input
             type="text"
-<<<<<<< HEAD
-            placeholder={isSmallMobile ? "Describe your idea..." : "Describe your idea, and I'll bring it to life..."}
-            style={{
-              flex: 1,
-              padding: isSmallMobile ? "8px 10px" : isPhone ? "10px 12px" : "12px 22px",
-              fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.21rem",
-              borderRadius: isSmallMobile ? "12px" : "14px",
-              border: "1.5px solid #f2edfc",
-              background: "#f7f3ff",
-              outline: "none",
-              marginRight: isSmallMobile ? 0 : isPhone ? 0 : 10,
-              color: "#52576d",
-              minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
-=======
                 placeholder={isSmallMobile ? "Describe your idea..." : "Describe your idea — and we'll bring it to life"}
             style={{
               flex: 1,
@@ -801,7 +726,6 @@ const handleCreateClick = async () => {
               color: "#0f172a",
               minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
               boxShadow: "0 1px 2px rgba(2,6,23,0.04)",
->>>>>>> rc
             }}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -813,28 +737,16 @@ const handleCreateClick = async () => {
               background: selectedButton ? "linear-gradient(90deg,#111827,#0f172a)" : "#e5e7eb",
               color: selectedButton ? "#ffffff" : "#9ca3af",
               fontWeight: 700,
-<<<<<<< HEAD
-              fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.11rem",
-              padding: isSmallMobile ? "8px 14px" : isPhone ? "10px 16px" : "11px 32px",
-              borderRadius: isSmallMobile ? "10px" : "12px",
-              border: "none",
-              boxShadow: "0 2px 10px #c7f7fd66",
-=======
               fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.05rem",
               padding: isSmallMobile ? "10px 14px" : isPhone ? "10px 16px" : "12px 24px",
               borderRadius: isSmallMobile ? "10px" : "12px",
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: selectedButton ? "0 10px 24px rgba(2,6,23,0.15)" : "none",
->>>>>>> rc
               display: "flex",
               alignItems: "center",
               gap: isSmallMobile ? 6 : 8,
               cursor: "pointer",
-<<<<<<< HEAD
-              transition: "background 0.14s, transform 0.14s",
-=======
               transition: "background 0.14s, transform 0.14s, box-shadow 0.14s",
->>>>>>> rc
               width: isSmallMobile ? "100%" : isPhone ? "100%" : undefined,
               minHeight: isSmallMobile ? "34px" : isPhone ? "38px" : "auto",
               justifyContent: "center",
@@ -850,19 +762,8 @@ const handleCreateClick = async () => {
               }
             }}
           >
-<<<<<<< HEAD
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.2rem",
-              }}
-            >
-              ✨
-=======
             <span style={{ display: "flex", alignItems: "center", fontSize: isSmallMobile ? "1rem" : isPhone ? "1.05rem" : "1.15rem" }}>
               <FiZap />
->>>>>>> rc
             </span>
             {loading || videoLoading ? "Generating..." : "Create"}
           </button>
@@ -973,25 +874,6 @@ const handleCreateClick = async () => {
                   selectedButton === btn.key
                     ? "0 10px 22px rgba(15,23,42,0.18)"
                     : hoveredButton === btn.key
-<<<<<<< HEAD
-                    ? "0 4px 12px #a1a1d9aa"
-                    : undefined,
-                borderRadius: isSmallMobile ? 10 : 12,
-                padding: isSmallMobile ? "6px 10px" : isPhone ? "8px 12px" : "9px 20px 9px 15px",
-                display: "flex",
-                alignItems: "center",
-                fontWeight: selectedButton === btn.key ? 600 : 500,
-                fontSize: isSmallMobile ? "0.85rem" : isPhone ? "0.98rem" : "1.07rem",
-                color: selectedButton === btn.key ? "#9e36c1" : "#3e4062",
-                gap: isSmallMobile ? 5 : 7,
-                cursor: "pointer",
-                position: "relative",
-                minWidth: isSmallMobile ? "calc(50% - 4px)" : isPhone ? "calc(50% - 5px)" : "120px",
-                flex: isSmallMobile ? "1 1 calc(50% - 4px)" : isPhone ? "1 1 calc(50% - 5px)" : "0 0 auto",
-                minHeight: isSmallMobile ? "36px" : isPhone ? "40px" : "auto",
-
-                // Animation styles
-=======
                     ? "0 8px 16px rgba(2,6,23,0.08)"
                     : "0 2px 8px rgba(2,6,23,0.04)",
                 borderRadius: isSmallMobile ? 10 : 12,
@@ -1005,7 +887,6 @@ const handleCreateClick = async () => {
                 cursor: "pointer",
                 position: "relative",
                 minWidth: "100px",
->>>>>>> rc
                 transform:
                   clickedButton === btn.key
                     ? "scale(0.95)"
@@ -1027,17 +908,10 @@ const handleCreateClick = async () => {
                     background: selectedButton === btn.key ? "#ffffff22" : btn.tagColor,
                     color: selectedButton === btn.key ? "#ffffff" : "#ffffff",
                     fontWeight: 600,
-<<<<<<< HEAD
-                    fontSize: isSmallMobile ? "0.65rem" : "0.73rem",
-                    borderRadius: isSmallMobile ? "6px" : "7px",
-                    padding: isSmallMobile ? "2px 8px" : "2.5px 10px",
-                    marginLeft: isSmallMobile ? 4 : 8,
-=======
                     fontSize: isSmallMobile ? "0.62rem" : "0.72rem",
                     borderRadius: isSmallMobile ? "6px" : "7px",
                     padding: isSmallMobile ? "2px 8px" : "3px 10px",
                     marginLeft: isSmallMobile ? 6 : 10,
->>>>>>> rc
                     userSelect: "none",
                     whiteSpace: "nowrap",
                   }}
@@ -1250,13 +1124,8 @@ const handleCreateClick = async () => {
       <div
         style={{
           marginTop: isSmallMobile ? 20 : isPhone ? 24 : 30,
-<<<<<<< HEAD
-          color: "#b6afd4",
-          fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.1rem",
-=======
           color: "#94a3b8",
           fontSize: isSmallMobile ? "0.9rem" : isPhone ? "1rem" : "1.05rem",
->>>>>>> rc
           textAlign: "center",
           padding: isSmallMobile ? "0 16px" : "0",
           lineHeight: 1.4,

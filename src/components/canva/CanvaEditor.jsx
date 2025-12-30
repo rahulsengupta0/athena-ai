@@ -1,11 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-<<<<<<< HEAD
-import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
-import TopToolbar from './TopToolbar';
-import LeftSidebar from './LeftSidebar';
-
-const CanvaEditor = () => {
-=======
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { BrightnessControl, ContrastControl, BlurControl, ShadowsControl, OpacityControl } from './controls';
@@ -23,7 +16,6 @@ import TextStyleModal from './TextStyleModal';
 const CanvaEditor = () => {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
->>>>>>> rc
   const [selectedTool, setSelectedTool] = useState('select');
   const [layers, setLayers] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -36,8 +28,6 @@ const CanvaEditor = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
-<<<<<<< HEAD
-=======
   const [isRotating, setIsRotating] = useState(false);
   const [rotateStart, setRotateStart] = useState({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
 
@@ -65,7 +55,6 @@ const CanvaEditor = () => {
   // Rename layer (right sidebar)
   const [renamingLayerId, setRenamingLayerId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
->>>>>>> rc
   const [showGrid, setShowGrid] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [hoveredOption, setHoveredOption] = useState(null);
@@ -85,41 +74,30 @@ const CanvaEditor = () => {
     fontSize: 16,
     fontFamily: 'Arial',
     fontWeight: 'normal',
-<<<<<<< HEAD
-=======
     fontStyle: 'normal',
     textDecoration: 'none',
->>>>>>> rc
     color: '#000000',
     textAlign: 'left'
   });
   const [shapeSettings, setShapeSettings] = useState({
     fillColor: '#3182ce',
     strokeColor: '#000000',
-<<<<<<< HEAD
-    strokeWidth: 1
-=======
     strokeWidth: 1,
     fillType: 'color', // 'color' | 'image'
     fillImageSrc: null,
     fillImageFit: 'cover' // 'cover' | 'contain'
->>>>>>> rc
   });
   const [imageSettings, setImageSettings] = useState({
     brightness: 100,
     contrast: 100,
     saturation: 100,
     blur: 0,
-<<<<<<< HEAD
-    opacity: 100
-=======
     opacity: 100,
     strokeColor: '#000000',
     strokeWidth: 0,
     strokeStyle: 'solid', // 'solid' | 'dashed'
     cornerRadius: 4,
     animation: 'none' // 'none' | 'fadeIn' | 'slideInUp' | 'slideInLeft' | 'zoomIn'
->>>>>>> rc
   });
   const [drawingSettings, setDrawingSettings] = useState({
     brushSize: 5,
@@ -143,8 +121,6 @@ const CanvaEditor = () => {
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
-<<<<<<< HEAD
-=======
   // Save/Export modal state
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg'
@@ -156,7 +132,6 @@ const CanvaEditor = () => {
   const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
   const [showStyleModal, setShowStyleModal] = useState(false);
   const [isHeading, setIsHeading] = useState(false);
->>>>>>> rc
   // Custom scroller state
   const [scrollMetrics, setScrollMetrics] = useState({
     contentWidth: 0,
@@ -188,11 +163,8 @@ const CanvaEditor = () => {
   const canvasAreaRef = useRef(null);
   const contentWrapperRef = useRef(null);
   const fileInputRef = useRef(null);
-<<<<<<< HEAD
-=======
   const strokeColorInputRef = useRef(null);
   const textColorInputRef = useRef(null);
->>>>>>> rc
   const lastPointRef = useRef(null);
   const lastTimeRef = useRef(0);
   const hDragRef = useRef({ isDragging: false, startX: 0, startScrollLeft: 0 });
@@ -346,79 +318,38 @@ const CanvaEditor = () => {
   // Eraser functionality - only affect drawing layers under cursor
   const handleEraserAction = (x, y) => {
     const eraserRadius = drawingSettings.brushSize / 2;
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     // Find layers that intersect with the eraser area
     const layersToErase = layers.filter(layer => {
       if (!layer.visible) return false;
       // Only allow erasing on drawing layers; ignore shapes/images/text entirely
       if (layer.type !== 'drawing') return false;
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       // Check if eraser circle intersects with layer bounds
       const layerLeft = layer.x;
       const layerRight = layer.x + layer.width;
       const layerTop = layer.y;
       const layerBottom = layer.y + layer.height;
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       // Check if eraser circle intersects with layer rectangle
       const closestX = Math.max(layerLeft, Math.min(x, layerRight));
       const closestY = Math.max(layerTop, Math.min(y, layerBottom));
       const distance = Math.hypot(x - closestX, y - closestY);
-<<<<<<< HEAD
-      
-      return distance <= eraserRadius;
-    });
-    
-=======
 
       return distance <= eraserRadius;
     });
 
->>>>>>> rc
     if (layersToErase.length > 0) {
       // Only modify drawing layers; keep all other layers intact
       const newLayers = layers.map(layer => {
         const layerToErase = layersToErase.find(l => l.id === layer.id);
         if (!layerToErase) return layer;
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         // For drawing layers, create holes by removing path points near the eraser
         const newPath = layer.path.filter(point => {
           const distance = Math.hypot(point.x - (x - layer.x), point.y - (y - layer.y));
           return distance > eraserRadius;
         });
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         if (newPath.length < 2) {
           // If too few points remain, delete only this drawing layer
           return null;
         }
-<<<<<<< HEAD
-        
-        return { ...layer, path: newPath };
-      }).filter(Boolean);
-      
-      setLayers(newLayers);
-      saveToHistory(newLayers);
-      
-=======
 
         return { ...layer, path: newPath };
       }).filter(Boolean);
@@ -426,7 +357,6 @@ const CanvaEditor = () => {
       setLayers(newLayers);
       saveToHistory(newLayers);
 
->>>>>>> rc
       // Clear selection if selected layer was erased
       const erasedLayerIds = layersToErase.map(l => l.id);
       if (erasedLayerIds.includes(selectedLayer)) {
@@ -443,11 +373,8 @@ const CanvaEditor = () => {
     setHistoryIndex(newHistory.length - 1);
   };
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> rc
   const undo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
@@ -465,11 +392,6 @@ const CanvaEditor = () => {
   const handleToolSelect = (toolId) => {
     setSelectedTool(toolId);
     setSelectedLayer(null);
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     // Set drawing mode when selecting drawing tools
     if (['brush', 'pen', 'eraser'].includes(toolId)) {
       setDrawingSettings(prev => ({ ...prev, drawingMode: toolId }));
@@ -479,66 +401,6 @@ const CanvaEditor = () => {
   const handleDrawingSettingsChange = (property, value) => {
     setDrawingSettings(prev => ({ ...prev, [property]: value }));
   };
-<<<<<<< HEAD
-
-  const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
-    let newLayer;
-    const tool = toolOverride || selectedTool;
-    
-    if (tool === 'text' || tool === 'heading' || tool === 'subheading' || tool === 'textbox') {
-      const isHeading = tool === 'heading';
-      const isSubheading = tool === 'subheading';
-      const isTextBox = tool === 'textbox' || tool === 'text';
-      const presetFontSize = isHeading ? 48 : isSubheading ? 32 : 16;
-      const presetFontWeight = isHeading ? 'bold' : 'normal';
-      const presetText = isHeading
-        ? 'Add a heading'
-        : isSubheading
-        ? 'Add a subheading'
-        : 'Add a little bit of body text';
-      const presetName = isHeading ? 'Heading' : isSubheading ? 'Subheading' : 'Text Box';
-
-      newLayer = {
-        id: Date.now(),
-        type: 'text',
-        name: presetName,
-        text: presetText,
-        x: x,
-        y: y,
-        width: 300,
-        height: isHeading ? 80 : isSubheading ? 60 : 50,
-        ...textSettings,
-        fontSize: presetFontSize,
-        fontWeight: presetFontWeight,
-        visible: true,
-        locked: false
-      };
-    } else if (
-      ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle','diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft','arrowUp','arrowDown','cloud'].includes(tool)
-    ) {
-      newLayer = {
-        id: Date.now(),
-        type: 'shape',
-        name: tool.charAt(0).toUpperCase() + tool.slice(1),
-        shape: tool,
-        x: x,
-        y: y,
-        width: tool === 'ellipse' || tool === 'roundedRectangle' ? 160 : tool.includes('arrow') ? 140 : 100,
-        height: tool === 'ellipse' || tool === 'roundedRectangle' ? 100 : 100,
-        ...shapeSettings,
-        visible: true,
-        locked: false
-      };
-    }
-
-    if (newLayer) {
-      const newLayers = [...layers, newLayer];
-      setLayers(newLayers);
-      setSelectedLayer(newLayer.id);
-      saveToHistory(newLayers);
-    }
-  };
-=======
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
   let newLayer;
@@ -632,7 +494,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     saveToHistory(newLayers);
   }
 };
->>>>>>> rc
 
   const handleLayerSelect = (layerId) => {
     setSelectedLayer(layerId);
@@ -642,11 +503,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
         fontSize: layer.fontSize || 16,
         fontFamily: layer.fontFamily || 'Arial',
         fontWeight: layer.fontWeight || 'normal',
-<<<<<<< HEAD
-        color: layer.color || '#000000',
-        textAlign: layer.textAlign || 'left'
-      });
-=======
         fontStyle: layer.fontStyle || 'normal',
         textDecoration: layer.textDecoration || 'none',
         color: layer.color || '#000000',
@@ -655,7 +511,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
       // Auto-detect if it's a heading based on name or font size
       const isHeadingText = isHeadingLayer(layer);
       setIsHeading(isHeadingText);
->>>>>>> rc
     }
   };
 
@@ -668,10 +523,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     saveToHistory(newLayers);
   };
 
-<<<<<<< HEAD
-  const handleLayerToggleVisibility = (layerId) => {
-    const newLayers = layers.map(l => 
-=======
   // Keyboard shortcuts and custom events
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -717,7 +568,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
 
   const handleLayerToggleVisibility = (layerId) => {
     const newLayers = layers.map(l =>
->>>>>>> rc
       l.id === layerId ? { ...l, visible: !l.visible } : l
     );
     setLayers(newLayers);
@@ -741,12 +591,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     }
   };
 
-<<<<<<< HEAD
-  const handleTextSettingsChange = (property, value) => {
-    setTextSettings(prev => ({ ...prev, [property]: value }));
-    if (selectedLayer) {
-      const newLayers = layers.map(l => 
-=======
   // Inline rename helpers
   const startRenameLayer = (layer) => {
     setRenamingLayerId(layer.id);
@@ -2200,7 +2044,6 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     setTextSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
       const newLayers = layers.map(l =>
->>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -2208,13 +2051,6 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     }
   };
 
-<<<<<<< HEAD
-  // Update the textual content of a text layer
-  const handleTextContentChange = (value) => {
-    if (!selectedLayer) return;
-    const newLayers = layers.map(l =>
-      l.id === selectedLayer && l.type === 'text' ? { ...l, text: value } : l
-=======
 
   // Update the textual content of a text layer
   const handleTextContentChange = (value, shouldAutoResize = false) => {
@@ -2237,18 +2073,11 @@ const drawHeartPath = (ctx, x, y, w, h) => {
 
     const newLayers = layers.map(l =>
       l.id === selectedLayer && l.type === 'text' ? updatedLayer : l
->>>>>>> rc
     );
     setLayers(newLayers);
     saveToHistory(newLayers);
   };
 
-<<<<<<< HEAD
-  const handleShapeSettingsChange = (property, value) => {
-    setShapeSettings(prev => ({ ...prev, [property]: value }));
-    if (selectedLayer) {
-      const newLayers = layers.map(l => 
-=======
   // AI Text Enhancement
   const handleEnhanceText = async () => {
     if (!selectedLayer) return;
@@ -2308,7 +2137,6 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     setShapeSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
       const newLayers = layers.map(l =>
->>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -2328,16 +2156,6 @@ const drawHeartPath = (ctx, x, y, w, h) => {
   };
 
   const handleMouseMove = useCallback((e) => {
-<<<<<<< HEAD
-    if (isResizing && resizeStart.layerId) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-      const newWidth = Math.max(10, resizeStart.width + deltaX);
-      const newHeight = Math.max(10, resizeStart.height + deltaY);
-      setLayers(prevLayers => prevLayers.map(layer =>
-        layer.id === resizeStart.layerId
-          ? { ...layer, width: newWidth, height: newHeight }
-=======
     if (isRotating && rotateStart.layerId) {
       const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
       const dx = mouseX - rotateStart.cx;
@@ -2353,24 +2171,10 @@ const drawHeartPath = (ctx, x, y, w, h) => {
       setLayers(prevLayers => prevLayers.map(layer =>
         layer.id === rotateStart.layerId
           ? { ...layer, rotation: newRotation }
->>>>>>> rc
           : layer
       ));
       return;
     }
-<<<<<<< HEAD
-    if (isDragging && selectedLayer) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      
-      setLayers(prevLayers => prevLayers.map(layer => 
-        layer.id === selectedLayer 
-          ? { ...layer, x: layer.x + deltaX, y: layer.y + deltaY }
-          : layer
-      ));
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
-=======
 if (isResizing && resizeStart.layerId) {
   const deltaX = e.clientX - resizeStart.x;
   const deltaY = e.clientY - resizeStart.y;
@@ -2406,17 +2210,11 @@ const nextY = layer.y + deltaY;
   setDragStart({ x: e.clientX, y: e.clientY });
 }
 
->>>>>>> rc
     if (drawingSettings.isDrawing && ['brush', 'pen', 'eraser'].includes(selectedTool)) {
       const now = performance.now();
       const minMs = 8; // throttle
       if (now - lastTimeRef.current < minMs) return;
       const point = getCanvasPoint(e.clientX, e.clientY);
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       if (selectedTool === 'eraser') {
         // Handle eraser dragging
         handleEraserAction(point.x, point.y);
@@ -2424,11 +2222,6 @@ const nextY = layer.y + deltaY;
         lastPointRef.current = point;
         return;
       }
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       const lastPoint = lastPointRef.current || point;
       const minDist = Math.max(1, drawingSettings.brushSize * 0.25);
       if (Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) < minDist) return;
@@ -2446,8 +2239,6 @@ const nextY = layer.y + deltaY;
         return currentLayers;
       });
     }
-<<<<<<< HEAD
-=======
     if (isRotating) {
       setIsRotating(false);
       setRotateStart({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
@@ -2456,7 +2247,6 @@ const nextY = layer.y + deltaY;
         return currentLayers;
       });
     }
->>>>>>> rc
     if (isResizing) {
       setIsResizing(false);
       setResizeStart({ x: 0, y: 0, width: 0, height: 0, layerId: null });
@@ -2470,31 +2260,16 @@ const nextY = layer.y + deltaY;
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       return;
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     if (drawingSettings.isDrawing && currentPath.length > 1) {
       // Calculate bounding box for the drawing path
       const minX = Math.min(...currentPath.map(p => p.x));
       const maxX = Math.max(...currentPath.map(p => p.x));
       const minY = Math.min(...currentPath.map(p => p.y));
       const maxY = Math.max(...currentPath.map(p => p.y));
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       // Add padding for brush size
       const padding = Math.max(drawingSettings.brushSize / 2, 5);
       const width = maxX - minX + padding * 2;
       const height = maxY - minY + padding * 2;
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       // Only create drawing layer if it has meaningful size
       if (width > 5 && height > 5) {
         // Normalize path coordinates relative to the bounding box
@@ -2503,11 +2278,6 @@ const nextY = layer.y + deltaY;
           x: point.x - minX + padding,
           y: point.y - minY + padding
         }));
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         const newDrawingPath = {
           id: Date.now(),
           type: 'drawing',
@@ -2524,11 +2294,6 @@ const nextY = layer.y + deltaY;
           visible: true,
           locked: false
         };
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         setLayers(prevLayers => {
           const newLayers = [...prevLayers, newDrawingPath];
           saveToHistory(newLayers);
@@ -2536,11 +2301,6 @@ const nextY = layer.y + deltaY;
         });
         setSelectedLayer(newDrawingPath.id);
       }
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> rc
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       setCurrentPath([]);
     } else if (drawingSettings.isDrawing) {
@@ -2551,11 +2311,7 @@ const nextY = layer.y + deltaY;
   }, [isDragging, isResizing, drawingSettings.isDrawing, currentPath, drawingSettings.drawingMode, drawingSettings.brushSize, drawingSettings.brushColor, drawingSettings.opacity]);
 
   useEffect(() => {
-<<<<<<< HEAD
-    if (isDragging || isResizing || drawingSettings.isDrawing) {
-=======
     if (isDragging || isResizing || isRotating || drawingSettings.isDrawing) {
->>>>>>> rc
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -2563,11 +2319,7 @@ const nextY = layer.y + deltaY;
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-<<<<<<< HEAD
-  }, [isDragging, isResizing, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
-=======
   }, [isDragging, isResizing, isRotating, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
->>>>>>> rc
 
   const handleResizeMouseDown = (e, layer) => {
     e.stopPropagation();
@@ -2577,8 +2329,6 @@ const nextY = layer.y + deltaY;
     setSelectedLayer(layer.id);
   };
 
-<<<<<<< HEAD
-=======
   const handleRotateMouseDown = (e, layer) => {
     e.stopPropagation();
     if (selectedTool !== 'select') return;
@@ -2591,7 +2341,6 @@ const nextY = layer.y + deltaY;
     setSelectedLayer(layer.id);
   };
 
->>>>>>> rc
   // Image upload functionality
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -2609,10 +2358,7 @@ const nextY = layer.y + deltaY;
           height: 200,
           visible: true,
           locked: false,
-<<<<<<< HEAD
-=======
           rotation: 0,
->>>>>>> rc
           ...imageSettings
         };
         const newLayers = [...layers, newImage];
@@ -2625,8 +2371,6 @@ const nextY = layer.y + deltaY;
     }
   };
 
-<<<<<<< HEAD
-=======
   // Handle AI generated image - callback from AIImageGenerator component
   const handleAIGeneratedImage = (newImage) => {
     const newLayers = [...layers, newImage];
@@ -2636,7 +2380,6 @@ const nextY = layer.y + deltaY;
     setUploadedImages(prev => [...prev, newImage]);
   };
 
->>>>>>> rc
   // Template selection
   const handleTemplateSelect = (template) => {
     setCanvasSize({ width: template.width, height: template.height });
@@ -2679,11 +2422,7 @@ const nextY = layer.y + deltaY;
   const handleImageSettingsChange = (property, value) => {
     setImageSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
-<<<<<<< HEAD
-      const newLayers = layers.map(l => 
-=======
       const newLayers = layers.map(l =>
->>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -2691,8 +2430,6 @@ const nextY = layer.y + deltaY;
     }
   };
 
-<<<<<<< HEAD
-=======
   // Generic effects handler (brightness, contrast, blur, opacity, shadows)
   const handleEffectChange = (property, value) => {
     if (!selectedLayer) return;
@@ -2703,16 +2440,10 @@ const nextY = layer.y + deltaY;
     saveToHistory(newLayers);
   };
 
->>>>>>> rc
   // Drawing functionality
   const handleDrawingMouseDown = (e) => {
     if (!['brush', 'pen', 'eraser'].includes(selectedTool)) return;
     const { x, y } = getCanvasPoint(e.clientX, e.clientY);
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     if (selectedTool === 'eraser') {
       // Start eraser drawing mode and erase content under cursor
       setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
@@ -2721,11 +2452,6 @@ const nextY = layer.y + deltaY;
       lastTimeRef.current = performance.now();
       return;
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
     const firstPoint = { x, y, pressure: 1 };
     lastPointRef.current = firstPoint;
@@ -2802,11 +2528,6 @@ const nextY = layer.y + deltaY;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> rc
     if (selectedTool !== 'select' && !['brush', 'pen', 'eraser'].includes(selectedTool)) {
       handleAddElement(x, y);
     } else if (selectedTool === 'select') {
@@ -2832,13 +2553,8 @@ const nextY = layer.y + deltaY;
       width: '280px',
       minWidth: '280px',
       flex: '0 0 280px',
-<<<<<<< HEAD
-      backgroundColor: '#1e293b',
-      borderRight: '1px solid #334155',
-=======
       backgroundColor: '#0f172a',
       borderRight: '2px solid #1e293b',
->>>>>>> rc
       padding: '20px',
       overflowY: 'auto',
       position: 'sticky',
@@ -2846,10 +2562,7 @@ const nextY = layer.y + deltaY;
       height: '100vh',
       zIndex: 2,
       color: '#ffffff',
-<<<<<<< HEAD
-=======
       boxShadow: '4px 0 12px rgba(0, 0, 0, 0.15)',
->>>>>>> rc
     },
     mainArea: {
       flex: 1,
@@ -2870,12 +2583,8 @@ const nextY = layer.y + deltaY;
       gap: '12px',
       position: 'sticky',
       top: 0,
-<<<<<<< HEAD
-      zIndex: 20
-=======
       zIndex: 100,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
->>>>>>> rc
     },
     toolbarButton: {
       padding: '8px 12px',
@@ -2899,19 +2608,6 @@ const nextY = layer.y + deltaY;
         cursor: 'not-allowed'
       }
     },
-<<<<<<< HEAD
-    canvasArea: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'flex-start',
-      justifyContent: 'flex-start',
-      padding: '20px',
-      paddingRight: isRightSidebarCollapsed ? '28px' : '320px',
-      position: 'relative',
-      overflow: 'auto',
-      minWidth: 0
-    },
-=======
 canvasArea: {
   flex: 1,
   display: 'flex',
@@ -2928,7 +2624,6 @@ canvasArea: {
   WebkitOverflowScrolling: 'touch' ,// Smooth iOS scrolling
 },
 
->>>>>>> rc
     canvas: {
       width: canvasSize.width,
       height: canvasSize.height,
@@ -2937,64 +2632,15 @@ canvasArea: {
       borderRadius: '8px',
       position: 'relative',
       marginRight: isRightSidebarCollapsed ? 0 : 320,
-<<<<<<< HEAD
-      cursor: selectedTool === 'select' ? 'default' : 
-              selectedTool === 'eraser' ? 'crosshair' :
-              ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
-      overflow: 'hidden',
-=======
       cursor: selectedTool === 'select' ? 'default' :
               selectedTool === 'eraser' ? 'crosshair' :
               ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
       overflow: 'visible',
->>>>>>> rc
       transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
       transformOrigin: 'top left',
       backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
       backgroundSize: '20px 20px'
     },
-<<<<<<< HEAD
-    
-    rightSidebar: {
-      width: isRightSidebarCollapsed ? '60px' : '280px',
-      minWidth: isRightSidebarCollapsed ? '60px' : '280px',
-      flex: isRightSidebarCollapsed ? '0 0 60px' : '0 0 280px',
-      backgroundColor: 'white',
-      borderLeft: '1px solid #e1e5e9',
-      // Add internal top padding equal to toolbar height (60px) to avoid external gap
-      padding: isRightSidebarCollapsed ? '80px 8px 20px' : '80px 20px 20px',
-      overflowY: 'auto',
-      position: 'sticky',
-      top: 0,
-      height: '100vh',
-      zIndex: 5,
-      transition: 'all 0.3s ease'
-    },
-    toolButton: {
-      padding: '12px 16px',
-      border: 'none',
-      borderRadius: '8px',
-      backgroundColor: 'transparent',
-      cursor: 'pointer',
-      margin: '2px 0',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      fontSize: '14px',
-      color: '#ffffff',
-      width: '100%',
-      justifyContent: 'flex-start',
-      fontWeight: '500',
-      transition: 'all 0.2s ease',
-      '&:hover': {
-        backgroundColor: '#334155',
-      }
-    },
-    activeTool: {
-      backgroundColor: '#334155',
-      color: '#ffffff',
-      borderColor: '#334155'
-=======
 
     rightSidebar: {
       position: 'fixed',
@@ -3041,7 +2687,6 @@ canvasArea: {
       borderColor: '#60a5fa',
       boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
       transform: 'translateY(-1px)',
->>>>>>> rc
     },
     layerItem: {
       padding: '12px',
@@ -3053,9 +2698,6 @@ canvasArea: {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-<<<<<<< HEAD
-      justifyContent: 'space-between'
-=======
       justifyContent: 'space-between',
       transition: 'all 0.2s ease',
       userSelect: 'none'
@@ -3080,7 +2722,6 @@ canvasArea: {
     },
     dragHandleActive: {
       cursor: 'grabbing'
->>>>>>> rc
     },
     layerControls: {
       display: 'flex',
@@ -3095,9 +2736,6 @@ canvasArea: {
       borderRadius: '4px',
       display: 'flex',
       alignItems: 'center',
-<<<<<<< HEAD
-      justifyContent: 'center'
-=======
       justifyContent: 'center',
       opacity: 1,
       transition: 'opacity 0.2s ease'
@@ -3139,7 +2777,6 @@ canvasArea: {
       borderRadius: 8,
       background: 'none',
       cursor: 'pointer'
->>>>>>> rc
     },
     propertyPanel: {
       marginTop: '20px',
@@ -3216,16 +2853,6 @@ canvasArea: {
 
   return (
     <div style={styles.container}>
-<<<<<<< HEAD
-      
-      {/* Left Sidebar */}
-      <div style={styles.leftSidebar} className="custom-scrollbar">
-        {/* Header */}
-        <div style={{ 
-          padding: "0 0 20px 0", 
-          display: "flex", 
-          alignItems: "center", 
-=======
 
       {/* Left Sidebar */}
       <div style={styles.leftSidebar} className="custom-scrollbar">
@@ -3234,7 +2861,6 @@ canvasArea: {
           padding: "0 0 20px 0",
           display: "flex",
           alignItems: "center",
->>>>>>> rc
           gap: 10,
           borderBottom: "1px solid #334155",
           marginBottom: "20px"
@@ -3254,11 +2880,6 @@ canvasArea: {
           </div>
           <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Design Tools</span>
         </div>
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         {/* Selection Tool */}
         <div>
           <button
@@ -3414,15 +3035,9 @@ canvasArea: {
               >
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'rectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rectangle')}
@@ -3434,15 +3049,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'roundedRectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('roundedRectangle')}
@@ -3454,15 +3063,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'circle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('circle')}
@@ -3474,15 +3077,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'ellipse' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('ellipse')}
@@ -3494,15 +3091,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'triangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('triangle')}
@@ -3514,15 +3105,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'rightTriangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rightTriangle')}
@@ -3534,15 +3119,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'star' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star')}
@@ -3554,15 +3133,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'star6' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star6')}
@@ -3574,15 +3147,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'heart' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('heart')}
@@ -3594,15 +3161,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'diamond' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('diamond')}
@@ -3614,15 +3175,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'pentagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('pentagon')}
@@ -3634,15 +3189,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'hexagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('hexagon')}
@@ -3654,15 +3203,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'arrow' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrow')}
@@ -3674,15 +3217,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'arrowLeft' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowLeft')}
@@ -3694,15 +3231,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'arrowUp' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowUp')}
@@ -3714,15 +3245,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'arrowDown' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowDown')}
@@ -3734,15 +3259,9 @@ canvasArea: {
               </button>
               <button
                 style={{
-<<<<<<< HEAD
-                  ...styles.toolbarButton,
-                    border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
-                    backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
-=======
                   ...styles.toolButton,
                   border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
                   backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
->>>>>>> rc
                   ...(selectedTool === 'cloud' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('cloud')}
@@ -3891,10 +3410,6 @@ canvasArea: {
                   marginTop: '6px'
                 }}
               >
-<<<<<<< HEAD
-                <button 
-                  style={{ ...styles.toolbarButton, border: hoveredOption === 'upload' ? '1px solid #ffffff' : 'none', backgroundColor: hoveredOption === 'upload' ? '#334155' : 'transparent' }}
-=======
                 <button
                   style={{
                     // Rectangle shape with dashed border
@@ -3923,17 +3438,10 @@ canvasArea: {
                     borderColor: hoveredOption === 'upload' ? '#a855f7' : '#8b5cf6',
                     transform: hoveredOption === 'upload' ? 'translateY(-2px)' : 'translateY(0)'
                   }}
->>>>>>> rc
                   onMouseEnter={() => setHoveredOption('upload')}
                   onMouseLeave={() => setHoveredOption(null)}
                   onClick={() => fileInputRef.current?.click()}
                 >
-<<<<<<< HEAD
-                  <FiUpload size={16} />
-                  Upload Image
-                </button>
-            
-=======
                   <FiUpload size={20} color="#ffffff" />
                   <span style={{
                     color: '#ffffff',
@@ -3952,7 +3460,6 @@ canvasArea: {
                   imageSettings={imageSettings}
                 />
 
->>>>>>> rc
             <input
               ref={fileInputRef}
               type="file"
@@ -4046,15 +3553,9 @@ canvasArea: {
                       <span style={{ fontSize: '9px', color: '#666' }}>
                         {template.width}×{template.height}
                       </span>
-<<<<<<< HEAD
-                      <span style={{ 
-                        fontSize: '8px', 
-                        color: '#3182ce', 
-=======
                       <span style={{
                         fontSize: '8px',
                         color: '#3182ce',
->>>>>>> rc
                         backgroundColor: '#e3f2fd',
                         padding: '1px 4px',
                         borderRadius: '2px'
@@ -4084,11 +3585,6 @@ canvasArea: {
               <h4 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#374151' }}>
                 {selectedTool === 'eraser' ? 'Eraser Settings' : 'Drawing Settings'}
               </h4>
-<<<<<<< HEAD
-              
-=======
-
->>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Size' : 'Brush Size'}: {drawingSettings.brushSize}px
@@ -4102,11 +3598,6 @@ canvasArea: {
                   style={{ width: '100%' }}
                 />
               </div>
-<<<<<<< HEAD
-              
-=======
-
->>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Color' : 'Color'}
@@ -4118,11 +3609,6 @@ canvasArea: {
                   style={{ width: '100%', height: '32px', border: '1px solid #d1d5db', borderRadius: '4px' }}
                 />
               </div>
-<<<<<<< HEAD
-              
-=======
-
->>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Opacity: {drawingSettings.opacity}%
@@ -4136,11 +3622,6 @@ canvasArea: {
                   style={{ width: '100%' }}
                 />
               </div>
-<<<<<<< HEAD
-              
-=======
-
->>>>>>> rc
               <div>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Tool Mode
@@ -4214,23 +3695,6 @@ canvasArea: {
       <div style={styles.mainArea}>
         {/* Top Toolbar */}
         <TopToolbar
-<<<<<<< HEAD
-          styles={styles}
-          undo={undo}
-          redo={redo}
-          historyIndex={historyIndex}
-          historyLength={history.length}
-          zoom={zoom}
-          handleZoomOut={handleZoomOut}
-          handleZoomIn={handleZoomIn}
-          handleZoomReset={handleZoomReset}
-          handleFitToScreen={handleFitToScreen}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          canvasSize={canvasSize}
-          selectedTool={selectedTool}
-        />
-=======
   styles={styles}
   undo={undo}
   redo={redo}
@@ -4252,24 +3716,17 @@ canvasArea: {
   hasSelection={!!selectedLayer}
 />
 
->>>>>>> rc
 
         {/* Canvas Area */}
         <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
           <div ref={contentWrapperRef}
             style={{
-<<<<<<< HEAD
-              width: canvasSize.width,
-              height: canvasSize.height,
-              position: 'relative'
-=======
 position: 'relative',
     width: `${canvasSize.width}px`,
     height: `${canvasSize.height}px`,
     overflow: 'hidden',                    // ← this clips elements
     transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
     transformOrigin: 'top left',
->>>>>>> rc
             }}
           >
             {/* Invisible spacer to create scrollable area proportional to zoom */}
@@ -4285,16 +3742,6 @@ position: 'relative',
                 opacity: 0
               }}
             />
-<<<<<<< HEAD
-            <div 
-              style={styles.canvas} 
-              onClick={handleCanvasClick} 
-              onMouseDown={handleDrawingMouseDown}
-              onMouseMove={handleCanvasMouseMove}
-              onMouseLeave={handleCanvasMouseLeave}
-              ref={canvasRef}
-            >
-=======
             <div
   style={{
         ...styles.canvas,
@@ -4311,7 +3758,6 @@ position: 'relative',
   onMouseLeave={handleCanvasMouseLeave}
   ref={canvasRef}
 >
->>>>>>> rc
             {layers.length === 0 && !hasChosenTemplate ? (
               <div
                 style={{
@@ -4406,13 +3852,9 @@ position: 'relative',
                     border: selectedLayer === layer.id ? '2px dashed #3182ce' : 'none',
                     cursor: selectedTool === 'select' ? 'move' : 'default',
                     display: layer.visible ? 'block' : 'none',
-<<<<<<< HEAD
-                    userSelect: 'none'
-=======
                     userSelect: 'none',
                     transform: `rotate(${layer.rotation || 0}deg)`,
                     transformOrigin: 'center center'
->>>>>>> rc
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -4426,11 +3868,8 @@ position: 'relative',
                         fontSize: layer.fontSize,
                         fontFamily: layer.fontFamily,
                         fontWeight: layer.fontWeight,
-<<<<<<< HEAD
-=======
                         fontStyle: layer.fontStyle || 'normal',
                         textDecoration: layer.textDecoration || 'none',
->>>>>>> rc
                         color: layer.color,
                         textAlign: layer.textAlign,
                         width: '100%',
@@ -4438,9 +3877,6 @@ position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
                         padding: '4px',
-<<<<<<< HEAD
-                        userSelect: 'text'
-=======
                         userSelect: 'text',
                         filter: getFilterCSS({
                           brightness: layer.brightness ?? 100,
@@ -4451,7 +3887,6 @@ position: 'relative',
                           ? `${layer.shadows.x ?? 0}px ${layer.shadows.y ?? 0}px ${layer.shadows.blur ?? 0}px ${hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100)}`
                           : 'none',
                         opacity: (layer.opacity ?? 100) / 100
->>>>>>> rc
                       }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
@@ -4466,37 +3901,6 @@ position: 'relative',
                       {layer.text}
                     </div>
                   )}
-<<<<<<< HEAD
-                  {layer.type === 'shape' && (
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: layer.fillColor,
-                        border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
-                        borderRadius: layer.shape === 'circle' ? '50%' : '0',
-                        clipPath: layer.shape === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' :
-                                  layer.shape === 'star' ? 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' :
-                                  layer.shape === 'heart' ? 'polygon(50% 85%, 15% 50%, 15% 15%, 50% 15%, 85% 15%, 85% 50%)' :
-                                  layer.shape === 'arrow' ? 'polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)' : 'none'
-                      }}
-                    />
-                  )}
-                  {layer.type === 'image' && (
-                    <img
-                      src={layer.src}
-                      alt={layer.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '4px',
-                        filter: `brightness(${layer.brightness || 100}%) contrast(${layer.contrast || 100}%) saturate(${layer.saturation || 100}%) blur(${layer.blur || 0}px)`,
-                        opacity: (layer.opacity || 100) / 100
-                      }}
-                      draggable={false}
-                    />
-=======
                   {layer.type === 'shape' && (() => {
                     const display = getShapeDisplayProps(layer.shape);
                     if (layer.fillType === 'image' && layer.fillImageSrc) {
@@ -4581,7 +3985,6 @@ position: 'relative',
                         }} />
                       )}
                     </div>
->>>>>>> rc
                   )}
                   {layer.type === 'drawing' && (
                     <svg
@@ -4591,9 +3994,6 @@ position: 'relative',
                         position: 'absolute',
                         top: 0,
                         left: 0,
-<<<<<<< HEAD
-                        pointerEvents: 'none'
-=======
                         pointerEvents: 'none',
                         filter: getFilterCSS({
                           brightness: layer.brightness ?? 100,
@@ -4601,16 +4001,11 @@ position: 'relative',
                           blur: layer.blur ?? 0
                         }),
                         opacity: (layer.opacity ?? 100) / 100
->>>>>>> rc
                       }}
                       viewBox={`0 0 ${layer.width} ${layer.height}`}
                     >
                       <path
-<<<<<<< HEAD
-                        d={layer.path.map((point, index) => 
-=======
                         d={layer.path.map((point, index) =>
->>>>>>> rc
                           index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
                         ).join(' ')}
                         stroke={layer.mode === 'eraser' ? '#ffffff' : layer.color}
@@ -4625,8 +4020,6 @@ position: 'relative',
                       />
                     </svg>
                   )}
-<<<<<<< HEAD
-=======
                   {/* Floating actions for selected element */}
                   {selectedLayer === layer.id && (
                     <FloatingToolbar
@@ -4640,7 +4033,6 @@ position: 'relative',
                       getLayerPrimaryColor={getLayerPrimaryColor}
                     />
                   )}
->>>>>>> rc
                   {selectedLayer === layer.id && (
                     <div
                       onMouseDown={(e) => handleResizeMouseDown(e, layer)}
@@ -4659,12 +4051,6 @@ position: 'relative',
                       title="Resize"
                     />
                   )}
-<<<<<<< HEAD
-              </div>
-              ))
-            )}
-            
-=======
                   {selectedLayer === layer.id && (
                     <>
                       <div
@@ -4708,7 +4094,6 @@ position: 'relative',
               ))
             )}
 
->>>>>>> rc
             {/* Eraser preview - circular cursor */}
             {selectedTool === 'eraser' && isMouseOverCanvas && (
               <div
@@ -4744,11 +4129,7 @@ position: 'relative',
                 viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
               >
                 <path
-<<<<<<< HEAD
-                  d={currentPath.map((point, index) => 
-=======
                   d={currentPath.map((point, index) =>
->>>>>>> rc
                     index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
                   ).join(' ')}
                   stroke={drawingSettings.drawingMode === 'eraser' ? '#ffffff' : drawingSettings.brushColor}
@@ -4832,8 +4213,6 @@ position: 'relative',
           )}
         </div>
       </div>
-<<<<<<< HEAD
-=======
       <SaveExportModal
         open={isSaveModalOpen}
         onClose={() => !isExporting && setIsSaveModalOpen(false)}
@@ -4847,22 +4226,14 @@ position: 'relative',
         onDownload={handleDownloadExport}
         onSaveWorksheet={handleSaveWorksheetToLocation}
       />
->>>>>>> rc
 
       {/* Right Sidebar */}
       <div style={styles.rightSidebar} className="custom-scrollbar">
         {/* Toggle Button */}
-<<<<<<< HEAD
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-=======
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
->>>>>>> rc
           marginBottom: '20px',
           paddingBottom: '10px',
           borderBottom: '1px solid #e1e5e9'
@@ -4894,11 +4265,6 @@ position: 'relative',
             )}
           </button>
         </div>
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> rc
         {!isRightSidebarCollapsed && (
           <>
             {layers.length === 0 ? (
@@ -4906,17 +4272,6 @@ position: 'relative',
                 No layers yet
               </div>
             ) : (
-<<<<<<< HEAD
-              layers.map(layer => (
-                <div key={layer.id} style={{
-                  ...styles.layerItem,
-                  border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
-                  backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
-                }}>
-                  <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '500' }}>{layer.name}</div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>{layer.type}</div>
-=======
               layers.map((layer, index) => (
                 <div
                   key={layer.id}
@@ -4965,7 +4320,6 @@ position: 'relative',
                       )}
                       <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
                     </div>
->>>>>>> rc
                   </div>
                   <div style={styles.layerControls}>
                     <button
@@ -4998,18 +4352,6 @@ position: 'relative',
 
         {/* Collapsed state - show layer count and quick actions */}
         {isRightSidebarCollapsed && (
-<<<<<<< HEAD
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: '12px',
-            paddingTop: '10px'
-          }}>
-            <div style={{ 
-              textAlign: 'center', 
-              fontSize: '12px', 
-=======
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -5020,7 +4362,6 @@ position: 'relative',
             <div style={{
               textAlign: 'center',
               fontSize: '12px',
->>>>>>> rc
               color: '#666',
               fontWeight: '500'
             }}>
@@ -5053,15 +4394,9 @@ position: 'relative',
                   </button>
                 ))}
                 {layers.length > 3 && (
-<<<<<<< HEAD
-                  <div style={{ 
-                    textAlign: 'center', 
-                    fontSize: '10px', 
-=======
                   <div style={{
                     textAlign: 'center',
                     fontSize: '10px',
->>>>>>> rc
                     color: '#999',
                     padding: '4px'
                   }}>
@@ -5077,9 +4412,6 @@ position: 'relative',
         {selectedLayer && !isRightSidebarCollapsed && (
           <div style={styles.propertyPanel}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>Properties</h4>
-<<<<<<< HEAD
-            
-=======
             {/* Effects (applies to all layer types) */}
             {(() => {
               const sel = layers.find(l => l.id === selectedLayer);
@@ -5096,7 +4428,6 @@ position: 'relative',
               );
             })()}
 
->>>>>>> rc
             {layers.find(l => l.id === selectedLayer)?.type === 'text' && (
               <>
                 <div style={styles.propertyRow}>
@@ -5109,8 +4440,6 @@ position: 'relative',
                   />
                 </div>
                 <div style={styles.propertyRow}>
-<<<<<<< HEAD
-=======
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', marginLeft: 8 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568', cursor: 'pointer' }}>
                       <input
@@ -5131,7 +4460,6 @@ position: 'relative',
                   </div>
                 </div>
                 <div style={styles.propertyRow}>
->>>>>>> rc
                   <span style={styles.propertyLabel}>Font Size</span>
                   <input
                     type="number"
@@ -5172,13 +4500,6 @@ position: 'relative',
                 </div>
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Color</span>
-<<<<<<< HEAD
-                  <input
-                    type="color"
-                    value={textSettings.color}
-                    onChange={(e) => handleTextSettingsChange('color', e.target.value)}
-                    style={styles.colorInput}
-=======
                   <div
                     onClick={() => textColorInputRef.current && textColorInputRef.current.click()}
                     title={textSettings.color}
@@ -5199,7 +4520,6 @@ position: 'relative',
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
                     tabIndex={-1}
                     aria-hidden="true"
->>>>>>> rc
                   />
                 </div>
                 <div style={styles.propertyRow}>
@@ -5278,8 +4598,6 @@ position: 'relative',
             {layers.find(l => l.id === selectedLayer)?.type === 'shape' && (
               <>
                 <div style={styles.propertyRow}>
-<<<<<<< HEAD
-=======
                   <span style={styles.propertyLabel}>Fill Type</span>
                   <select
                     value={shapeSettings.fillType}
@@ -5329,7 +4647,6 @@ position: 'relative',
                   </>
                 )}
                 <div style={styles.propertyRow}>
->>>>>>> rc
                   <span style={styles.propertyLabel}>Fill Color</span>
                   <input
                     type="color"
@@ -5362,33 +4679,6 @@ position: 'relative',
             {layers.find(l => l.id === selectedLayer)?.type === 'image' && (
               <>
                 <div style={styles.propertyRow}>
-<<<<<<< HEAD
-                  <span style={styles.propertyLabel}>Brightness</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={imageSettings.brightness}
-                    onChange={(e) => handleImageSettingsChange('brightness', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.brightness}%
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Contrast</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={imageSettings.contrast}
-                    onChange={(e) => handleImageSettingsChange('contrast', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.contrast}%
-=======
                   <span style={styles.propertyLabel}>Stroke Color</span>
                   <div
                     onClick={() => strokeColorInputRef.current && strokeColorInputRef.current.click()}
@@ -5444,7 +4734,6 @@ position: 'relative',
                   />
                   <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
                     {imageSettings.cornerRadius}px
->>>>>>> rc
                   </span>
                 </div>
                 <div style={styles.propertyRow}>
@@ -5461,37 +4750,6 @@ position: 'relative',
                     {imageSettings.saturation}%
                   </span>
                 </div>
-<<<<<<< HEAD
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Blur</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    value={imageSettings.blur}
-                    onChange={(e) => handleImageSettingsChange('blur', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.blur}px
-                  </span>
-                </div>
-                <div style={styles.propertyRow}>
-                  <span style={styles.propertyLabel}>Opacity</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={imageSettings.opacity}
-                    onChange={(e) => handleImageSettingsChange('opacity', parseInt(e.target.value))}
-                    style={{ width: '100px' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
-                    {imageSettings.opacity}%
-                  </span>
-                </div>
-=======
->>>>>>> rc
               </>
             )}
 
@@ -5554,8 +4812,6 @@ position: 'relative',
           </div>
         )}
       </div>
-<<<<<<< HEAD
-=======
       
       {showStyleModal && (
         <TextStyleModal 
@@ -5564,7 +4820,6 @@ position: 'relative',
           onAddToCanvas={handleAddStyledImageToCanvas}
         />
       )}
->>>>>>> rc
     </div>
   );
 };
