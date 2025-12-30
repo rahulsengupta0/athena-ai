@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-import React from 'react'
-import Teamintro from '../components/Team/Teamintro'
-import Teamhero from '../components/Team/Teamhero'
-export const Team = () => {
-    return (
-        <>
-            <Teamintro/>
-            <Teamhero/>
-        </>
-    )
-}
-=======
 import React, { useState, useEffect } from 'react';
 import Teamintro from '../components/Team/Teamintro';
 import Teamhero from '../components/Team/Teamhero';
@@ -157,4 +144,3 @@ export const Team = () => {
     </>
   );
 };
->>>>>>> rc
