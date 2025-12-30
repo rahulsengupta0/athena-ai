@@ -50,16 +50,37 @@ const ContentWriter = () => {
 
   const templates = useMemo(() => getTemplatesForTab(tab), [tab])
 
-  const handleGenerate = () => {
-    if (!brief.trim()) return
-    setIsLoading(true)
-    // Demo output
-    setTimeout(() => {
-      const demo = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nKey points:\n- Point one about the topic\n- Important consideration\n- Call to action or conclusion\n\nThis is AI-generated content based on your prompt: "${brief}"`
-      setOutput(demo)
-      setIsLoading(false)
-    }, 900)
+const handleGenerate = async () => {
+  if (!brief.trim()) return;
+  setIsLoading(true);
+  setOutput('');
+
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    const response = await fetch(`${API_BASE_URL}/api/content/generate-content`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: brief }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      setOutput('Error: ' + (errorData.error || 'Failed to generate content'));
+      setIsLoading(false);
+      return;
+    }
+
+    const data = await response.json();
+    setOutput(data.result || 'No content received');
+  } catch (error) {
+    setOutput('Error: ' + error.message);
+  } finally {
+    setIsLoading(false);
   }
+};
+
+
 
   return (
     <div style={{ padding: 24 }}>

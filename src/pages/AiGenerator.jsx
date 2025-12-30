@@ -1,4 +1,5 @@
 import React from 'react'
+<<<<<<< HEAD
 import { AiGeneratorPage } from '../components/aigenerator/AiGeneratorPage'
 
 export const AiGenerator = () => {
@@ -8,3 +9,10 @@ export const AiGenerator = () => {
     </>
   )
 }
+=======
+import AiGeneratorPage from '../components/aigenerator/AiGeneratorPage';
+
+export const AiGenerator = () => (
+  <AiGeneratorPage/>
+);
+>>>>>>> rc

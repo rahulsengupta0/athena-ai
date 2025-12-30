@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+
+.env
+**/.env
 
 # Editor directories and files
 .vscode/*
@@ -18,7 +22,22 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
-*.ntvs*
+.ntvs
 *.njsproj
 *.sln
 *.sw?
+
+python-bg-remover/env/
+python-bg-remover/env/
+
+backend/.env
+
+.env
+__pycache__/
+*.pyc
+
+# Chroma database files
+chroma_backend/chroma_store/
+chroma_backend/data/
+*.sqlite3
+*.parquet

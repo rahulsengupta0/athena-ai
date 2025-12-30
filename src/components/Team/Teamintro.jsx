@@ -1,4 +1,5 @@
 import React from 'react';
+<<<<<<< HEAD
 import './Team.css';
 
 const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClick = () => {} }) => {
@@ -6,6 +7,23 @@ const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClic
     { key: 'Members', label: 'Members' },
     { key: 'Invites', label: 'Invites' },
     { key: 'Roles', label: 'Roles' },
+=======
+import { FiSearch } from 'react-icons/fi';
+import './Team.css';
+
+const Teamintro = ({ 
+  activeTab = 'Members', 
+  onTabChange = () => {}, 
+  onFilterClick = () => {},
+  onInviteClick = () => {},
+  stats = { totalMembers: 0, totalProjects: 0, pendingInvites: 0 },
+  searchQuery = '',
+  onSearchChange = () => {}
+}) => {
+  const tabs = [
+    { key: 'Members', label: 'Members' },
+    { key: 'Invites', label: 'Invites' },
+>>>>>>> rc
   ];
 
   return (
@@ -18,13 +36,20 @@ const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClic
             <p className="team-subtitle">Manage your team members and collaborations</p>
           </div>
         </div>
+<<<<<<< HEAD
         <button className="primary-btn">Invite Member</button>
+=======
+        <button className="primary-btn" onClick={onInviteClick}>
+          Invite Member
+        </button>
+>>>>>>> rc
       </div>
 
       {/* KPI Cards */}
       <div className="team-kpis">
         <div className="kpi-card">
           <div className="kpi-title">Total Members</div>
+<<<<<<< HEAD
           <div className="kpi-value">5</div>
           <div className="kpi-trend up">+2 this month</div>
         </div>
@@ -37,6 +62,20 @@ const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClic
           <div className="kpi-title">Avg. Response Time</div>
           <div className="kpi-value">2.3h</div>
           <div className="kpi-trend good">-15min improvement</div>
+=======
+          <div className="kpi-value">{stats.totalMembers || 0}</div>
+          <div className="kpi-trend up">Active team members</div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-title">Active Projects</div>
+          <div className="kpi-value">{stats.totalProjects || 0}</div>
+          <div className="kpi-trend up">Team projects</div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-title">Pending Invites</div>
+          <div className="kpi-value">{stats.pendingInvites || 0}</div>
+          <div className="kpi-trend good">Awaiting response</div>
+>>>>>>> rc
         </div>
       </div>
 
@@ -54,6 +93,7 @@ const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClic
       </div>
 
       {/* Search and Filter */}
+<<<<<<< HEAD
       <div className="team-search-row">
         <div className="search-input-wrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -64,6 +104,22 @@ const Teamintro = ({ activeTab = 'Members', onTabChange = () => {}, onFilterClic
         </div>
         <button className="secondary-btn" onClick={onFilterClick}>Filter</button>
       </div>
+=======
+      {activeTab === 'Members' && (
+        <div className="team-search-row">
+          <div className="search-input-wrap">
+            <FiSearch style={{ position: 'absolute', left: 10, color: '#6b7280' }} size={18} />
+            <input 
+              className="search-input" 
+              placeholder="Search team members..." 
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
+          <button className="secondary-btn" onClick={onFilterClick}>Filter</button>
+        </div>
+      )}
+>>>>>>> rc
     </div>
   );
 };

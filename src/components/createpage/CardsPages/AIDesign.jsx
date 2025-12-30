@@ -1,10 +1,5 @@
 import React, { useMemo, useState } from "react";
-
-// Simple, self-contained page that mirrors the UI in the screenshot.
-// It includes: title, tabs, prompt textarea, example prompts, and a generate button.
-// Functionality: when Generate is clicked, it shows a mock "design preview" area
-// with the selected category, size, and prompt. This can later be wired to a real API.
-
+import api from "../../../utils/api";
 const TABS = [
   { key: "logo", label: "Logo Design" },
   { key: "social", label: "Social Media" },
@@ -19,7 +14,6 @@ const EXAMPLES = [
   "Create a business card design with professional look"
 ];
 
-// Size bar kept fixed here for now; can be replaced by a shared component if present.
 const SIZES = [
   { key: "square", label: "1024 × 1024" },
   { key: "landscape", label: "1280 × 720" },
@@ -34,7 +28,7 @@ const pillStyle = (active) => ({
   color: active ? "#fff" : "#6169a5",
   background: active ? "#7f5bff" : "#f1effd",
   border: active ? "1px solid #7f5bff" : "1px solid #ece9ff",
-  cursor: "pointer",
+  cursor: "pointer"
 });
 
 const sizeItemStyle = (active) => ({
@@ -44,14 +38,14 @@ const sizeItemStyle = (active) => ({
   background: active ? "#f3f0ff" : "#fff",
   color: "#3b3f70",
   fontWeight: 700,
-  cursor: "pointer",
+  cursor: "pointer"
 });
 
 const box = {
   background: "#fff",
   border: "1.6px solid #efeefa",
   borderRadius: 16,
-  boxShadow: "0 3px 16px #e9e4f33d",
+  boxShadow: "0 3px 16px #e9e4f33d"
 };
 
 export const AIDesign = () => {
@@ -60,45 +54,124 @@ export const AIDesign = () => {
   const [activeSize, setActiveSize] = useState("square");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [generatedImage, setGeneratedImage] = useState(null);
+  const [error, setError] = useState(null);
 
   const selectedSize = useMemo(() => SIZES.find((s) => s.key === activeSize), [activeSize]);
+const uploadGeneratedImage = async (base64Image) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(base64Image);
+    const blob = await response.blob();
+    const file = new File([blob], "generated-image.png", { type: blob.type });
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("featureFolder", "ai design generation");
+
+    const res = await api.post("/upload", formData, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    return res.data.fileUrl;
+  } catch (error) {
+    console.error("Upload error:", error);
+    setError("Upload failed: " + error.message);
+  }
+};
+
+
+const handleGenerateLogo = async () => {
+  if (!prompt.trim()) return;
+  setIsLoading(true);
+  setResult(null);
+  setGeneratedImage(null);
+  setError(null);
+
+  try {
+    const response = await api.post("/api/generate-logo", { prompt });
+    const data = response.data;
+
+    if (!data.imageBase64 || data.imageBase64.length < 1000) {
+      setError("Received invalid or too short base64 image data");
+      setIsLoading(false);
+      return;
+    }
+
+    const cleanBase64 = data.imageBase64.replace(/\s/g, "");
+    const imgSrc = `data:${data.mimeType};base64,${cleanBase64}`;
+
+    await uploadGeneratedImage(imgSrc);
+
+    setGeneratedImage(imgSrc);
+    setResult({
+      tab: activeTab,
+      size: selectedSize?.label,
+      text: prompt.trim(),
+    });
+  } catch (error) {
+    setError("Error: " + error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   const onGenerate = async () => {
-    if (!prompt.trim()) return;
-    setIsLoading(true);
-    // Simulate generation
-    setTimeout(() => {
-      setResult({
-        id: Date.now(),
-        text: prompt.trim(),
-        tab: activeTab,
-        size: selectedSize?.label,
-      });
-      setIsLoading(false);
-    }, 900);
+    if (activeTab === "logo") {
+      await handleGenerateLogo();
+    } else {
+      if (!prompt.trim()) return;
+      setIsLoading(true);
+      setError(null);
+      setResult(null);
+      setGeneratedImage(null);
+
+      setTimeout(() => {
+        setResult({
+          id: Date.now(),
+          text: prompt.trim(),
+          tab: activeTab,
+          size: selectedSize?.label,
+        });
+        setIsLoading(false);
+      }, 900);
+    }
   };
 
   return (
     <div style={{ padding: 24 }}>
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <div style={{
-          width: 38,
-          height: 38,
-          borderRadius: 12,
-          background: "#f1effd",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#7f5bff",
-          fontWeight: 800,
-          fontSize: 20,
-        }}>✦</div>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 12,
+            background: "#f1effd",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#7f5bff",
+            fontWeight: 800,
+            fontSize: 20,
+          }}
+        >
+          ✦
+        </div>
         <div>
-          <div style={{ fontSize: "1.55rem", fontWeight: 800, color: "#1a1f47" }}>AI Design Generator</div>
+          <div style={{ fontSize: "1.55rem", fontWeight: 800, color: "#1a1f47" }}>
+            AI Design Generator
+          </div>
           <div style={{ color: "#858ab0" }}>Create stunning designs from text descriptions</div>
         </div>
       </div>
 
+      {/* Tabs */}
       <div style={{ ...box, padding: 10, display: "flex", gap: 10, marginBottom: 20 }}>
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={pillStyle(activeTab === t.key)}>
@@ -107,9 +180,13 @@ export const AIDesign = () => {
         ))}
       </div>
 
+      {/* Main grid layout */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+        {/* Left panel: Prompt input */}
         <div style={{ ...box, padding: 16 }}>
-          <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#1b1f4b", marginBottom: 10 }}>Describe Your Design</div>
+          <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#1b1f4b", marginBottom: 10 }}>
+            Describe Your Design
+          </div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -127,7 +204,7 @@ export const AIDesign = () => {
             }}
           />
 
-          {/* Fixed size bar */}
+          {/* Size selector */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
             <div style={{ color: "#6a6fa1", fontWeight: 700, minWidth: 44 }}>Size</div>
             {SIZES.map((s) => (
@@ -137,6 +214,7 @@ export const AIDesign = () => {
             ))}
           </div>
 
+          {/* Generate and Clear buttons */}
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <button
               onClick={onGenerate}
@@ -159,6 +237,8 @@ export const AIDesign = () => {
               onClick={() => {
                 setPrompt("");
                 setResult(null);
+                setGeneratedImage(null);
+                setError(null);
               }}
               style={{
                 background: "#f5f4fe",
@@ -174,11 +254,22 @@ export const AIDesign = () => {
               Clear
             </button>
           </div>
+
+          {/* Error message */}
+          {error && (
+            <div style={{ marginTop: 10, color: "red", fontWeight: "bold" }}>
+              {error}
+            </div>
+          )}
         </div>
 
+        {/* Right panel: Examples and Preview */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Examples */}
           <div style={{ ...box, padding: 16 }}>
-            <div style={{ fontWeight: 800, fontSize: "1.02rem", color: "#1b1f4b", marginBottom: 8 }}>Example Prompts</div>
+            <div style={{ fontWeight: 800, fontSize: "1.02rem", color: "#1b1f4b", marginBottom: 8 }}>
+              Example Prompts
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {EXAMPLES.map((ex, idx) => (
                 <button
@@ -200,28 +291,44 @@ export const AIDesign = () => {
             </div>
           </div>
 
+          {/* Preview */}
           {result && (
             <div style={{ ...box, padding: 16 }}>
-              <div style={{ fontWeight: 800, color: "#1b1f4b", marginBottom: 10 }}>Preview</div>
+              <div style={{ fontWeight: 800, color: "#1b1f4b", marginBottom: 10 }}>
+                Preview
+              </div>
               <div
                 style={{
                   width: "100%",
-                  aspectRatio: activeSize === "portrait" ? "9/16" : activeSize === "landscape" ? "16/9" : "1/1",
                   border: "2px dashed #cfcaf5",
                   borderRadius: 16,
                   background: "linear-gradient(135deg,#faf9ff,#f3f1fe)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   color: "#6a6fa1",
                   textAlign: "center",
                   padding: 16,
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 800, marginBottom: 6 }}>{TABS.find(t => t.key === result.tab)?.label} · {result.size}</div>
-                  <div style={{ opacity: 0.9 }}>{result.text}</div>
-                </div>
+                {activeTab === "logo" && generatedImage ? (
+                  <img
+                    src={generatedImage}
+                    alt="Generated Logo"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "240px",
+                      borderRadius: 12,
+                      background: "#fff",
+                    }}
+                    onError={() => alert("Image failed to load")}
+                    onLoad={() => console.log("Image loaded successfully")}
+                  />
+                ) : (
+                  <div>
+                    <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                      {TABS.find((t) => t.key === result.tab)?.label} · {result.size}
+                    </div>
+                    <div style={{ opacity: 0.9 }}>{result.text}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -232,5 +339,3 @@ export const AIDesign = () => {
 };
 
 export default AIDesign;
-
-

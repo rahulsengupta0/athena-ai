@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lower } from './Lower';
 import {
   MdAutoAwesome,
@@ -123,6 +124,7 @@ const toolCards = [
 
 export default function ToolCards() {
   const [hovered, setHovered] = useState(null);
+  const navigate = useNavigate();
 
   return (
     <div style={styles.pageContainer}>
@@ -158,6 +160,13 @@ export default function ToolCards() {
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#7442cc')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#906BFF')}
+                onClick={() => {
+  if (tool.key === 'remove') navigate('/bgremove');
+  else if (tool.key === 'enhance') navigate('/artisticiamge');
+  else if (tool.key === 'color') navigate('/imageeditor');
+  else if (tool.key === 'crop') navigate('/smartcrop');
+}}
+
               >
                 Try Now
               </button>

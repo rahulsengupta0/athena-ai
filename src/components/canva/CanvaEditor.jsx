@@ -1,9 +1,29 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+<<<<<<< HEAD
 import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
 import TopToolbar from './TopToolbar';
 import LeftSidebar from './LeftSidebar';
 
 const CanvaEditor = () => {
+=======
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import { BrightnessControl, ContrastControl, BlurControl, ShadowsControl, OpacityControl } from './controls';
+import { getFilterCSS, getShadowCSS, hexToRgba } from '../../utils/styleUtils';
+import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
+import { FiType, FiImage, FiSquare, FiUpload, FiDownload, FiSave, FiCircle, FiTriangle, FiEdit3, FiMove, FiRotateCw, FiRotateCcw, FiCrop, FiFilter, FiAlignLeft, FiAlignCenter, FiAlignRight, FiBold, FiItalic, FiUnderline, FiLayers, FiEye, FiEyeOff, FiTrash2, FiCopy, FiZoomIn, FiZoomOut, FiGrid, FiMaximize, FiMinimize, FiStar, FiHeart, FiZap, FiShield, FiTarget, FiTrendingUp, FiPlus, FiMinus, FiX, FiCheck, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiChevronDown, FiChevronRight, FiCloud } from 'react-icons/fi';
+import TopToolbar from './TopToolbar';
+import SaveExportModal from './SaveExportModal';
+import AIImageGenerator from './AIImageGenerator';
+import FloatingToolbar from './FloatingToolbar';
+import TextEnhanceButton from './TextEnhanceButton';
+import { enhanceText } from './TextEnhanceService';
+import TextStyleModal from './TextStyleModal';
+
+const CanvaEditor = () => {
+  const { id: projectId } = useParams();
+  const navigate = useNavigate();
+>>>>>>> rc
   const [selectedTool, setSelectedTool] = useState('select');
   const [layers, setLayers] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -16,6 +36,36 @@ const CanvaEditor = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, layerId: null });
+<<<<<<< HEAD
+=======
+  const [isRotating, setIsRotating] = useState(false);
+  const [rotateStart, setRotateStart] = useState({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
+
+  useEffect(() => {
+    if (projectId) {
+      api.getProject(projectId).then(project => {
+        if (project && project.design) {
+          setLayers(project.design.layers || []);
+          setCanvasSize(project.design.canvasSize || { width: 800, height: 600 });
+          setZoom(project.design.zoom || 100);
+          setPan(project.design.pan || { x: 0, y: 0 });
+        }
+      }).catch(error => {
+        console.error("Failed to load project", error);
+        // Optionally, show an error message to the user
+      });
+    }
+  }, [projectId]);
+
+
+  // Drag and drop for layers panel
+  const [draggedLayer, setDraggedLayer] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(-1);
+  const [isLayerDragging, setIsLayerDragging] = useState(false);
+  // Rename layer (right sidebar)
+  const [renamingLayerId, setRenamingLayerId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+>>>>>>> rc
   const [showGrid, setShowGrid] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [hoveredOption, setHoveredOption] = useState(null);
@@ -35,20 +85,41 @@ const CanvaEditor = () => {
     fontSize: 16,
     fontFamily: 'Arial',
     fontWeight: 'normal',
+<<<<<<< HEAD
+=======
+    fontStyle: 'normal',
+    textDecoration: 'none',
+>>>>>>> rc
     color: '#000000',
     textAlign: 'left'
   });
   const [shapeSettings, setShapeSettings] = useState({
     fillColor: '#3182ce',
     strokeColor: '#000000',
+<<<<<<< HEAD
     strokeWidth: 1
+=======
+    strokeWidth: 1,
+    fillType: 'color', // 'color' | 'image'
+    fillImageSrc: null,
+    fillImageFit: 'cover' // 'cover' | 'contain'
+>>>>>>> rc
   });
   const [imageSettings, setImageSettings] = useState({
     brightness: 100,
     contrast: 100,
     saturation: 100,
     blur: 0,
+<<<<<<< HEAD
     opacity: 100
+=======
+    opacity: 100,
+    strokeColor: '#000000',
+    strokeWidth: 0,
+    strokeStyle: 'solid', // 'solid' | 'dashed'
+    cornerRadius: 4,
+    animation: 'none' // 'none' | 'fadeIn' | 'slideInUp' | 'slideInLeft' | 'zoomIn'
+>>>>>>> rc
   });
   const [drawingSettings, setDrawingSettings] = useState({
     brushSize: 5,
@@ -72,6 +143,20 @@ const CanvaEditor = () => {
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
+<<<<<<< HEAD
+=======
+  // Save/Export modal state
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState('png'); // 'png' | 'jpeg'
+  const [exportQuality, setExportQuality] = useState(0.92); // for jpeg (0-1)
+  const [isExporting, setIsExporting] = useState(false);
+  const [includeProjectFile, setIncludeProjectFile] = useState(true);
+  const [isSavingWorksheet, setIsSavingWorksheet] = useState(false);
+  const [isEnhancingText, setIsEnhancingText] = useState(false);
+  const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
+  const [showStyleModal, setShowStyleModal] = useState(false);
+  const [isHeading, setIsHeading] = useState(false);
+>>>>>>> rc
   // Custom scroller state
   const [scrollMetrics, setScrollMetrics] = useState({
     contentWidth: 0,
@@ -103,6 +188,11 @@ const CanvaEditor = () => {
   const canvasAreaRef = useRef(null);
   const contentWrapperRef = useRef(null);
   const fileInputRef = useRef(null);
+<<<<<<< HEAD
+=======
+  const strokeColorInputRef = useRef(null);
+  const textColorInputRef = useRef(null);
+>>>>>>> rc
   const lastPointRef = useRef(null);
   const lastTimeRef = useRef(0);
   const hDragRef = useRef({ isDragging: false, startX: 0, startScrollLeft: 0 });
@@ -256,43 +346,71 @@ const CanvaEditor = () => {
   // Eraser functionality - only affect drawing layers under cursor
   const handleEraserAction = (x, y) => {
     const eraserRadius = drawingSettings.brushSize / 2;
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     // Find layers that intersect with the eraser area
     const layersToErase = layers.filter(layer => {
       if (!layer.visible) return false;
       // Only allow erasing on drawing layers; ignore shapes/images/text entirely
       if (layer.type !== 'drawing') return false;
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       // Check if eraser circle intersects with layer bounds
       const layerLeft = layer.x;
       const layerRight = layer.x + layer.width;
       const layerTop = layer.y;
       const layerBottom = layer.y + layer.height;
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       // Check if eraser circle intersects with layer rectangle
       const closestX = Math.max(layerLeft, Math.min(x, layerRight));
       const closestY = Math.max(layerTop, Math.min(y, layerBottom));
       const distance = Math.hypot(x - closestX, y - closestY);
+<<<<<<< HEAD
       
       return distance <= eraserRadius;
     });
     
+=======
+
+      return distance <= eraserRadius;
+    });
+
+>>>>>>> rc
     if (layersToErase.length > 0) {
       // Only modify drawing layers; keep all other layers intact
       const newLayers = layers.map(layer => {
         const layerToErase = layersToErase.find(l => l.id === layer.id);
         if (!layerToErase) return layer;
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         // For drawing layers, create holes by removing path points near the eraser
         const newPath = layer.path.filter(point => {
           const distance = Math.hypot(point.x - (x - layer.x), point.y - (y - layer.y));
           return distance > eraserRadius;
         });
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         if (newPath.length < 2) {
           // If too few points remain, delete only this drawing layer
           return null;
         }
+<<<<<<< HEAD
         
         return { ...layer, path: newPath };
       }).filter(Boolean);
@@ -300,6 +418,15 @@ const CanvaEditor = () => {
       setLayers(newLayers);
       saveToHistory(newLayers);
       
+=======
+
+        return { ...layer, path: newPath };
+      }).filter(Boolean);
+
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+
+>>>>>>> rc
       // Clear selection if selected layer was erased
       const erasedLayerIds = layersToErase.map(l => l.id);
       if (erasedLayerIds.includes(selectedLayer)) {
@@ -316,6 +443,11 @@ const CanvaEditor = () => {
     setHistoryIndex(newHistory.length - 1);
   };
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> rc
   const undo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
@@ -333,7 +465,11 @@ const CanvaEditor = () => {
   const handleToolSelect = (toolId) => {
     setSelectedTool(toolId);
     setSelectedLayer(null);
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     // Set drawing mode when selecting drawing tools
     if (['brush', 'pen', 'eraser'].includes(toolId)) {
       setDrawingSettings(prev => ({ ...prev, drawingMode: toolId }));
@@ -343,6 +479,7 @@ const CanvaEditor = () => {
   const handleDrawingSettingsChange = (property, value) => {
     setDrawingSettings(prev => ({ ...prev, [property]: value }));
   };
+<<<<<<< HEAD
 
   const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     let newLayer;
@@ -401,6 +538,101 @@ const CanvaEditor = () => {
       saveToHistory(newLayers);
     }
   };
+=======
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
+  let newLayer;
+  const tool = toolOverride || selectedTool;
+
+  if (tool === 'text' || tool === 'heading' || tool === 'subheading' || tool === 'textbox') {
+    const isHeading = tool === 'heading';
+    const isSubheading = tool === 'subheading';
+
+    const presetName =
+      tool === 'heading'
+        ? 'Heading'
+        : tool === 'subheading'
+        ? 'Subheading'
+        : 'Body Text';
+
+    const presetText =
+      tool === 'heading'
+        ? 'Add a heading'
+        : tool === 'subheading'
+        ? 'Add a subheading'
+        : 'Add some body text';
+
+    const presetFontSize =
+      tool === 'heading'
+        ? 32
+        : tool === 'subheading'
+        ? 24
+        : 16;
+
+    const presetFontWeight = isHeading ? '700' : isSubheading ? '600' : '400';
+
+    const width = 300;
+    const height = isHeading ? 80 : isSubheading ? 60 : 50;
+
+    const safeX = x;
+    const safeY = y;
+
+    newLayer = {
+      id: Date.now(),
+      type: 'text',
+      name: presetName,
+      text: presetText,
+      x: safeX,
+      y: safeY,
+      width,
+      height,
+      ...textSettings,
+      fontSize: presetFontSize,
+      fontWeight: presetFontWeight,
+      visible: true,
+      locked: false,
+      rotation: 0,
+    };
+  } else if (
+    ['rectangle','roundedRectangle','circle','ellipse','triangle','rightTriangle',
+     'diamond','pentagon','hexagon','star','star6','heart','arrow','arrowLeft',
+     'arrowUp','arrowDown','cloud'].includes(tool)
+  ) {
+    const width =
+      tool === 'ellipse' || tool === 'roundedRectangle' ? 160
+      : tool.includes('arrow') ? 140
+      : 100;
+    const height =
+      tool === 'ellipse' || tool === 'roundedRectangle' ? 100
+      : 100;
+
+    const safeX = clamp(x, 0, canvasSize.width - width);
+    const safeY = clamp(y, 0, canvasSize.height - height);
+
+    newLayer = {
+      id: Date.now(),
+      type: 'shape',
+      name: tool.charAt(0).toUpperCase() + tool.slice(1),
+      shape: tool,
+      x: safeX,
+      y: safeY,
+      width,
+      height,
+      ...shapeSettings,
+      visible: true,
+      locked: false,
+      rotation: 0,
+    };
+  }
+
+  if (newLayer) {
+    const newLayers = [...layers, newLayer];
+    setLayers(newLayers);
+    setSelectedLayer(newLayer.id);
+    saveToHistory(newLayers);
+  }
+};
+>>>>>>> rc
 
   const handleLayerSelect = (layerId) => {
     setSelectedLayer(layerId);
@@ -410,9 +642,20 @@ const CanvaEditor = () => {
         fontSize: layer.fontSize || 16,
         fontFamily: layer.fontFamily || 'Arial',
         fontWeight: layer.fontWeight || 'normal',
+<<<<<<< HEAD
         color: layer.color || '#000000',
         textAlign: layer.textAlign || 'left'
       });
+=======
+        fontStyle: layer.fontStyle || 'normal',
+        textDecoration: layer.textDecoration || 'none',
+        color: layer.color || '#000000',
+        textAlign: layer.textAlign || 'left'
+      });
+      // Auto-detect if it's a heading based on name or font size
+      const isHeadingText = isHeadingLayer(layer);
+      setIsHeading(isHeadingText);
+>>>>>>> rc
     }
   };
 
@@ -425,8 +668,56 @@ const CanvaEditor = () => {
     saveToHistory(newLayers);
   };
 
+<<<<<<< HEAD
   const handleLayerToggleVisibility = (layerId) => {
     const newLayers = layers.map(l => 
+=======
+  // Keyboard shortcuts and custom events
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Delete' && selectedLayer) {
+        handleLayerDelete(selectedLayer);
+      }
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') {
+          e.preventDefault();
+          undo();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    const handleOpenTextStyleModal = () => {
+      const selectedTextLayer = layers.find(l => l.id === selectedLayer && l.type === 'text');
+      if (selectedTextLayer && selectedTextLayer.text && selectedTextLayer.text.trim()) {
+        setShowStyleModal(true);
+      }
+    };
+
+    const handleAddStyledImageFromEvent = (e) => {
+      try {
+        handleAddStyledImageToCanvas(e.detail.imageUrl);
+      } catch (error) {
+        console.error('Error adding styled image to canvas:', error);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('openTextStyleModal', handleOpenTextStyleModal);
+    window.addEventListener('addStyledImageToCanvas', handleAddStyledImageFromEvent);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('openTextStyleModal', handleOpenTextStyleModal);
+      window.removeEventListener('addStyledImageToCanvas', handleAddStyledImageFromEvent);
+    };
+  }, [selectedLayer, handleLayerDelete, undo, redo, layers]);
+
+  const handleLayerToggleVisibility = (layerId) => {
+    const newLayers = layers.map(l =>
+>>>>>>> rc
       l.id === layerId ? { ...l, visible: !l.visible } : l
     );
     setLayers(newLayers);
@@ -450,10 +741,1466 @@ const CanvaEditor = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleTextSettingsChange = (property, value) => {
     setTextSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
       const newLayers = layers.map(l => 
+=======
+  // Inline rename helpers
+  const startRenameLayer = (layer) => {
+    setRenamingLayerId(layer.id);
+    setRenameValue(layer.name || '');
+  };
+
+  const commitRenameLayer = () => {
+    if (!renamingLayerId) return;
+    const trimmed = renameValue.trim();
+    const newLayers = layers.map(l => l.id === renamingLayerId ? { ...l, name: trimmed || l.name } : l);
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
+  const handleLayerMoveUp = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex < layers.length - 1) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex + 1]] = [newLayers[currentIndex + 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  const handleLayerMoveDown = (layerId) => {
+    const currentIndex = layers.findIndex(l => l.id === layerId);
+    if (currentIndex > 0) {
+      const newLayers = [...layers];
+      [newLayers[currentIndex], newLayers[currentIndex - 1]] = [newLayers[currentIndex - 1], newLayers[currentIndex]];
+      setLayers(newLayers);
+      saveToHistory(newLayers);
+    }
+  };
+
+  // Floating toolbar color helpers
+  const getLayerPrimaryColor = (layer) => {
+    if (!layer) return '#000000';
+    if (layer.type === 'text') return layer.color || '#000000';
+    if (layer.type === 'shape') return layer.fillColor || '#3182ce';
+    if (layer.type === 'drawing') return layer.color || '#000000';
+    if (layer.type === 'image') return layer.strokeColor || '#000000';
+    return '#000000';
+  };
+
+  const handleQuickColorChange = (colorValue) => {
+    if (!selectedLayer) return;
+    const newLayers = layers.map(l => {
+      if (l.id !== selectedLayer) return l;
+      if (l.type === 'text') return { ...l, color: colorValue };
+      if (l.type === 'shape') return { ...l, fillColor: colorValue };
+      if (l.type === 'drawing') return { ...l, color: colorValue };
+      if (l.type === 'image') return { ...l, strokeColor: colorValue };
+      return l;
+    });
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+  };
+
+  // Drag and drop handlers for layers panel
+  const handleLayerDragStart = (e, layerId) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    setDraggedLayer(layerId);
+    setIsLayerDragging(true);
+  };
+
+  const handleLayerDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleLayerDragLeave = (e) => {
+    // Only reset if we're actually leaving the layer item
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverIndex(-1);
+    }
+  };
+
+  const handleLayerDrop = (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedLayer === null) return;
+
+    const draggedIndex = layers.findIndex(l => l.id === draggedLayer);
+    if (draggedIndex === -1 || draggedIndex === dropIndex) {
+      setDraggedLayer(null);
+      setDragOverIndex(-1);
+      setIsLayerDragging(false);
+      return;
+    }
+
+    const newLayers = [...layers];
+    const draggedLayerData = newLayers[draggedIndex];
+
+    // Remove the dragged layer
+    newLayers.splice(draggedIndex, 1);
+
+    // Insert at new position
+    const newIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newLayers.splice(newIndex, 0, draggedLayerData);
+
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+
+    // Reset drag state
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
+  };
+
+  const handleLayerDragEnd = () => {
+    setDraggedLayer(null);
+    setDragOverIndex(-1);
+    setIsLayerDragging(false);
+  };
+
+  // Export: open modal with export options
+  const handleExport = () => {
+    setIsSaveModalOpen(true);
+  };
+
+ //Handle save canva design (new + existing)
+  const handleSave = async () => {
+    const design = { layers, canvasSize, zoom, pan };
+
+    try {
+      if (projectId) {
+        await api.updateProjectDesign(projectId, design);
+        alert('Design saved successfully!');
+      } else {
+        const newProjectData = {
+          title: "Untitled Design",
+          desc: "Created in Canva Clone",
+          icon: "🎨",
+          category: "General",
+          status: "Active",
+          design: design,
+        };
+
+        const newProject = await api.createProject(newProjectData);
+
+        if (newProject && newProject._id) {
+          alert('Project created successfully!');
+
+          navigate(`/canva-clone/${newProject._id}`, { replace: true });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save design:', error);
+      alert('Error saving design. Please try again.');
+    }
+  };
+
+  // Duplicate currently selected layer (if any)
+  const handleDuplicateSelected = () => {
+    if (!selectedLayer) return;
+    handleLayerDuplicate(selectedLayer);
+  };
+
+  // Export utility: render all layers to an offscreen canvas for a full-template export
+  const exportCanvasAsImage = async (format = 'png', quality = 0.92) => {
+    const width = canvasSize.width;
+    const height = canvasSize.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+
+    // Helpers
+    const drawRoundedRect = (x, y, w, h, r) => {
+      const radius = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    };
+
+    const drawText = (layer) => {
+      ctx.save();
+      // Apply effects
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+      if (layer.shadows?.enabled) {
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+      } else {
+        // Explicitly reset shadow properties when disabled
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      ctx.fillStyle = layer.color || '#000000';
+      const fontWeight = layer.fontWeight || 'normal';
+      const fontSize = layer.fontSize || 16;
+      const fontFamily = layer.fontFamily || 'Arial';
+      ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+      ctx.textBaseline = 'top';
+      if (layer.fontStyle === 'italic') {
+        ctx.font = `italic ${fontWeight} ${fontSize}px ${fontFamily}`;
+      }
+      const x = layer.x + 4;
+      const y = layer.y + 4;
+      const maxWidth = Math.max(10, (layer.width || 300) - 8);
+      const lines = (layer.text || '').split(/\n/);
+      let offsetY = 0;
+      for (const line of lines) {
+        if (layer.textDecoration === 'underline') {
+          const metrics = ctx.measureText(line);
+          const underlineY = y + offsetY + fontSize;
+          ctx.fillText(line, x, y + offsetY, maxWidth);
+          ctx.beginPath();
+          ctx.moveTo(x, underlineY + 2);
+          ctx.lineTo(x + metrics.width, underlineY + 2);
+          ctx.lineWidth = Math.max(1, Math.floor(fontSize / 12));
+          ctx.strokeStyle = layer.color || '#000000';
+          ctx.stroke();
+        } else {
+          ctx.fillText(line, x, y + offsetY, maxWidth);
+        }
+        offsetY += fontSize * 1.3;
+      }
+      ctx.restore();
+    };
+
+    // Helper function to draw shape path
+    const drawShapePath = (ctx, s, x, y, w, h) => {
+      if (s === 'rectangle') {
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.closePath();
+      } else if (s === 'roundedRectangle') {
+        drawRoundedRect(x, y, w, h, 16);
+      } else if (s === 'circle') {
+        ctx.beginPath();
+        ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        ctx.closePath();
+      } else if (s === 'ellipse') {
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+        ctx.closePath();
+      } else if (s === 'triangle') {
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x, y + h);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+      } else if (s === 'rightTriangle') {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x, y + h);
+        ctx.closePath();
+      } else if (s === 'diamond') {
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x + w, y + h / 2);
+        ctx.lineTo(x + w / 2, y + h);
+        ctx.lineTo(x, y + h / 2);
+        ctx.closePath();
+      } else if (s === 'pentagon') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.95, y + h * 0.38);
+        ctx.lineTo(x + w * 0.77, y + h);
+        ctx.lineTo(x + w * 0.23, y + h);
+        ctx.lineTo(x + w * 0.05, y + h * 0.38);
+        ctx.closePath();
+      } else if (s === 'hexagon') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.25, y);
+        ctx.lineTo(x + w * 0.75, y);
+        ctx.lineTo(x + w, y + h * 0.5);
+        ctx.lineTo(x + w * 0.75, y + h);
+        ctx.lineTo(x + w * 0.25, y + h);
+        ctx.lineTo(x, y + h * 0.5);
+        ctx.closePath();
+      } else if (s === 'star') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.61, y + h * 0.35);
+        ctx.lineTo(x + w * 0.98, y + h * 0.35);
+        ctx.lineTo(x + w * 0.68, y + h * 0.57);
+        ctx.lineTo(x + w * 0.79, y + h * 0.91);
+        ctx.lineTo(x + w * 0.5, y + h * 0.70);
+        ctx.lineTo(x + w * 0.21, y + h * 0.91);
+        ctx.lineTo(x + w * 0.32, y + h * 0.57);
+        ctx.lineTo(x + w * 0.02, y + h * 0.35);
+        ctx.lineTo(x + w * 0.39, y + h * 0.35);
+        ctx.closePath();
+      } else if (s === 'star6') {
+        ctx.beginPath();
+        const centerX = x + w / 2;
+        const centerY = y + h / 2;
+        const outerRadius = Math.min(w, h) / 2;
+        const innerRadius = outerRadius * 0.5;
+        for (let i = 0; i < 12; i++) {
+          const angle = (i * Math.PI) / 6 - Math.PI / 2;
+          const radius = i % 2 === 0 ? outerRadius : innerRadius;
+          const px = centerX + radius * Math.cos(angle);
+          const py = centerY + radius * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else if (s === 'heart') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y + h * 0.85);
+        ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+        ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+        ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+        ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+        ctx.closePath();
+      } else if (s === 'arrow') {
+        ctx.beginPath();
+        ctx.moveTo(x, y + h * 0.3);
+        ctx.lineTo(x + w * 0.6, y + h * 0.3);
+        ctx.lineTo(x + w * 0.6, y + h * 0.1);
+        ctx.lineTo(x + w, y + h * 0.5);
+        ctx.lineTo(x + w * 0.6, y + h * 0.9);
+        ctx.lineTo(x + w * 0.6, y + h * 0.7);
+        ctx.lineTo(x, y + h * 0.7);
+        ctx.closePath();
+      } else if (s === 'arrowLeft') {
+        ctx.beginPath();
+        ctx.moveTo(x + w, y + h * 0.3);
+        ctx.lineTo(x + w * 0.4, y + h * 0.3);
+        ctx.lineTo(x + w * 0.4, y + h * 0.1);
+        ctx.lineTo(x, y + h * 0.5);
+        ctx.lineTo(x + w * 0.4, y + h * 0.9);
+        ctx.lineTo(x + w * 0.4, y + h * 0.7);
+        ctx.lineTo(x + w, y + h * 0.7);
+        ctx.closePath();
+      } else if (s === 'arrowUp') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.3, y + h);
+        ctx.lineTo(x + w * 0.3, y + h * 0.4);
+        ctx.lineTo(x + w * 0.1, y + h * 0.4);
+        ctx.lineTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.9, y + h * 0.4);
+        ctx.lineTo(x + w * 0.7, y + h * 0.4);
+        ctx.lineTo(x + w * 0.7, y + h);
+        ctx.closePath();
+      } else if (s === 'arrowDown') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.3, y);
+        ctx.lineTo(x + w * 0.3, y + h * 0.6);
+        ctx.lineTo(x + w * 0.1, y + h * 0.6);
+        ctx.lineTo(x + w * 0.5, y + h);
+        ctx.lineTo(x + w * 0.9, y + h * 0.6);
+        ctx.lineTo(x + w * 0.7, y + h * 0.6);
+        ctx.lineTo(x + w * 0.7, y);
+        ctx.closePath();
+      } else if (s === 'cloud') {
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.25, y + h * 0.5);
+        ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+        ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+        ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+        ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+        ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+        ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+        ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+        ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+        ctx.closePath();
+      } else {
+        drawRoundedRect(x, y, w, h, 8);
+      }
+    };
+
+    const drawShape = (layer) => {
+      const x = layer.x;
+      const y = layer.y;
+      const w = layer.width || 100;
+      const h = layer.height || 100;
+      const fill = layer.fillColor || '#3182ce';
+      const stroke = layer.strokeColor || '#000000';
+      const strokeWidth = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 1;
+      const s = layer.shape;
+
+      ctx.save();
+      // Apply effects
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+
+      // Step 1: Draw shadow first (if enabled)
+      if (layer.shadows?.enabled) {
+        ctx.save();
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+        ctx.fillStyle = fill;
+        drawShapePath(ctx, s, x, y, w, h);
+        // Use evenodd fill rule for star shapes
+        if (s === 'star' || s === 'star6') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Step 2: Draw the actual shape fill (without shadow)
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = fill;
+
+      if (layer.fillType === 'image' && layer.fillImageSrc) {
+        // Image fill is handled separately
+        const path = new Path2D();
+        if (s === 'rectangle') {
+          path.rect(x, y, w, h);
+        } else if (s === 'circle') {
+          path.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        } else if (s === 'triangle') {
+          path.moveTo(x + w / 2, y);
+          path.lineTo(x, y + h);
+          path.lineTo(x + w, y + h);
+          path.closePath();
+        } else if (s === 'rightTriangle') {
+          path.moveTo(x, y);
+          path.lineTo(x + w, y);
+          path.lineTo(x, y + h);
+          path.closePath();
+        } else if (s === 'diamond') {
+          path.moveTo(x + w / 2, y);
+          path.lineTo(x + w, y + h / 2);
+          path.lineTo(x + w / 2, y + h);
+          path.lineTo(x, y + h / 2);
+          path.closePath();
+        }
+        ctx.clip(path);
+        ctx.fillStyle = '#ddd';
+        ctx.fill();
+      } else {
+        drawShapePath(ctx, s, x, y, w, h);
+        // Use evenodd fill rule for star shapes
+        if (s === 'star' || s === 'star6') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
+      }
+
+      // Step 3: Draw stroke (if any)
+      if (strokeWidth > 0) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeWidth;
+        // For star shapes, we need to redraw the path for stroke since fill('evenodd') consumes the path
+        if (s === 'star' || s === 'star6') {
+          drawShapePath(ctx, s, x, y, w, h);
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    };
+
+    const drawShapeLayerWithImage = async (layer) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const x = layer.x;
+          const y = layer.y;
+          const w = layer.width || img.width;
+          const h = layer.height || img.height;
+
+          ctx.save();
+          // Apply effects
+          ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+          ctx.filter = getFilterCSS({
+            brightness: layer.brightness ?? 100,
+            contrast: layer.contrast ?? 100,
+            blur: layer.blur ?? 0
+          });
+          if (layer.shadows?.enabled) {
+            ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+            ctx.shadowBlur = layer.shadows.blur ?? 0;
+            ctx.shadowOffsetX = layer.shadows.x ?? 0;
+            ctx.shadowOffsetY = layer.shadows.y ?? 0;
+          } else {
+            // Explicitly reset shadow properties when disabled
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          }
+          // Draw shape directly on context (not Path2D) for proper shadow support
+          const s = layer.shape;
+
+          // First, draw the shape filled to create the shadow
+          ctx.fillStyle = layer.fillColor || '#3182ce';
+          if (s === 'rectangle') {
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'roundedRectangle') {
+            drawRoundedRect(x, y, w, h, 16);
+            ctx.fill();
+          } else if (s === 'circle') {
+            ctx.beginPath();
+            ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'ellipse') {
+            ctx.beginPath();
+            ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'triangle') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'rightTriangle') {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'diamond') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h / 2);
+            ctx.lineTo(x + w / 2, y + h);
+            ctx.lineTo(x, y + h / 2);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'pentagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.95, y + h * 0.38);
+            ctx.lineTo(x + w * 0.77, y + h);
+            ctx.lineTo(x + w * 0.23, y + h);
+            ctx.lineTo(x + w * 0.05, y + h * 0.38);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'hexagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y);
+            ctx.lineTo(x + w * 0.75, y);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.75, y + h);
+            ctx.lineTo(x + w * 0.25, y + h);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'star') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.61, y + h * 0.35);
+            ctx.lineTo(x + w * 0.98, y + h * 0.35);
+            ctx.lineTo(x + w * 0.68, y + h * 0.57);
+            ctx.lineTo(x + w * 0.79, y + h * 0.91);
+            ctx.lineTo(x + w * 0.5, y + h * 0.70);
+            ctx.lineTo(x + w * 0.21, y + h * 0.91);
+            ctx.lineTo(x + w * 0.32, y + h * 0.57);
+            ctx.lineTo(x + w * 0.02, y + h * 0.35);
+            ctx.lineTo(x + w * 0.39, y + h * 0.35);
+            ctx.closePath();
+            ctx.fill('evenodd');
+          } else if (s === 'star6') {
+            ctx.beginPath();
+            const centerX = x + w / 2;
+            const centerY = y + h / 2;
+            const outerRadius = Math.min(w, h) / 2;
+            const innerRadius = outerRadius * 0.5;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i * Math.PI) / 6 - Math.PI / 2;
+              const radius = i % 2 === 0 ? outerRadius : innerRadius;
+              const px = centerX + radius * Math.cos(angle);
+              const py = centerY + radius * Math.sin(angle);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill('evenodd');
+          } else if (s === 'heart') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y + h * 0.85);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+            ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrow') {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.1);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.6, y + h * 0.9);
+            ctx.lineTo(x + w * 0.6, y + h * 0.7);
+            ctx.lineTo(x, y + h * 0.7);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowLeft') {
+            ctx.beginPath();
+            ctx.moveTo(x + w, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.1);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.lineTo(x + w * 0.4, y + h * 0.9);
+            ctx.lineTo(x + w * 0.4, y + h * 0.7);
+            ctx.lineTo(x + w, y + h * 0.7);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowUp') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y + h);
+            ctx.lineTo(x + w * 0.3, y + h * 0.4);
+            ctx.lineTo(x + w * 0.1, y + h * 0.4);
+            ctx.lineTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.9, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'arrowDown') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y);
+            ctx.lineTo(x + w * 0.3, y + h * 0.6);
+            ctx.lineTo(x + w * 0.1, y + h * 0.6);
+            ctx.lineTo(x + w * 0.5, y + h);
+            ctx.lineTo(x + w * 0.9, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y);
+            ctx.closePath();
+            ctx.fill();
+          } else if (s === 'cloud') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+            ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+            ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+            ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+            ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            drawRoundedRect(x, y, w, h, 8);
+            ctx.fill();
+          }
+
+          // Now clip and draw the image on top (replacing the fill)
+          ctx.save();
+          if (s === 'rectangle') {
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'roundedRectangle') {
+            drawRoundedRect(x, y, w, h, 16);
+            ctx.clip();
+          } else if (s === 'circle') {
+            ctx.beginPath();
+            ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'ellipse') {
+            ctx.beginPath();
+            ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'triangle') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'rightTriangle') {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'diamond') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h / 2);
+            ctx.lineTo(x + w / 2, y + h);
+            ctx.lineTo(x, y + h / 2);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'pentagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.95, y + h * 0.38);
+            ctx.lineTo(x + w * 0.77, y + h);
+            ctx.lineTo(x + w * 0.23, y + h);
+            ctx.lineTo(x + w * 0.05, y + h * 0.38);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'hexagon') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y);
+            ctx.lineTo(x + w * 0.75, y);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.75, y + h);
+            ctx.lineTo(x + w * 0.25, y + h);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'star') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.61, y + h * 0.35);
+            ctx.lineTo(x + w * 0.98, y + h * 0.35);
+            ctx.lineTo(x + w * 0.68, y + h * 0.57);
+            ctx.lineTo(x + w * 0.79, y + h * 0.91);
+            ctx.lineTo(x + w * 0.5, y + h * 0.70);
+            ctx.lineTo(x + w * 0.21, y + h * 0.91);
+            ctx.lineTo(x + w * 0.32, y + h * 0.57);
+            ctx.lineTo(x + w * 0.02, y + h * 0.35);
+            ctx.lineTo(x + w * 0.39, y + h * 0.35);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'star6') {
+            ctx.beginPath();
+            const centerX = x + w / 2;
+            const centerY = y + h / 2;
+            const outerRadius = Math.min(w, h) / 2;
+            const innerRadius = outerRadius * 0.5;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i * Math.PI) / 6 - Math.PI / 2;
+              const radius = i % 2 === 0 ? outerRadius : innerRadius;
+              const px = centerX + radius * Math.cos(angle);
+              const py = centerY + radius * Math.sin(angle);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'heart') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5, y + h * 0.85);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+            ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+            ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrow') {
+            ctx.beginPath();
+            ctx.moveTo(x, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.3);
+            ctx.lineTo(x + w * 0.6, y + h * 0.1);
+            ctx.lineTo(x + w, y + h * 0.5);
+            ctx.lineTo(x + w * 0.6, y + h * 0.9);
+            ctx.lineTo(x + w * 0.6, y + h * 0.7);
+            ctx.lineTo(x, y + h * 0.7);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowLeft') {
+            ctx.beginPath();
+            ctx.moveTo(x + w, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.3);
+            ctx.lineTo(x + w * 0.4, y + h * 0.1);
+            ctx.lineTo(x, y + h * 0.5);
+            ctx.lineTo(x + w * 0.4, y + h * 0.9);
+            ctx.lineTo(x + w * 0.4, y + h * 0.7);
+            ctx.lineTo(x + w, y + h * 0.7);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowUp') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y + h);
+            ctx.lineTo(x + w * 0.3, y + h * 0.4);
+            ctx.lineTo(x + w * 0.1, y + h * 0.4);
+            ctx.lineTo(x + w * 0.5, y);
+            ctx.lineTo(x + w * 0.9, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h * 0.4);
+            ctx.lineTo(x + w * 0.7, y + h);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'arrowDown') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.3, y);
+            ctx.lineTo(x + w * 0.3, y + h * 0.6);
+            ctx.lineTo(x + w * 0.1, y + h * 0.6);
+            ctx.lineTo(x + w * 0.5, y + h);
+            ctx.lineTo(x + w * 0.9, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y + h * 0.6);
+            ctx.lineTo(x + w * 0.7, y);
+            ctx.closePath();
+            ctx.clip();
+          } else if (s === 'cloud') {
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.25, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+            ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+            ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+            ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+            ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+            ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+            ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+            ctx.closePath();
+            ctx.clip();
+          } else {
+            drawRoundedRect(x, y, w, h, 8);
+            ctx.clip();
+          }
+
+          // Compute object-fit cover/contain into rect x,y,w,h
+          const ir = img.width / img.height;
+          const r = w / h;
+          let dw = w, dh = h, dx = x, dy = y;
+          if (layer.fillImageFit === 'contain' ? ir > r : ir < r) {
+            dh = w / ir; dy = y + (h - dh) / 2;
+          } else {
+            dw = h * ir; dx = x + (w - dw) / 2;
+          }
+          ctx.drawImage(img, dx, dy, dw, dh);
+          ctx.restore(); // Restore after clipping
+
+          // Stroke
+          const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+          if (sw > 0) {
+            ctx.lineWidth = sw;
+            ctx.strokeStyle = layer.strokeColor || '#000000';
+            // Draw stroke using the same shape path
+            if (s === 'rectangle') {
+              ctx.beginPath();
+              ctx.rect(x, y, w, h);
+              ctx.closePath();
+            } else if (s === 'roundedRectangle') {
+              drawRoundedRect(x, y, w, h, 16);
+            } else if (s === 'circle') {
+              ctx.beginPath();
+              ctx.arc(x + Math.min(w, h) / 2, y + Math.min(w, h) / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+              ctx.closePath();
+            } else if (s === 'ellipse') {
+              ctx.beginPath();
+              ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+              ctx.closePath();
+            } else if (s === 'triangle') {
+              ctx.beginPath();
+              ctx.moveTo(x + w / 2, y);
+              ctx.lineTo(x, y + h);
+              ctx.lineTo(x + w, y + h);
+              ctx.closePath();
+            } else if (s === 'rightTriangle') {
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + w, y);
+              ctx.lineTo(x, y + h);
+              ctx.closePath();
+            } else if (s === 'diamond') {
+              ctx.beginPath();
+              ctx.moveTo(x + w / 2, y);
+              ctx.lineTo(x + w, y + h / 2);
+              ctx.lineTo(x + w / 2, y + h);
+              ctx.lineTo(x, y + h / 2);
+              ctx.closePath();
+            } else if (s === 'pentagon') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.95, y + h * 0.38);
+              ctx.lineTo(x + w * 0.77, y + h);
+              ctx.lineTo(x + w * 0.23, y + h);
+              ctx.lineTo(x + w * 0.05, y + h * 0.38);
+              ctx.closePath();
+            } else if (s === 'hexagon') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.25, y);
+              ctx.lineTo(x + w * 0.75, y);
+              ctx.lineTo(x + w, y + h * 0.5);
+              ctx.lineTo(x + w * 0.75, y + h);
+              ctx.lineTo(x + w * 0.25, y + h);
+              ctx.lineTo(x, y + h * 0.5);
+              ctx.closePath();
+            } else if (s === 'star') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.61, y + h * 0.35);
+              ctx.lineTo(x + w * 0.98, y + h * 0.35);
+              ctx.lineTo(x + w * 0.68, y + h * 0.57);
+              ctx.lineTo(x + w * 0.79, y + h * 0.91);
+              ctx.lineTo(x + w * 0.5, y + h * 0.70);
+              ctx.lineTo(x + w * 0.21, y + h * 0.91);
+              ctx.lineTo(x + w * 0.32, y + h * 0.57);
+              ctx.lineTo(x + w * 0.02, y + h * 0.35);
+              ctx.lineTo(x + w * 0.39, y + h * 0.35);
+              ctx.closePath();
+            } else if (s === 'star6') {
+              ctx.beginPath();
+              const centerX = x + w / 2;
+              const centerY = y + h / 2;
+              const outerRadius = Math.min(w, h) / 2;
+              const innerRadius = outerRadius * 0.5;
+              for (let i = 0; i < 12; i++) {
+                const angle = (i * Math.PI) / 6 - Math.PI / 2;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const px = centerX + radius * Math.cos(angle);
+                const py = centerY + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+              ctx.closePath();
+            } else if (s === 'heart') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.5, y + h * 0.85);
+              ctx.bezierCurveTo(x + w * 0.15, y + h * 0.85, x + w * 0.15, y + h * 0.50, x + w * 0.15, y + h * 0.50);
+              ctx.bezierCurveTo(x + w * 0.15, y + h * 0.15, x + w * 0.35, y, x + w * 0.5, y + h * 0.15);
+              ctx.bezierCurveTo(x + w * 0.65, y, x + w * 0.85, y + h * 0.15, x + w * 0.85, y + h * 0.50);
+              ctx.bezierCurveTo(x + w * 0.85, y + h * 0.50, x + w * 0.85, y + h * 0.85, x + w * 0.5, y + h * 0.85);
+              ctx.closePath();
+            } else if (s === 'arrow') {
+              ctx.beginPath();
+              ctx.moveTo(x, y + h * 0.3);
+              ctx.lineTo(x + w * 0.6, y + h * 0.3);
+              ctx.lineTo(x + w * 0.6, y + h * 0.1);
+              ctx.lineTo(x + w, y + h * 0.5);
+              ctx.lineTo(x + w * 0.6, y + h * 0.9);
+              ctx.lineTo(x + w * 0.6, y + h * 0.7);
+              ctx.lineTo(x, y + h * 0.7);
+              ctx.closePath();
+            } else if (s === 'arrowLeft') {
+              ctx.beginPath();
+              ctx.moveTo(x + w, y + h * 0.3);
+              ctx.lineTo(x + w * 0.4, y + h * 0.3);
+              ctx.lineTo(x + w * 0.4, y + h * 0.1);
+              ctx.lineTo(x, y + h * 0.5);
+              ctx.lineTo(x + w * 0.4, y + h * 0.9);
+              ctx.lineTo(x + w * 0.4, y + h * 0.7);
+              ctx.lineTo(x + w, y + h * 0.7);
+              ctx.closePath();
+            } else if (s === 'arrowUp') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.3, y + h);
+              ctx.lineTo(x + w * 0.3, y + h * 0.4);
+              ctx.lineTo(x + w * 0.1, y + h * 0.4);
+              ctx.lineTo(x + w * 0.5, y);
+              ctx.lineTo(x + w * 0.9, y + h * 0.4);
+              ctx.lineTo(x + w * 0.7, y + h * 0.4);
+              ctx.lineTo(x + w * 0.7, y + h);
+              ctx.closePath();
+            } else if (s === 'arrowDown') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.3, y);
+              ctx.lineTo(x + w * 0.3, y + h * 0.6);
+              ctx.lineTo(x + w * 0.1, y + h * 0.6);
+              ctx.lineTo(x + w * 0.5, y + h);
+              ctx.lineTo(x + w * 0.9, y + h * 0.6);
+              ctx.lineTo(x + w * 0.7, y + h * 0.6);
+              ctx.lineTo(x + w * 0.7, y);
+              ctx.closePath();
+            } else if (s === 'cloud') {
+              ctx.beginPath();
+              ctx.moveTo(x + w * 0.25, y + h * 0.5);
+              ctx.bezierCurveTo(x + w * 0.1, y + h * 0.5, x, y + h * 0.35, x + w * 0.1, y + h * 0.25);
+              ctx.bezierCurveTo(x + w * 0.1, y + h * 0.1, x + w * 0.25, y, x + w * 0.4, y + h * 0.1);
+              ctx.bezierCurveTo(x + w * 0.5, y, x + w * 0.6, y + h * 0.1, x + w * 0.6, y + h * 0.25);
+              ctx.bezierCurveTo(x + w * 0.9, y + h * 0.25, x + w, y + h * 0.4, x + w * 0.85, y + h * 0.5);
+              ctx.bezierCurveTo(x + w * 0.95, y + h * 0.6, x + w * 0.9, y + h * 0.75, x + w * 0.75, y + h * 0.8);
+              ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.5, y + h, x + w * 0.35, y + h * 0.9);
+              ctx.bezierCurveTo(x + w * 0.2, y + h * 0.95, x + w * 0.05, y + h * 0.85, x + w * 0.1, y + h * 0.7);
+              ctx.bezierCurveTo(x, y + h * 0.6, x + w * 0.05, y + h * 0.5, x + w * 0.15, y + h * 0.5);
+              ctx.closePath();
+            } else {
+              drawRoundedRect(x, y, w, h, 8);
+            }
+            ctx.stroke();
+          }
+
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = layer.fillImageSrc;
+      });
+    };
+
+    const drawImageLayer = async (layer) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const x = layer.x;
+          const y = layer.y;
+          const w = layer.width || img.width;
+          const h = layer.height || img.height;
+
+          ctx.save();
+          // Apply effects
+          ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+          ctx.filter = getFilterCSS({
+            brightness: layer.brightness ?? 100,
+            contrast: layer.contrast ?? 100,
+            blur: layer.blur ?? 0
+          });
+          if (layer.shadows?.enabled) {
+            ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+            ctx.shadowBlur = layer.shadows.blur ?? 0;
+            ctx.shadowOffsetX = layer.shadows.x ?? 0;
+            ctx.shadowOffsetY = layer.shadows.y ?? 0;
+          } else {
+            // Explicitly reset shadow properties when disabled
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          }
+          // Corner radius mask
+          const r = Math.max(0, Math.min(layer.cornerRadius ?? 4, Math.min(w, h) / 2));
+          if (r > 0) {
+            const path = new Path2D();
+            path.moveTo(x + r, y);
+            path.lineTo(x + w - r, y);
+            path.quadraticCurveTo(x + w, y, x + w, y + r);
+            path.lineTo(x + w, y + h - r);
+            path.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            path.lineTo(x + r, y + h);
+            path.quadraticCurveTo(x, y + h, x, y + h - r);
+            path.lineTo(x, y + r);
+            path.quadraticCurveTo(x, y, x + r, y);
+            path.closePath();
+            ctx.save();
+            ctx.clip(path);
+            ctx.drawImage(img, x, y, w, h);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, x, y, w, h);
+          }
+
+          // Stroke
+          const sw = Number.isFinite(layer.strokeWidth) ? layer.strokeWidth : 0;
+          if (sw > 0) {
+            ctx.save();
+            ctx.lineWidth = sw;
+            ctx.strokeStyle = layer.strokeColor || '#000000';
+            if (layer.strokeStyle === 'dashed') ctx.setLineDash([8, 6]);
+            const path = new Path2D();
+            const inset = sw / 2;
+            const rx = Math.max(0, Math.min((layer.cornerRadius ?? 4), Math.min(w, h) / 2));
+            path.moveTo(x + inset + rx, y + inset);
+            path.lineTo(x + w - inset - rx, y + inset);
+            path.quadraticCurveTo(x + w - inset, y + inset, x + w - inset, y + inset + rx);
+            path.lineTo(x + w - inset, y + h - inset - rx);
+            path.quadraticCurveTo(x + w - inset, y + h - inset, x + w - inset - rx, y + h - inset);
+            path.lineTo(x + inset + rx, y + h - inset);
+            path.quadraticCurveTo(x + inset, y + h - inset, x + inset, y + h - inset - rx);
+            path.lineTo(x + inset, y + inset + rx);
+            path.quadraticCurveTo(x + inset, y + inset, x + inset + rx, y + inset);
+            path.closePath();
+            ctx.stroke(path);
+            ctx.restore();
+          }
+
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = layer.src;
+      });
+    };
+
+    const drawDrawingLayer = (layer) => {
+      if (!Array.isArray(layer.path) || layer.path.length < 2) return;
+      ctx.save();
+      // Apply effects (opacity, optional blur via filter)
+      ctx.globalAlpha = (layer.opacity ?? 100) / 100;
+      ctx.filter = getFilterCSS({
+        brightness: layer.brightness ?? 100,
+        contrast: layer.contrast ?? 100,
+        blur: layer.blur ?? 0
+      });
+      if (layer.shadows?.enabled) {
+        ctx.shadowColor = hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100);
+        ctx.shadowBlur = layer.shadows.blur ?? 0;
+        ctx.shadowOffsetX = layer.shadows.x ?? 0;
+        ctx.shadowOffsetY = layer.shadows.y ?? 0;
+      } else {
+        // Explicitly reset shadow properties when disabled
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      ctx.lineWidth = layer.brushSize || 5;
+      ctx.strokeStyle = layer.color || '#000000';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      const start = layer.path[0];
+      ctx.moveTo(layer.x + start.x, layer.y + start.y);
+      for (let i = 1; i < layer.path.length; i++) {
+        const p = layer.path[i];
+        ctx.lineTo(layer.x + p.x, layer.y + p.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // Draw all layers in order
+    const imageDrawPromises = [];
+    for (const layer of layers) {
+      if (!layer || layer.visible === false) continue;
+      if (layer.type === 'shape') {
+        if (layer.fillType === 'image' && layer.fillImageSrc) {
+          imageDrawPromises.push(drawShapeLayerWithImage(layer));
+        } else {
+          drawShape(layer);
+        }
+      } else if (layer.type === 'text') {
+        drawText(layer);
+      } else if (layer.type === 'image') {
+        imageDrawPromises.push(drawImageLayer(layer));
+      } else if (layer.type === 'drawing') {
+        drawDrawingLayer(layer);
+      }
+    }
+    if (imageDrawPromises.length) {
+      await Promise.all(imageDrawPromises);
+    }
+
+    const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const dataUrl = canvas.toDataURL(mime, format === 'jpeg' ? quality : undefined);
+    return dataUrl;
+  };
+
+  const drawShapeLayer = (ctx, layer, images) => {
+  const {
+    x,
+    y,
+    width: w,
+    height: h,
+    fillType,
+    fillColor,
+    fillImageSrc,
+    fillImageFit,
+    shadows,
+    strokeWidth,
+    strokeColor,
+  } = layer;
+
+  if (!ctx) return;
+
+  // Helper to convert HEX → RGBA
+  const hexToRgba = (hex, alpha = 1) => {
+    if (!hex) return `rgba(0, 0, 0, ${alpha})`;
+    const [r, g, b] = hex.match(/\w\w/g).map((c) => parseInt(c, 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Helper to draw shape path
+  const drawShapePath = () => {
+    const s = layer.shape;
+    ctx.beginPath();
+
+    switch (s) {
+      case "rectangle":
+        ctx.rect(x, y, w, h);
+        break;
+
+      case "circle":
+        ctx.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+        break;
+
+      case "ellipse":
+        ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+        break;
+
+      case "triangle":
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.closePath();
+        break;
+
+      case "star":
+        drawStarPath(ctx, x, y, w, h);
+        break;
+
+      case "star6":
+        drawStar6Path(ctx, x, y, w, h);
+        break;
+
+      case "arrow":
+        drawArrowPath(ctx, x, y, w, h);
+        break;
+
+      case "heart":
+        drawHeartPath(ctx, x, y, w, h);
+        break;
+
+      default:
+        ctx.rect(x, y, w, h); // fallback
+        break;
+    }
+  };
+
+  // 🌟 Step 1: Draw shadow first
+  if (shadows?.enabled) {
+    ctx.save();
+    ctx.shadowColor = hexToRgba(shadows.color || "#000000", (shadows.opacity ?? 50) / 100);
+    ctx.shadowBlur = shadows.blur ?? 0;
+    ctx.shadowOffsetX = shadows.x ?? 0;
+    ctx.shadowOffsetY = shadows.y ?? 0;
+
+    drawShapePath();
+    ctx.fillStyle = fillColor || "#cccccc";
+    ctx.fill("evenodd");
+    ctx.restore();
+  }
+
+  // 🌈 Step 2: Draw actual shape fill
+  ctx.save();
+  drawShapePath();
+
+  if (fillType === "image" && fillImageSrc && images?.[fillImageSrc]) {
+    const img = images[fillImageSrc];
+    ctx.clip();
+
+    const [iw, ih] = [img.width, img.height];
+    const scale =
+      fillImageFit === "cover"
+        ? Math.max(w / iw, h / ih)
+        : Math.min(w / iw, h / ih);
+    const dx = x + (w - iw * scale) / 2;
+    const dy = y + (h - ih * scale) / 2;
+
+    ctx.drawImage(img, dx, dy, iw * scale, ih * scale);
+  } else {
+    ctx.fillStyle = fillColor || "#3182ce";
+    ctx.fill("evenodd");
+  }
+
+  ctx.restore();
+
+  // ✏️ Step 3: Stroke outline (if any)
+  if (strokeWidth > 0) {
+    ctx.save();
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeStyle = strokeColor || "#000";
+    drawShapePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+/* ---------- Shape Helper Functions ---------- */
+
+const drawStarPath = (ctx, x, y, w, h, points = 5) => {
+  const outerRadius = Math.min(w, h) / 2;
+  const innerRadius = outerRadius / 2.5;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+
+  ctx.beginPath();
+  for (let i = 0; i < 2 * points; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (Math.PI * i) / points - Math.PI / 2;
+    const sx = cx + radius * Math.cos(angle);
+    const sy = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+};
+
+const drawStar6Path = (ctx, x, y, w, h) => {
+  const outerRadius = Math.min(w, h) / 2;
+  const innerRadius = outerRadius * 0.5;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+
+  ctx.beginPath();
+  for (let i = 0; i < 12; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / 6 - Math.PI / 2;
+    const sx = cx + radius * Math.cos(angle);
+    const sy = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+};
+
+const drawArrowPath = (ctx, x, y, w, h) => {
+  ctx.beginPath();
+  ctx.moveTo(x, y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y);
+  ctx.lineTo(x + w, y + h / 2);
+  ctx.lineTo(x + (w * 0.7), y + h);
+  ctx.lineTo(x + (w * 0.7), y + (h * 0.5));
+  ctx.lineTo(x, y + (h * 0.5));
+  ctx.closePath();
+};
+
+const drawHeartPath = (ctx, x, y, w, h) => {
+  const topCurveHeight = h * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(x + w / 2, y + h);
+  ctx.bezierCurveTo(
+    x + w / 2,
+    y + h - topCurveHeight / 2,
+    x,
+    y + h / 2,
+    x,
+    y + topCurveHeight
+  );
+  ctx.bezierCurveTo(x, y, x + w / 2, y, x + w / 2, y + topCurveHeight);
+  ctx.bezierCurveTo(
+    x + w / 2,
+    y,
+    x + w,
+    y,
+    x + w,
+    y + topCurveHeight
+  );
+  ctx.bezierCurveTo(
+    x + w,
+    y + h / 2,
+    x + w / 2,
+    y + h - topCurveHeight / 2,
+    x + w / 2,
+    y + h
+  );
+  ctx.closePath();
+};
+
+
+  const handleDownloadExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const dataUrl = await exportCanvasAsImage(exportFormat, exportQuality);
+      if (!dataUrl) return;
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const ext = exportFormat === 'jpeg' ? 'jpg' : 'png';
+      link.download = `design-${timestamp}.${ext}`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // Optionally persist and download project file (worksheet)
+      try {
+        const design = { layers, canvasSize, zoom: 100, pan: { x: 0, y: 0 }, savedAt: Date.now() };
+        localStorage.setItem('canvaDesign', JSON.stringify(design));
+        if (includeProjectFile) {
+          const blob = new Blob([JSON.stringify(design, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const jsonLink = document.createElement('a');
+          jsonLink.href = url;
+          jsonLink.download = `design-${timestamp}.json`;
+          document.body.appendChild(jsonLink);
+          jsonLink.click();
+          document.body.removeChild(jsonLink);
+          URL.revokeObjectURL(url);
+        }
+      } catch {}
+    } finally {
+      setIsExporting(false);
+      setIsSaveModalOpen(false);
+    }
+  };
+
+  // Save worksheet (project JSON) to a user-chosen location using File System Access API
+  const handleSaveWorksheetToLocation = async () => {
+    if (isSavingWorksheet) return;
+    setIsSavingWorksheet(true);
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const design = { layers, canvasSize, zoom, pan, savedAt: Date.now() };
+      const fileName = `design-${timestamp}.json`;
+
+      // Feature-detect the File System Access API
+      const canUseFSA = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
+      if (canUseFSA) {
+        const opts = {
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'JSON Files',
+              accept: { 'application/json': ['.json'] }
+            }
+          ]
+        };
+        try {
+          // @ts-ignore - showSaveFilePicker is not in TS DOM lib on all versions
+          const handle = await window.showSaveFilePicker(opts);
+          const writable = await handle.createWritable();
+          await writable.write(new Blob([JSON.stringify(design, null, 2)], { type: 'application/json' }));
+          await writable.close();
+        } catch (err) {
+          // If user cancels or error occurs, silently ignore
+        }
+      } else {
+        // Fallback: trigger a regular download (user chooses location via browser dialog)
+        const blob = new Blob([JSON.stringify(design, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setIsSavingWorksheet(false);
+    }
+  };
+
+  const handleTextSettingsChange = (property, value) => {
+    setTextSettings(prev => ({ ...prev, [property]: value }));
+    if (selectedLayer) {
+      const newLayers = layers.map(l =>
+>>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -461,20 +2208,107 @@ const CanvaEditor = () => {
     }
   };
 
+<<<<<<< HEAD
   // Update the textual content of a text layer
   const handleTextContentChange = (value) => {
     if (!selectedLayer) return;
     const newLayers = layers.map(l =>
       l.id === selectedLayer && l.type === 'text' ? { ...l, text: value } : l
+=======
+
+  // Update the textual content of a text layer
+  const handleTextContentChange = (value, shouldAutoResize = false) => {
+    if (!selectedLayer) return;
+
+    const layer = layers.find(l => l.id === selectedLayer && l.type === 'text');
+    if (!layer) return;
+
+    let updatedLayer = { ...layer, text: value };
+
+    // Auto-resize if requested
+    if (shouldAutoResize) {
+      const dimensions = calculateTextDimensions(value, layer);
+      updatedLayer = {
+        ...updatedLayer,
+        width: dimensions.width,
+        height: dimensions.height
+      };
+    }
+
+    const newLayers = layers.map(l =>
+      l.id === selectedLayer && l.type === 'text' ? updatedLayer : l
+>>>>>>> rc
     );
     setLayers(newLayers);
     saveToHistory(newLayers);
   };
 
+<<<<<<< HEAD
   const handleShapeSettingsChange = (property, value) => {
     setShapeSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
       const newLayers = layers.map(l => 
+=======
+  // AI Text Enhancement
+  const handleEnhanceText = async () => {
+    if (!selectedLayer) return;
+
+    const selectedTextLayer = layers.find(l => l.id === selectedLayer && l.type === 'text');
+    if (!selectedTextLayer || !selectedTextLayer.text || !selectedTextLayer.text.trim()) {
+      alert('Please enter some text to enhance');
+      return;
+    }
+
+    // Determine if it's a heading based on multiple factors
+    const detectedIsHeading = isHeading || isHeadingLayer(selectedTextLayer);
+
+    setIsEnhancingText(true);
+    try {
+      const data = await enhanceText(selectedTextLayer.text, detectedIsHeading);
+      // Update text and auto-resize the box to fit the enhanced text
+      handleTextContentChange(data.enhancedText, true);
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+      alert('Error enhancing text: ' + error.message);
+    } finally {
+      setIsEnhancingText(false);
+    }
+  };
+
+  // Add styled image to canvas
+  const handleAddStyledImageToCanvas = (imageUrl) => {
+    const newLayer = {
+      id: Date.now().toString(),
+      type: 'image',
+      name: 'Styled Text',
+      src: imageUrl,
+      x: (canvasSize.width - 200) / 2,
+      y: (canvasSize.height - 100) / 2,
+      width: 200,
+      height: 100,
+      opacity: 100,
+      visible: true,
+      locked: false,
+      mode: 'normal',
+      filters: [],
+      shadows: []
+    };
+    
+    setLayers(prevLayers => {
+      const newLayers = [...prevLayers, newLayer];
+      saveToHistory(newLayers);
+      return newLayers;
+    });
+    
+    // Select the newly added layer
+    setSelectedLayer(newLayer.id);
+  };
+
+  const handleShapeSettingsChange = (property, value) => {
+    setShapeSettings(prev => ({ ...prev, [property]: value }));
+    if (selectedLayer) {
+      const newLayers = layers.map(l =>
+>>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -494,6 +2328,7 @@ const CanvaEditor = () => {
   };
 
   const handleMouseMove = useCallback((e) => {
+<<<<<<< HEAD
     if (isResizing && resizeStart.layerId) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
@@ -502,10 +2337,28 @@ const CanvaEditor = () => {
       setLayers(prevLayers => prevLayers.map(layer =>
         layer.id === resizeStart.layerId
           ? { ...layer, width: newWidth, height: newHeight }
+=======
+    if (isRotating && rotateStart.layerId) {
+      const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+      const dx = mouseX - rotateStart.cx;
+      const dy = mouseY - rotateStart.cy;
+      const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+      let newRotation = rotateStart.startRotation + (angleDeg - rotateStart.startAngleDeg);
+      if (e.shiftKey) {
+        newRotation = Math.round(newRotation / 15) * 15;
+      }
+      // Normalize to [-180, 180)
+      if (newRotation >= 180) newRotation -= 360;
+      if (newRotation < -180) newRotation += 360;
+      setLayers(prevLayers => prevLayers.map(layer =>
+        layer.id === rotateStart.layerId
+          ? { ...layer, rotation: newRotation }
+>>>>>>> rc
           : layer
       ));
       return;
     }
+<<<<<<< HEAD
     if (isDragging && selectedLayer) {
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
@@ -517,12 +2370,53 @@ const CanvaEditor = () => {
       ));
       setDragStart({ x: e.clientX, y: e.clientY });
     }
+=======
+if (isResizing && resizeStart.layerId) {
+  const deltaX = e.clientX - resizeStart.x;
+  const deltaY = e.clientY - resizeStart.y;
+
+  setLayers(prevLayers => prevLayers.map(layer => {
+    if (layer.id !== resizeStart.layerId) return layer;
+
+    const rawWidth = Math.max(10, resizeStart.width + deltaX);
+    const rawHeight = Math.max(10, resizeStart.height + deltaY);
+const newWidth = Math.max(10, rawWidth);
+const newHeight = Math.max(10, rawHeight);
+
+
+    return { ...layer, width: newWidth, height: newHeight };
+  }));
+  return;
+}
+
+if (isDragging && selectedLayer) {
+  const deltaX = e.clientX - dragStart.x;
+  const deltaY = e.clientY - dragStart.y;
+
+  setLayers(prevLayers => prevLayers.map(layer => {
+    if (layer.id !== selectedLayer) return layer;
+
+const nextX = layer.x + deltaX;
+const nextY = layer.y + deltaY;
+
+
+    return { ...layer, x: nextX, y: nextY };
+  }));
+
+  setDragStart({ x: e.clientX, y: e.clientY });
+}
+
+>>>>>>> rc
     if (drawingSettings.isDrawing && ['brush', 'pen', 'eraser'].includes(selectedTool)) {
       const now = performance.now();
       const minMs = 8; // throttle
       if (now - lastTimeRef.current < minMs) return;
       const point = getCanvasPoint(e.clientX, e.clientY);
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       if (selectedTool === 'eraser') {
         // Handle eraser dragging
         handleEraserAction(point.x, point.y);
@@ -530,7 +2424,11 @@ const CanvaEditor = () => {
         lastPointRef.current = point;
         return;
       }
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       const lastPoint = lastPointRef.current || point;
       const minDist = Math.max(1, drawingSettings.brushSize * 0.25);
       if (Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) < minDist) return;
@@ -548,6 +2446,17 @@ const CanvaEditor = () => {
         return currentLayers;
       });
     }
+<<<<<<< HEAD
+=======
+    if (isRotating) {
+      setIsRotating(false);
+      setRotateStart({ cx: 0, cy: 0, startAngleDeg: 0, startRotation: 0, layerId: null });
+      setLayers(currentLayers => {
+        saveToHistory(currentLayers);
+        return currentLayers;
+      });
+    }
+>>>>>>> rc
     if (isResizing) {
       setIsResizing(false);
       setResizeStart({ x: 0, y: 0, width: 0, height: 0, layerId: null });
@@ -561,19 +2470,31 @@ const CanvaEditor = () => {
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       return;
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     if (drawingSettings.isDrawing && currentPath.length > 1) {
       // Calculate bounding box for the drawing path
       const minX = Math.min(...currentPath.map(p => p.x));
       const maxX = Math.max(...currentPath.map(p => p.x));
       const minY = Math.min(...currentPath.map(p => p.y));
       const maxY = Math.max(...currentPath.map(p => p.y));
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       // Add padding for brush size
       const padding = Math.max(drawingSettings.brushSize / 2, 5);
       const width = maxX - minX + padding * 2;
       const height = maxY - minY + padding * 2;
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       // Only create drawing layer if it has meaningful size
       if (width > 5 && height > 5) {
         // Normalize path coordinates relative to the bounding box
@@ -582,7 +2503,11 @@ const CanvaEditor = () => {
           x: point.x - minX + padding,
           y: point.y - minY + padding
         }));
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         const newDrawingPath = {
           id: Date.now(),
           type: 'drawing',
@@ -599,7 +2524,11 @@ const CanvaEditor = () => {
           visible: true,
           locked: false
         };
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         setLayers(prevLayers => {
           const newLayers = [...prevLayers, newDrawingPath];
           saveToHistory(newLayers);
@@ -607,7 +2536,11 @@ const CanvaEditor = () => {
         });
         setSelectedLayer(newDrawingPath.id);
       }
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> rc
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       setCurrentPath([]);
     } else if (drawingSettings.isDrawing) {
@@ -618,7 +2551,11 @@ const CanvaEditor = () => {
   }, [isDragging, isResizing, drawingSettings.isDrawing, currentPath, drawingSettings.drawingMode, drawingSettings.brushSize, drawingSettings.brushColor, drawingSettings.opacity]);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (isDragging || isResizing || drawingSettings.isDrawing) {
+=======
+    if (isDragging || isResizing || isRotating || drawingSettings.isDrawing) {
+>>>>>>> rc
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -626,7 +2563,11 @@ const CanvaEditor = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
+<<<<<<< HEAD
   }, [isDragging, isResizing, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
+=======
+  }, [isDragging, isResizing, isRotating, drawingSettings.isDrawing, handleMouseMove, handleMouseUp]);
+>>>>>>> rc
 
   const handleResizeMouseDown = (e, layer) => {
     e.stopPropagation();
@@ -636,6 +2577,21 @@ const CanvaEditor = () => {
     setSelectedLayer(layer.id);
   };
 
+<<<<<<< HEAD
+=======
+  const handleRotateMouseDown = (e, layer) => {
+    e.stopPropagation();
+    if (selectedTool !== 'select') return;
+    const centerX = layer.x + layer.width / 2;
+    const centerY = layer.y + layer.height / 2;
+    const { x: mouseX, y: mouseY } = getCanvasPoint(e.clientX, e.clientY);
+    const startAngleDeg = Math.atan2(mouseY - centerY, mouseX - centerX) * (180 / Math.PI);
+    setIsRotating(true);
+    setRotateStart({ cx: centerX, cy: centerY, startAngleDeg, startRotation: layer.rotation || 0, layerId: layer.id });
+    setSelectedLayer(layer.id);
+  };
+
+>>>>>>> rc
   // Image upload functionality
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -653,6 +2609,10 @@ const CanvaEditor = () => {
           height: 200,
           visible: true,
           locked: false,
+<<<<<<< HEAD
+=======
+          rotation: 0,
+>>>>>>> rc
           ...imageSettings
         };
         const newLayers = [...layers, newImage];
@@ -665,6 +2625,18 @@ const CanvaEditor = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // Handle AI generated image - callback from AIImageGenerator component
+  const handleAIGeneratedImage = (newImage) => {
+    const newLayers = [...layers, newImage];
+    setLayers(newLayers);
+    setSelectedLayer(newImage.id);
+    saveToHistory(newLayers);
+    setUploadedImages(prev => [...prev, newImage]);
+  };
+
+>>>>>>> rc
   // Template selection
   const handleTemplateSelect = (template) => {
     setCanvasSize({ width: template.width, height: template.height });
@@ -707,7 +2679,11 @@ const CanvaEditor = () => {
   const handleImageSettingsChange = (property, value) => {
     setImageSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
+<<<<<<< HEAD
       const newLayers = layers.map(l => 
+=======
+      const newLayers = layers.map(l =>
+>>>>>>> rc
         l.id === selectedLayer ? { ...l, [property]: value } : l
       );
       setLayers(newLayers);
@@ -715,11 +2691,28 @@ const CanvaEditor = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // Generic effects handler (brightness, contrast, blur, opacity, shadows)
+  const handleEffectChange = (property, value) => {
+    if (!selectedLayer) return;
+    const newLayers = layers.map(l =>
+      l.id === selectedLayer ? { ...l, [property]: value } : l
+    );
+    setLayers(newLayers);
+    saveToHistory(newLayers);
+  };
+
+>>>>>>> rc
   // Drawing functionality
   const handleDrawingMouseDown = (e) => {
     if (!['brush', 'pen', 'eraser'].includes(selectedTool)) return;
     const { x, y } = getCanvasPoint(e.clientX, e.clientY);
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     if (selectedTool === 'eraser') {
       // Start eraser drawing mode and erase content under cursor
       setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
@@ -728,7 +2721,11 @@ const CanvaEditor = () => {
       lastTimeRef.current = performance.now();
       return;
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
     const firstPoint = { x, y, pressure: 1 };
     lastPointRef.current = firstPoint;
@@ -805,7 +2802,11 @@ const CanvaEditor = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rc
     if (selectedTool !== 'select' && !['brush', 'pen', 'eraser'].includes(selectedTool)) {
       handleAddElement(x, y);
     } else if (selectedTool === 'select') {
@@ -831,8 +2832,13 @@ const CanvaEditor = () => {
       width: '280px',
       minWidth: '280px',
       flex: '0 0 280px',
+<<<<<<< HEAD
       backgroundColor: '#1e293b',
       borderRight: '1px solid #334155',
+=======
+      backgroundColor: '#0f172a',
+      borderRight: '2px solid #1e293b',
+>>>>>>> rc
       padding: '20px',
       overflowY: 'auto',
       position: 'sticky',
@@ -840,6 +2846,10 @@ const CanvaEditor = () => {
       height: '100vh',
       zIndex: 2,
       color: '#ffffff',
+<<<<<<< HEAD
+=======
+      boxShadow: '4px 0 12px rgba(0, 0, 0, 0.15)',
+>>>>>>> rc
     },
     mainArea: {
       flex: 1,
@@ -860,7 +2870,12 @@ const CanvaEditor = () => {
       gap: '12px',
       position: 'sticky',
       top: 0,
+<<<<<<< HEAD
       zIndex: 20
+=======
+      zIndex: 100,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+>>>>>>> rc
     },
     toolbarButton: {
       padding: '8px 12px',
@@ -884,6 +2899,7 @@ const CanvaEditor = () => {
         cursor: 'not-allowed'
       }
     },
+<<<<<<< HEAD
     canvasArea: {
       flex: 1,
       display: 'flex',
@@ -895,6 +2911,24 @@ const CanvaEditor = () => {
       overflow: 'auto',
       minWidth: 0
     },
+=======
+canvasArea: {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'flex-start',
+  padding: '40px',
+  paddingRight: '48px',
+  position: 'relative',
+  overflow: 'auto',  // ✅ This enables scrollbars
+  minWidth: 0,
+  // ADD THESE:
+  overscrollBehavior: 'contain',  // Prevent page scroll
+  scrollbarWidth: 'thin',         // Thin scrollbars
+  WebkitOverflowScrolling: 'touch' ,// Smooth iOS scrolling
+},
+
+>>>>>>> rc
     canvas: {
       width: canvasSize.width,
       height: canvasSize.height,
@@ -903,15 +2937,23 @@ const CanvaEditor = () => {
       borderRadius: '8px',
       position: 'relative',
       marginRight: isRightSidebarCollapsed ? 0 : 320,
+<<<<<<< HEAD
       cursor: selectedTool === 'select' ? 'default' : 
               selectedTool === 'eraser' ? 'crosshair' :
               ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
       overflow: 'hidden',
+=======
+      cursor: selectedTool === 'select' ? 'default' :
+              selectedTool === 'eraser' ? 'crosshair' :
+              ['brush', 'pen'].includes(selectedTool) ? 'crosshair' : 'crosshair',
+      overflow: 'visible',
+>>>>>>> rc
       transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
       transformOrigin: 'top left',
       backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
       backgroundSize: '20px 20px'
     },
+<<<<<<< HEAD
     
     rightSidebar: {
       width: isRightSidebarCollapsed ? '60px' : '280px',
@@ -952,6 +2994,54 @@ const CanvaEditor = () => {
       backgroundColor: '#334155',
       color: '#ffffff',
       borderColor: '#334155'
+=======
+
+    rightSidebar: {
+      position: 'fixed',
+      right: 20,
+      top: 80, // below top toolbar (60px) with spacing
+      width: isRightSidebarCollapsed ? '60px' : '320px',
+      backgroundColor: 'white',
+      padding: isRightSidebarCollapsed ? '80px 8px 20px' : '80px 20px 20px',
+      overflowY: 'auto',
+      height: 'calc(100vh - 100px)',
+      zIndex: 10,
+      transition: 'all 0.3s ease',
+      border: '1px solid #e1e5e9',
+      borderRadius: '12px',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+    },
+    toolButton: {
+      padding: '14px 18px',
+      border: '1px solid #374151',
+      borderRadius: '12px',
+      backgroundColor: '#1e293b',
+      cursor: 'pointer',
+      margin: '4px 0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      fontSize: '15px',
+      color: '#f8fafc',
+      width: '100%',
+      justifyContent: 'flex-start',
+      fontWeight: '600',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      '&:hover': {
+        backgroundColor: '#334155',
+        borderColor: '#60a5fa',
+        transform: 'translateY(-1px)',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+      }
+    },
+    activeTool: {
+      backgroundColor: '#3b82f6',
+      color: '#ffffff',
+      borderColor: '#60a5fa',
+      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+      transform: 'translateY(-1px)',
+>>>>>>> rc
     },
     layerItem: {
       padding: '12px',
@@ -963,7 +3053,34 @@ const CanvaEditor = () => {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
+<<<<<<< HEAD
       justifyContent: 'space-between'
+=======
+      justifyContent: 'space-between',
+      transition: 'all 0.2s ease',
+      userSelect: 'none'
+    },
+    layerItemDragging: {
+      opacity: 0.5,
+      transform: 'rotate(5deg)',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
+    },
+    layerItemDragOver: {
+      borderTop: '3px solid #3182ce',
+      backgroundColor: '#f0f4ff'
+    },
+    dragHandle: {
+      cursor: 'grab',
+      padding: '4px',
+      marginRight: '8px',
+      color: '#666',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    dragHandleActive: {
+      cursor: 'grabbing'
+>>>>>>> rc
     },
     layerControls: {
       display: 'flex',
@@ -978,7 +3095,51 @@ const CanvaEditor = () => {
       borderRadius: '4px',
       display: 'flex',
       alignItems: 'center',
+<<<<<<< HEAD
       justifyContent: 'center'
+=======
+      justifyContent: 'center',
+      opacity: 1,
+      transition: 'opacity 0.2s ease'
+    },
+    // Floating action bar (color, duplicate, delete)
+    floatingBar: {
+      position: 'absolute',
+      top: -44,
+      left: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      border: '1px solid #e5e7eb',
+      borderRadius: 18,
+      padding: '6px 10px',
+      boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+      backdropFilter: 'saturate(180%) blur(6px)',
+      zIndex: 20
+    },
+    floatingBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      border: '1px solid #e5e7eb',
+      backgroundColor: '#ffffff',
+      cursor: 'pointer'
+    },
+    floatingColor: {
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      width: 28,
+      height: 28,
+      padding: 0,
+      border: '1px solid #e5e7eb',
+      borderRadius: 8,
+      background: 'none',
+      cursor: 'pointer'
+>>>>>>> rc
     },
     propertyPanel: {
       marginTop: '20px',
@@ -1055,6 +3216,7 @@ const CanvaEditor = () => {
 
   return (
     <div style={styles.container}>
+<<<<<<< HEAD
       
       {/* Left Sidebar */}
       <div style={styles.leftSidebar} className="custom-scrollbar">
@@ -1063,6 +3225,16 @@ const CanvaEditor = () => {
           padding: "0 0 20px 0", 
           display: "flex", 
           alignItems: "center", 
+=======
+
+      {/* Left Sidebar */}
+      <div style={styles.leftSidebar} className="custom-scrollbar">
+        {/* Header */}
+        <div style={{
+          padding: "0 0 20px 0",
+          display: "flex",
+          alignItems: "center",
+>>>>>>> rc
           gap: 10,
           borderBottom: "1px solid #334155",
           marginBottom: "20px"
@@ -1082,7 +3254,11 @@ const CanvaEditor = () => {
           </div>
           <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Design Tools</span>
         </div>
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         {/* Selection Tool */}
         <div>
           <button
@@ -1238,9 +3414,15 @@ const CanvaEditor = () => {
               >
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'rectangle' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'rectangle' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'rectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rectangle')}
@@ -1252,9 +3434,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'roundedRectangle' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'roundedRectangle' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'roundedRectangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('roundedRectangle')}
@@ -1266,9 +3454,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'circle' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'circle' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'circle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('circle')}
@@ -1280,9 +3474,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'ellipse' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'ellipse' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'ellipse' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('ellipse')}
@@ -1294,9 +3494,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'triangle' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'triangle' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'triangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('triangle')}
@@ -1308,9 +3514,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'rightTriangle' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'rightTriangle' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'rightTriangle' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('rightTriangle')}
@@ -1322,9 +3534,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'star' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'star' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'star' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star')}
@@ -1336,9 +3554,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'star6' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'star6' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'star6' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('star6')}
@@ -1350,9 +3574,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'heart' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'heart' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'heart' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('heart')}
@@ -1364,9 +3594,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'diamond' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'diamond' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'diamond' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('diamond')}
@@ -1378,9 +3614,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'pentagon' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'pentagon' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'pentagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('pentagon')}
@@ -1392,9 +3634,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'hexagon' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'hexagon' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'hexagon' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('hexagon')}
@@ -1406,9 +3654,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'arrow' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'arrow' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'arrow' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrow')}
@@ -1420,9 +3674,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'arrowLeft' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'arrowLeft' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'arrowLeft' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowLeft')}
@@ -1434,9 +3694,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'arrowUp' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'arrowUp' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'arrowUp' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowUp')}
@@ -1448,9 +3714,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'arrowDown' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'arrowDown' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'arrowDown' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('arrowDown')}
@@ -1462,9 +3734,15 @@ const CanvaEditor = () => {
               </button>
               <button
                 style={{
+<<<<<<< HEAD
                   ...styles.toolbarButton,
                     border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
                     backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
+=======
+                  ...styles.toolButton,
+                  border: hoveredOption === 'cloud' ? '1px solid #ffffff' : 'none',
+                  backgroundColor: hoveredOption === 'cloud' ? '#334155' : 'transparent',
+>>>>>>> rc
                   ...(selectedTool === 'cloud' ? styles.activeTool : {})
                 }}
                   onMouseEnter={() => setHoveredOption('cloud')}
@@ -1613,16 +3891,68 @@ const CanvaEditor = () => {
                   marginTop: '6px'
                 }}
               >
+<<<<<<< HEAD
                 <button 
                   style={{ ...styles.toolbarButton, border: hoveredOption === 'upload' ? '1px solid #ffffff' : 'none', backgroundColor: hoveredOption === 'upload' ? '#334155' : 'transparent' }}
+=======
+                <button
+                  style={{
+                    // Rectangle shape with dashed border
+                    padding: '20px 16px',
+                    border: '2px dashed #8b5cf6',
+                    borderRadius: '12px',
+                    background: hoveredOption === 'upload'
+                      ? 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)'
+                      : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                    cursor: 'pointer',
+                    margin: '8px 0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    width: '100%',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    color: '#ffffff',
+                    boxShadow: hoveredOption === 'upload'
+                      ? '0 6px 16px rgba(139, 92, 246, 0.4)'
+                      : '0 4px 12px rgba(139, 92, 246, 0.3)',
+                    minHeight: '90px',
+                    borderColor: hoveredOption === 'upload' ? '#a855f7' : '#8b5cf6',
+                    transform: hoveredOption === 'upload' ? 'translateY(-2px)' : 'translateY(0)'
+                  }}
+>>>>>>> rc
                   onMouseEnter={() => setHoveredOption('upload')}
                   onMouseLeave={() => setHoveredOption(null)}
                   onClick={() => fileInputRef.current?.click()}
                 >
+<<<<<<< HEAD
                   <FiUpload size={16} />
                   Upload Image
                 </button>
             
+=======
+                  <FiUpload size={20} color="#ffffff" />
+                  <span style={{
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    lineHeight: '1.2'
+                  }}>Upload Image</span>
+                </button>
+
+                {/* AI Generate Image Section */}
+                <AIImageGenerator
+                  onImageGenerated={handleAIGeneratedImage}
+                  hoveredOption={hoveredOption}
+                  setHoveredOption={setHoveredOption}
+                  imageSettings={imageSettings}
+                />
+
+>>>>>>> rc
             <input
               ref={fileInputRef}
               type="file"
@@ -1716,9 +4046,15 @@ const CanvaEditor = () => {
                       <span style={{ fontSize: '9px', color: '#666' }}>
                         {template.width}×{template.height}
                       </span>
+<<<<<<< HEAD
                       <span style={{ 
                         fontSize: '8px', 
                         color: '#3182ce', 
+=======
+                      <span style={{
+                        fontSize: '8px',
+                        color: '#3182ce',
+>>>>>>> rc
                         backgroundColor: '#e3f2fd',
                         padding: '1px 4px',
                         borderRadius: '2px'
@@ -1748,7 +4084,11 @@ const CanvaEditor = () => {
               <h4 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#374151' }}>
                 {selectedTool === 'eraser' ? 'Eraser Settings' : 'Drawing Settings'}
               </h4>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Size' : 'Brush Size'}: {drawingSettings.brushSize}px
@@ -1762,7 +4102,11 @@ const CanvaEditor = () => {
                   style={{ width: '100%' }}
                 />
               </div>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Color' : 'Color'}
@@ -1774,7 +4118,11 @@ const CanvaEditor = () => {
                   style={{ width: '100%', height: '32px', border: '1px solid #d1d5db', borderRadius: '4px' }}
                 />
               </div>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> rc
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Opacity: {drawingSettings.opacity}%
@@ -1788,7 +4136,11 @@ const CanvaEditor = () => {
                   style={{ width: '100%' }}
                 />
               </div>
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> rc
               <div>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Tool Mode
@@ -1862,6 +4214,7 @@ const CanvaEditor = () => {
       <div style={styles.mainArea}>
         {/* Top Toolbar */}
         <TopToolbar
+<<<<<<< HEAD
           styles={styles}
           undo={undo}
           redo={redo}
@@ -1877,14 +4230,46 @@ const CanvaEditor = () => {
           canvasSize={canvasSize}
           selectedTool={selectedTool}
         />
+=======
+  styles={styles}
+  undo={undo}
+  redo={redo}
+  historyIndex={historyIndex}
+  historyLength={history.length}
+  zoom={zoom}
+  setZoom={setZoom}  // ADD THIS LINE
+  handleZoomOut={handleZoomOut}
+  handleZoomIn={handleZoomIn}
+  handleZoomReset={handleZoomReset}
+  handleFitToScreen={handleFitToScreen}
+  showGrid={showGrid}
+  setShowGrid={setShowGrid}
+  canvasSize={canvasSize}
+  selectedTool={selectedTool}
+  onSave={handleSave}
+  onExport={handleExport}
+  onDuplicate={handleDuplicateSelected}
+  hasSelection={!!selectedLayer}
+/>
+
+>>>>>>> rc
 
         {/* Canvas Area */}
         <div style={styles.canvasArea} className="custom-scrollbar" ref={canvasAreaRef}>
           <div ref={contentWrapperRef}
             style={{
+<<<<<<< HEAD
               width: canvasSize.width,
               height: canvasSize.height,
               position: 'relative'
+=======
+position: 'relative',
+    width: `${canvasSize.width}px`,
+    height: `${canvasSize.height}px`,
+    overflow: 'hidden',                    // ← this clips elements
+    transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
+    transformOrigin: 'top left',
+>>>>>>> rc
             }}
           >
             {/* Invisible spacer to create scrollable area proportional to zoom */}
@@ -1900,6 +4285,7 @@ const CanvaEditor = () => {
                 opacity: 0
               }}
             />
+<<<<<<< HEAD
             <div 
               style={styles.canvas} 
               onClick={handleCanvasClick} 
@@ -1908,6 +4294,24 @@ const CanvaEditor = () => {
               onMouseLeave={handleCanvasMouseLeave}
               ref={canvasRef}
             >
+=======
+            <div
+  style={{
+        ...styles.canvas,
+        position: 'relative',
+        width: `${canvasSize.width}px`,
+        height: `${canvasSize.height}px`,
+        overflow: 'hidden',                          // ← keep here
+        transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
+        transformOrigin: 'top left',               // <- key line
+  }}
+  onClick={handleCanvasClick}
+  onMouseDown={handleDrawingMouseDown}
+  onMouseMove={handleCanvasMouseMove}
+  onMouseLeave={handleCanvasMouseLeave}
+  ref={canvasRef}
+>
+>>>>>>> rc
             {layers.length === 0 && !hasChosenTemplate ? (
               <div
                 style={{
@@ -2002,7 +4406,13 @@ const CanvaEditor = () => {
                     border: selectedLayer === layer.id ? '2px dashed #3182ce' : 'none',
                     cursor: selectedTool === 'select' ? 'move' : 'default',
                     display: layer.visible ? 'block' : 'none',
+<<<<<<< HEAD
                     userSelect: 'none'
+=======
+                    userSelect: 'none',
+                    transform: `rotate(${layer.rotation || 0}deg)`,
+                    transformOrigin: 'center center'
+>>>>>>> rc
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -2016,6 +4426,11 @@ const CanvaEditor = () => {
                         fontSize: layer.fontSize,
                         fontFamily: layer.fontFamily,
                         fontWeight: layer.fontWeight,
+<<<<<<< HEAD
+=======
+                        fontStyle: layer.fontStyle || 'normal',
+                        textDecoration: layer.textDecoration || 'none',
+>>>>>>> rc
                         color: layer.color,
                         textAlign: layer.textAlign,
                         width: '100%',
@@ -2023,7 +4438,20 @@ const CanvaEditor = () => {
                         display: 'flex',
                         alignItems: 'center',
                         padding: '4px',
+<<<<<<< HEAD
                         userSelect: 'text'
+=======
+                        userSelect: 'text',
+                        filter: getFilterCSS({
+                          brightness: layer.brightness ?? 100,
+                          contrast: layer.contrast ?? 100,
+                          blur: layer.blur ?? 0
+                        }),
+                        textShadow: layer.shadows?.enabled
+                          ? `${layer.shadows.x ?? 0}px ${layer.shadows.y ?? 0}px ${layer.shadows.blur ?? 0}px ${hexToRgba(layer.shadows.color, (layer.shadows.opacity ?? 50) / 100)}`
+                          : 'none',
+                        opacity: (layer.opacity ?? 100) / 100
+>>>>>>> rc
                       }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
@@ -2038,6 +4466,7 @@ const CanvaEditor = () => {
                       {layer.text}
                     </div>
                   )}
+<<<<<<< HEAD
                   {layer.type === 'shape' && (
                     <div
                       style={{
@@ -2067,6 +4496,92 @@ const CanvaEditor = () => {
                       }}
                       draggable={false}
                     />
+=======
+                  {layer.type === 'shape' && (() => {
+                    const display = getShapeDisplayProps(layer.shape);
+                    if (layer.fillType === 'image' && layer.fillImageSrc) {
+                      return (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'relative',
+                            border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
+                            borderRadius: display.borderRadius,
+                            clipPath: display.clipPath,
+                            overflow: 'hidden',
+                            backgroundImage: `url(${layer.fillImageSrc})`,
+                            backgroundSize: layer.fillImageFit === 'contain' ? 'contain' : 'cover',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            filter: getFilterCSS({
+                              brightness: layer.brightness ?? 100,
+                              contrast: layer.contrast ?? 100,
+                              blur: layer.blur ?? 0
+                            }),
+                            boxShadow: getShadowCSS(layer.shadows),
+                            opacity: (layer.opacity ?? 100) / 100
+                          }}
+                        />
+                      );
+                    }
+                    return (
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: layer.fillColor,
+                          border: `${layer.strokeWidth}px solid ${layer.strokeColor}`,
+                          borderRadius: display.borderRadius,
+                          clipPath: display.clipPath,
+                          filter: getFilterCSS({
+                            brightness: layer.brightness ?? 100,
+                            contrast: layer.contrast ?? 100,
+                            blur: layer.blur ?? 0
+                          }),
+                          boxShadow: getShadowCSS(layer.shadows),
+                          opacity: (layer.opacity ?? 100) / 100
+                        }}
+                      />
+                    );
+                  })()}
+                  {layer.type === 'image' && (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: `${layer.cornerRadius ?? 4}px`,
+                      overflow: 'hidden',
+                      position: 'relative',
+                      filter: getFilterCSS({
+                        brightness: layer.brightness ?? 100,
+                        contrast: layer.contrast ?? 100,
+                        blur: layer.blur ?? 0
+                      }),
+                      boxShadow: getShadowCSS(layer.shadows),
+                      opacity: (layer.opacity ?? 100) / 100
+                    }}>
+                      <img
+                        src={layer.src}
+                        alt={layer.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
+                        draggable={false}
+                      />
+                      {(layer.strokeWidth ?? 0) > 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: `${layer.cornerRadius ?? 4}px`,
+                          pointerEvents: 'none',
+                          border: `${layer.strokeWidth ?? 0}px ${layer.strokeStyle === 'dashed' ? 'dashed' : 'solid'} ${layer.strokeColor ?? '#000'}`
+                        }} />
+                      )}
+                    </div>
+>>>>>>> rc
                   )}
                   {layer.type === 'drawing' && (
                     <svg
@@ -2076,12 +4591,26 @@ const CanvaEditor = () => {
                         position: 'absolute',
                         top: 0,
                         left: 0,
+<<<<<<< HEAD
                         pointerEvents: 'none'
+=======
+                        pointerEvents: 'none',
+                        filter: getFilterCSS({
+                          brightness: layer.brightness ?? 100,
+                          contrast: layer.contrast ?? 100,
+                          blur: layer.blur ?? 0
+                        }),
+                        opacity: (layer.opacity ?? 100) / 100
+>>>>>>> rc
                       }}
                       viewBox={`0 0 ${layer.width} ${layer.height}`}
                     >
                       <path
+<<<<<<< HEAD
                         d={layer.path.map((point, index) => 
+=======
+                        d={layer.path.map((point, index) =>
+>>>>>>> rc
                           index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
                         ).join(' ')}
                         stroke={layer.mode === 'eraser' ? '#ffffff' : layer.color}
@@ -2096,6 +4625,22 @@ const CanvaEditor = () => {
                       />
                     </svg>
                   )}
+<<<<<<< HEAD
+=======
+                  {/* Floating actions for selected element */}
+                  {selectedLayer === layer.id && (
+                    <FloatingToolbar
+                      layer={layer}
+                      styles={styles}
+                      onColorChange={handleQuickColorChange}
+                      onDuplicate={handleLayerDuplicate}
+                      onDelete={handleLayerDelete}
+                      onEnhance={handleEnhanceText}
+                      isEnhancing={isEnhancingText}
+                      getLayerPrimaryColor={getLayerPrimaryColor}
+                    />
+                  )}
+>>>>>>> rc
                   {selectedLayer === layer.id && (
                     <div
                       onMouseDown={(e) => handleResizeMouseDown(e, layer)}
@@ -2114,10 +4659,56 @@ const CanvaEditor = () => {
                       title="Resize"
                     />
                   )}
+<<<<<<< HEAD
               </div>
               ))
             )}
             
+=======
+                  {selectedLayer === layer.id && (
+                    <>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -40,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 1,
+                          height: 32,
+                          backgroundColor: '#3182ce',
+                          zIndex: 99
+                        }}
+                      />
+                      <div
+                        onMouseDown={(e) => handleRotateMouseDown(e, layer)}
+                        style={{
+                          position: 'absolute',
+                          top: -56,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: '#ffffff',
+                          border: '2px solid #3182ce',
+                          boxShadow: '0 0 0 1px #3182ce',
+                          cursor: 'grab',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 100
+                        }}
+                        title="Rotate (hold Shift to snap)"
+                      >
+                        <FiRotateCw size={12} color="#3182ce" />
+                      </div>
+                    </>
+                  )}
+              </div>
+              ))
+            )}
+
+>>>>>>> rc
             {/* Eraser preview - circular cursor */}
             {selectedTool === 'eraser' && isMouseOverCanvas && (
               <div
@@ -2153,7 +4744,11 @@ const CanvaEditor = () => {
                 viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
               >
                 <path
+<<<<<<< HEAD
                   d={currentPath.map((point, index) => 
+=======
+                  d={currentPath.map((point, index) =>
+>>>>>>> rc
                     index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
                   ).join(' ')}
                   stroke={drawingSettings.drawingMode === 'eraser' ? '#ffffff' : drawingSettings.brushColor}
@@ -2237,14 +4832,37 @@ const CanvaEditor = () => {
           )}
         </div>
       </div>
+<<<<<<< HEAD
+=======
+      <SaveExportModal
+        open={isSaveModalOpen}
+        onClose={() => !isExporting && setIsSaveModalOpen(false)}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        exportQuality={exportQuality}
+        setExportQuality={setExportQuality}
+        includeProjectFile={includeProjectFile}
+        setIncludeProjectFile={setIncludeProjectFile}
+        isExporting={isExporting}
+        onDownload={handleDownloadExport}
+        onSaveWorksheet={handleSaveWorksheetToLocation}
+      />
+>>>>>>> rc
 
       {/* Right Sidebar */}
       <div style={styles.rightSidebar} className="custom-scrollbar">
         {/* Toggle Button */}
+<<<<<<< HEAD
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
+=======
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+>>>>>>> rc
           marginBottom: '20px',
           paddingBottom: '10px',
           borderBottom: '1px solid #e1e5e9'
@@ -2276,7 +4894,11 @@ const CanvaEditor = () => {
             )}
           </button>
         </div>
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> rc
         {!isRightSidebarCollapsed && (
           <>
             {layers.length === 0 ? (
@@ -2284,6 +4906,7 @@ const CanvaEditor = () => {
                 No layers yet
               </div>
             ) : (
+<<<<<<< HEAD
               layers.map(layer => (
                 <div key={layer.id} style={{
                   ...styles.layerItem,
@@ -2293,6 +4916,56 @@ const CanvaEditor = () => {
                   <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1 }}>
                   <div style={{ fontWeight: '500' }}>{layer.name}</div>
                   <div style={{ fontSize: '12px', color: '#666' }}>{layer.type}</div>
+=======
+              layers.map((layer, index) => (
+                <div
+                  key={layer.id}
+                  draggable
+                  onDragStart={(e) => handleLayerDragStart(e, layer.id)}
+                  onDragOver={(e) => handleLayerDragOver(e, index)}
+                  onDragLeave={handleLayerDragLeave}
+                  onDrop={(e) => handleLayerDrop(e, index)}
+                  onDragEnd={handleLayerDragEnd}
+                  style={{
+                    ...styles.layerItem,
+                    ...(draggedLayer === layer.id ? styles.layerItemDragging : {}),
+                    ...(dragOverIndex === index ? styles.layerItemDragOver : {}),
+                    border: selectedLayer === layer.id ? '2px solid #3182ce' : '1px solid #e1e5e9',
+                    backgroundColor: selectedLayer === layer.id ? '#f0f4ff' : 'white'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        ...styles.dragHandle,
+                        ...(isLayerDragging ? styles.dragHandleActive : {})
+                      }}
+                      title="Drag to reorder"
+                    >
+                      <FiMove size={16} />
+                    </div>
+                    <div onClick={() => handleLayerSelect(layer.id)} style={{ flex: 1, minWidth: 0 }}>
+                      {renamingLayerId === layer.id ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={commitRenameLayer}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commitRenameLayer(); if (e.key === 'Escape') { setRenamingLayerId(null); setRenameValue(''); } }}
+                          style={{ width: '100%', padding: 6, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13 }}
+                        />
+                      ) : (
+                        <div
+                          title="Double-click to rename"
+                          onDoubleClick={() => startRenameLayer(layer)}
+                          style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {layer.name}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{layer.type}</div>
+                    </div>
+>>>>>>> rc
                   </div>
                   <div style={styles.layerControls}>
                     <button
@@ -2325,6 +4998,7 @@ const CanvaEditor = () => {
 
         {/* Collapsed state - show layer count and quick actions */}
         {isRightSidebarCollapsed && (
+<<<<<<< HEAD
           <div style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -2335,6 +5009,18 @@ const CanvaEditor = () => {
             <div style={{ 
               textAlign: 'center', 
               fontSize: '12px', 
+=======
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            paddingTop: '10px'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              fontSize: '12px',
+>>>>>>> rc
               color: '#666',
               fontWeight: '500'
             }}>
@@ -2367,9 +5053,15 @@ const CanvaEditor = () => {
                   </button>
                 ))}
                 {layers.length > 3 && (
+<<<<<<< HEAD
                   <div style={{ 
                     textAlign: 'center', 
                     fontSize: '10px', 
+=======
+                  <div style={{
+                    textAlign: 'center',
+                    fontSize: '10px',
+>>>>>>> rc
                     color: '#999',
                     padding: '4px'
                   }}>
@@ -2385,7 +5077,26 @@ const CanvaEditor = () => {
         {selectedLayer && !isRightSidebarCollapsed && (
           <div style={styles.propertyPanel}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>Properties</h4>
+<<<<<<< HEAD
             
+=======
+            {/* Effects (applies to all layer types) */}
+            {(() => {
+              const sel = layers.find(l => l.id === selectedLayer);
+              if (!sel) return null;
+              return (
+                <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <h5 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#374151' }}>Effects</h5>
+                  <BrightnessControl value={sel.brightness ?? 100} onChange={(v) => handleEffectChange('brightness', v)} />
+                  <ContrastControl value={sel.contrast ?? 100} onChange={(v) => handleEffectChange('contrast', v)} />
+                  <BlurControl value={sel.blur ?? 0} onChange={(v) => handleEffectChange('blur', v)} />
+                  <OpacityControl value={sel.opacity ?? 100} onChange={(v) => handleEffectChange('opacity', v)} />
+                  <ShadowsControl value={sel.shadows} onChange={(v) => handleEffectChange('shadows', v)} />
+                </div>
+              );
+            })()}
+
+>>>>>>> rc
             {layers.find(l => l.id === selectedLayer)?.type === 'text' && (
               <>
                 <div style={styles.propertyRow}>
@@ -2398,6 +5109,29 @@ const CanvaEditor = () => {
                   />
                 </div>
                 <div style={styles.propertyRow}>
+<<<<<<< HEAD
+=======
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', marginLeft: 8 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isHeading}
+                        onChange={(e) => setIsHeading(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span>Is Heading</span>
+                    </label>
+                    <TextEnhanceButton
+                      onClick={handleEnhanceText}
+                      disabled={isEnhancingText || !layers.find(l => l.id === selectedLayer)?.text?.trim()}
+                      isEnhancing={isEnhancingText}
+                      variant="inline"
+                      size={14}
+                    />
+                  </div>
+                </div>
+                <div style={styles.propertyRow}>
+>>>>>>> rc
                   <span style={styles.propertyLabel}>Font Size</span>
                   <input
                     type="number"
@@ -2438,11 +5172,34 @@ const CanvaEditor = () => {
                 </div>
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Color</span>
+<<<<<<< HEAD
                   <input
                     type="color"
                     value={textSettings.color}
                     onChange={(e) => handleTextSettingsChange('color', e.target.value)}
                     style={styles.colorInput}
+=======
+                  <div
+                    onClick={() => textColorInputRef.current && textColorInputRef.current.click()}
+                    title={textSettings.color}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      border: '1px solid #d1d5db',
+                      boxShadow: 'inset 0 0 0 12px ' + (textSettings.color || '#000'),
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <input
+                    ref={textColorInputRef}
+                    type="color"
+                    value={textSettings.color}
+                    onChange={(e) => handleTextSettingsChange('color', e.target.value)}
+                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
+                    tabIndex={-1}
+                    aria-hidden="true"
+>>>>>>> rc
                   />
                 </div>
                 <div style={styles.propertyRow}>
@@ -2521,6 +5278,58 @@ const CanvaEditor = () => {
             {layers.find(l => l.id === selectedLayer)?.type === 'shape' && (
               <>
                 <div style={styles.propertyRow}>
+<<<<<<< HEAD
+=======
+                  <span style={styles.propertyLabel}>Fill Type</span>
+                  <select
+                    value={shapeSettings.fillType}
+                    onChange={(e) => handleShapeSettingsChange('fillType', e.target.value)}
+                    style={styles.propertyInput}
+                  >
+                    <option value="color">Color</option>
+                    <option value="image">Image</option>
+                  </select>
+                </div>
+                {shapeSettings.fillType === 'image' && (
+                  <>
+                    <div style={styles.propertyRow}>
+                      <span style={styles.propertyLabel}>Image Fit</span>
+                      <select
+                        value={shapeSettings.fillImageFit}
+                        onChange={(e) => handleShapeSettingsChange('fillImageFit', e.target.value)}
+                        style={styles.propertyInput}
+                      >
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          style={styles.smallButton}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="Upload image to use as fill"
+                        >
+                          Upload image
+                        </button>
+                        {shapeSettings.fillImageSrc && (
+                          <img src={shapeSettings.fillImageSrc} alt="fill" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid #e5e7eb' }} />
+                        )}
+                      </div>
+                      {uploadedImages.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
+                          {uploadedImages.map(ui => (
+                            <button key={ui.id} onClick={() => handleShapeSettingsChange('fillImageSrc', ui.src)} title={ui.name} style={{ padding: 0, border: shapeSettings.fillImageSrc === ui.src ? '2px solid #3182ce' : '1px solid #e5e7eb', borderRadius: 4, overflow: 'hidden', background: '#fff' }}>
+                              <img src={ui.src} alt={ui.name} style={{ width: '100%', height: 40, objectFit: 'cover', display: 'block' }} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+                <div style={styles.propertyRow}>
+>>>>>>> rc
                   <span style={styles.propertyLabel}>Fill Color</span>
                   <input
                     type="color"
@@ -2553,6 +5362,7 @@ const CanvaEditor = () => {
             {layers.find(l => l.id === selectedLayer)?.type === 'image' && (
               <>
                 <div style={styles.propertyRow}>
+<<<<<<< HEAD
                   <span style={styles.propertyLabel}>Brightness</span>
                   <input
                     type="range"
@@ -2578,6 +5388,63 @@ const CanvaEditor = () => {
                   />
                   <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
                     {imageSettings.contrast}%
+=======
+                  <span style={styles.propertyLabel}>Stroke Color</span>
+                  <div
+                    onClick={() => strokeColorInputRef.current && strokeColorInputRef.current.click()}
+                    title={imageSettings.strokeColor}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      border: '1px solid #d1d5db',
+                      boxShadow: 'inset 0 0 0 12px ' + (imageSettings.strokeColor || '#000'),
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <input
+                    ref={strokeColorInputRef}
+                    type="color"
+                    value={imageSettings.strokeColor}
+                    onChange={(e) => handleImageSettingsChange('strokeColor', e.target.value)}
+                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Stroke Width</span>
+                  <input
+                    type="number"
+                    value={imageSettings.strokeWidth}
+                    onChange={(e) => handleImageSettingsChange('strokeWidth', parseInt(e.target.value) || 0)}
+                    style={styles.propertyInput}
+                  />
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Stroke Style</span>
+                  <select
+                    value={imageSettings.strokeStyle}
+                    onChange={(e) => handleImageSettingsChange('strokeStyle', e.target.value)}
+                    style={styles.propertyInput}
+                  >
+                    <option value="solid">Solid</option>
+                    <option value="dashed">Dashed</option>
+                  </select>
+                </div>
+                <div style={styles.propertyRow}>
+                  <span style={styles.propertyLabel}>Corner Radius</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={imageSettings.cornerRadius}
+                    onChange={(e) => handleImageSettingsChange('cornerRadius', parseInt(e.target.value))}
+                    style={{ width: '100px' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#666', minWidth: '30px' }}>
+                    {imageSettings.cornerRadius}px
+>>>>>>> rc
                   </span>
                 </div>
                 <div style={styles.propertyRow}>
@@ -2594,6 +5461,7 @@ const CanvaEditor = () => {
                     {imageSettings.saturation}%
                   </span>
                 </div>
+<<<<<<< HEAD
                 <div style={styles.propertyRow}>
                   <span style={styles.propertyLabel}>Blur</span>
                   <input
@@ -2622,6 +5490,8 @@ const CanvaEditor = () => {
                     {imageSettings.opacity}%
                   </span>
                 </div>
+=======
+>>>>>>> rc
               </>
             )}
 
@@ -2684,6 +5554,17 @@ const CanvaEditor = () => {
           </div>
         )}
       </div>
+<<<<<<< HEAD
+=======
+      
+      {showStyleModal && (
+        <TextStyleModal 
+          text={layers.find(l => l.id === selectedLayer && l.type === 'text')?.text || ''}
+          onClose={() => setShowStyleModal(false)}
+          onAddToCanvas={handleAddStyledImageToCanvas}
+        />
+      )}
+>>>>>>> rc
     </div>
   );
 };

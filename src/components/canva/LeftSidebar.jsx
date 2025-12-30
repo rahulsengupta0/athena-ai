@@ -1,5 +1,32 @@
+<<<<<<< HEAD
 import React from 'react';
 import { FiType, FiImage, FiSquare, FiUpload, FiTriangle, FiEdit3, FiMove, FiGrid, FiChevronDown, FiChevronRight, FiStar, FiHeart, FiArrowUp, FiArrowDown, FiArrowLeft, FiArrowRight, FiCloud, FiZap, FiCrop, FiFilter, FiX } from 'react-icons/fi';
+=======
+// LeftSidebar.jsx
+import React from 'react';
+import {
+  FiType,
+  FiMove,
+  FiSquare,
+  FiImage,
+  FiUpload,
+  FiTriangle,
+  FiChevronDown,
+  FiChevronRight,
+  FiStar,
+  FiHeart,
+  FiArrowUp,
+  FiArrowDown,
+  FiArrowLeft,
+  FiArrowRight,
+  FiCloud,
+  FiZap,
+  FiGrid,
+  FiCrop,
+  FiFilter,
+  FiX
+} from 'react-icons/fi';
+>>>>>>> rc
 
 const LeftSidebar = ({
   styles,
@@ -24,6 +51,7 @@ const LeftSidebar = ({
   showGrid,
   setShowGrid
 }) => {
+<<<<<<< HEAD
   return (
     <div style={styles.leftSidebar} className="custom-scrollbar">
       <div style={{ 
@@ -61,11 +89,40 @@ const LeftSidebar = ({
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <FiMove size={16} />
             Selection
+=======
+  const customStyles = {
+    ...styles,
+    sidebar: {
+      ...styles.leftSidebar,
+      background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+      borderRight: '2px solid #374151'
+    }
+  };
+
+  const getButtonStyle = (buttonName) => ({
+    ...styles.toolButton,
+    border: hoveredOption === buttonName ? '1px solid #ffffff' : '1px solid #374151',
+    backgroundColor: hoveredOption === buttonName ? '#334155' : 'transparent',
+    ...(selectedTool === buttonName ? styles.activeTool : {})
+  });
+
+  return (
+    <div style={customStyles.sidebar}>
+      {/* Selection section (optional, from original code) */}
+      <div style={{ marginTop: 0 }}>
+        <button
+          style={{ ...styles.toolButton, justifyContent: 'space-between' }}
+          onClick={() => toggleSection('selection')}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FiMove size={16} /> Selection
+>>>>>>> rc
           </span>
           {openSections.selection ? <FiChevronDown size={16} /> : <FiChevronRight size={16} />}
         </button>
         {openSections.selection && (
           <div style={{ paddingLeft: 8 }}>
+<<<<<<< HEAD
             <div
               style={{
                 border: '1px solid #334155',
@@ -82,18 +139,28 @@ const LeftSidebar = ({
                   backgroundColor: hoveredOption === 'select' ? '#334155' : 'transparent',
                   ...(selectedTool === 'select' ? styles.activeTool : {})
                 }}
+=======
+            <div style={{ border: '1px solid #334155', borderRadius: 8, backgroundColor: '#334155', padding: 8, marginTop: 6 }}>
+              <button
+                style={getButtonStyle('select')}
+>>>>>>> rc
                 onMouseEnter={() => setHoveredOption('select')}
                 onMouseLeave={() => setHoveredOption(null)}
                 onClick={() => handleToolSelect('select')}
               >
                 <FiMove size={16} />
+<<<<<<< HEAD
                 Select & Move
+=======
+                Select / Move
+>>>>>>> rc
               </button>
             </div>
           </div>
         )}
       </div>
 
+<<<<<<< HEAD
       <div style={{ marginTop: '12px' }}>
         <button
           style={{
@@ -129,10 +196,36 @@ const LeftSidebar = ({
                 onMouseEnter={() => setHoveredOption('heading')}
                 onMouseLeave={() => setHoveredOption(null)}
                 onClick={() => { handleAddElement(100, 100, 'heading'); setSelectedTool('select'); }}
+=======
+      {/* Text Tools – this is what actually inserts headings */}
+      <div style={{ marginTop: 12 }}>
+        <button
+          style={{ ...styles.toolButton, justifyContent: 'space-between' }}
+          onClick={() => toggleSection('text')}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FiType size={16} /> Text
+          </span>
+          {openSections.text ? <FiChevronDown size={16} /> : <FiChevronRight size={16} />}
+        </button>
+
+        {openSections.text && (
+          <div style={{ paddingLeft: 8 }}>
+            <div style={{ border: '1px solid #334155', borderRadius: 8, backgroundColor: '#334155', padding: 8, marginTop: 6 }}>
+              <button
+                style={getButtonStyle('heading')}
+                onMouseEnter={() => setHoveredOption('heading')}
+                onMouseLeave={() => setHoveredOption(null)}
+                onClick={() => {
+                  handleAddElement(100, 100, 'heading');
+                  setSelectedTool('select');
+                }}
+>>>>>>> rc
               >
                 <FiType size={16} />
                 Add Heading
               </button>
+<<<<<<< HEAD
               <button
                 style={{
                   ...styles.toolButton,
@@ -143,10 +236,22 @@ const LeftSidebar = ({
                 onMouseEnter={() => setHoveredOption('subheading')}
                 onMouseLeave={() => setHoveredOption(null)}
                 onClick={() => { handleAddElement(100, 150, 'subheading'); setSelectedTool('select'); }}
+=======
+
+              <button
+                style={getButtonStyle('subheading')}
+                onMouseEnter={() => setHoveredOption('subheading')}
+                onMouseLeave={() => setHoveredOption(null)}
+                onClick={() => {
+                  handleAddElement(100, 150, 'subheading');
+                  setSelectedTool('select');
+                }}
+>>>>>>> rc
               >
                 <FiType size={16} />
                 Add Subheading
               </button>
+<<<<<<< HEAD
               <button
                 style={{
                   ...styles.toolButton,
@@ -157,6 +262,17 @@ const LeftSidebar = ({
                 onMouseEnter={() => setHoveredOption('textbox')}
                 onMouseLeave={() => setHoveredOption(null)}
                 onClick={() => { handleAddElement(100, 200, 'textbox'); setSelectedTool('select'); }}
+=======
+
+              <button
+                style={getButtonStyle('textbox')}
+                onMouseEnter={() => setHoveredOption('textbox')}
+                onMouseLeave={() => setHoveredOption(null)}
+                onClick={() => {
+                  handleAddElement(100, 200, 'textbox');
+                  setSelectedTool('select');
+                }}
+>>>>>>> rc
               >
                 <FiType size={16} />
                 Add Text Box
@@ -166,6 +282,7 @@ const LeftSidebar = ({
         )}
       </div>
 
+<<<<<<< HEAD
       <div style={{ marginTop: '12px' }}>
         <button
           style={{
@@ -800,10 +917,16 @@ const LeftSidebar = ({
           </div>
         )}
       </div>
+=======
+      {/* You can copy Shapes / Media / Canvas sections from the original code if needed */}
+>>>>>>> rc
     </div>
   );
 };
 
 export default LeftSidebar;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> rc

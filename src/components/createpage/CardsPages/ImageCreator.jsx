@@ -28,14 +28,40 @@ const ImageCreator = () => {
 
   const activeAspect = useMemo(() => ratios.find(r => r.key === ratio)?.aspect || '1 / 1', [ratio])
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return
-    setIsLoading(true)
-    setTimeout(() => {
-      setImageUrl('https://via.placeholder.com/1024x1024.png?text=AI+Image')
-      setIsLoading(false)
-    }, 900)
+const handleGenerate = async () => {
+  if (!prompt.trim()) return;
+  setIsLoading(true);
+  setImageUrl('');
+
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    const response = await fetch(`${API_BASE_URL}/api/ai-image/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, style, ratio, quality }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error:', errorData.error);
+      setImageUrl('');
+      setIsLoading(false);
+      return;
+    }
+
+    const data = await response.json();
+    setImageUrl(data.imageUrl || '');
+  } catch (error) {
+    console.error('Error:', error.message);
+    setImageUrl('');
+  } finally {
+    setIsLoading(false);
   }
+};
+
+
+
 
   return (
     <div style={{ padding: 24 }}>

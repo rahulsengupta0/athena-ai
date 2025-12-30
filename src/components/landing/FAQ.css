@@ -1,0 +1,138 @@
+/* FAQ.css */
+.faq-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 14px; 
+  max-width: var(--max-width); 
+  margin: 20px auto 0 
+}
+.faq-item{ 
+  position: relative; 
+  padding: 18px; 
+  cursor: pointer; 
+  overflow: hidden; 
+  transition: box-shadow .28s, background .28s 
+}
+.faq-q{ 
+  font-weight: 700; 
+  margin-bottom: 8px 
+}
+.faq-a{ 
+  color: var(--text-muted); 
+  max-height: 0; 
+  opacity: 0; 
+  transition: max-height .28s ease, opacity .28s ease, margin .28s ease; 
+  font-size: 14px; 
+  display: block 
+}
+.faq-item .faq-icon{ 
+  position: absolute; 
+  right: 18px; 
+  top: 18px; 
+  font-size: 22px; 
+  color: var(--text-muted) 
+}
+.faq-item.open{ 
+  background: linear-gradient(180deg, rgba(91,110,245,0.06), rgba(192,107,255,0.04));
+  box-shadow: var(--shadow-soft) 
+}
+.landing-page.dark .faq-item.open{ 
+  background: linear-gradient(180deg, rgba(91,110,245,0.12), rgba(192,107,255,0.10));
+}
+.faq-item.open .faq-a{ 
+  max-height: 500px; 
+  opacity: 1; 
+  margin-top: 8px 
+}
+
+/* responsive */
+@media (max-width:980px){ 
+  .faq-grid{ 
+    grid-template-columns:1fr 
+  } 
+}
+
+@media (max-width: 768px) {
+  .faq-grid {
+    gap: 12px;
+    margin-top: 16px;
+  }
+  
+  .faq-item {
+    padding: 18px;
+    border-radius: 16px;
+  }
+  
+  .faq-q {
+    font-size: 16px;
+  }
+  
+  .faq-a {
+    font-size: 13px;
+  }
+  
+  .faq-item .faq-icon {
+    font-size: 20px;
+  }
+}
+
+@media (max-width:700px){ 
+  .faq-item{
+    padding:16px
+  } 
+  
+  .faq-q {
+    font-size: 15px;
+  }
+  
+  .faq-a {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .faq-grid {
+    gap: 10px;
+  }
+  
+  .faq-item {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  
+  .faq-q {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .faq-a {
+    font-size: 11px;
+  }
+  
+  .faq-item .faq-icon {
+    font-size: 18px;
+    right: 14px;
+    top: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .faq-item {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .faq-q {
+    font-size: 13px;
+  }
+  
+  .faq-a {
+    font-size: 10px;
+  }
+  
+  .faq-item .faq-icon {
+    font-size: 16px;
+    right: 12px;
+    top: 12px;
+  }
+}

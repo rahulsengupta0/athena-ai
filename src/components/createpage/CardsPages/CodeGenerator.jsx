@@ -88,13 +88,36 @@ if __name__ == "__main__":
     )
   }
 
-  const onGenerate = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setCode(generateDemoCode())
-      setIsLoading(false)
-    }, 700)
+const onGenerate = async () => {
+  if (!prompt.trim()) return;
+  setIsLoading(true);
+  setCode('');
+  try {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const response = await fetch(`${API_BASE_URL}/api/codegen/generate-code`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ prompt, language, framework }),
+});
+
+
+    if (!response.ok) {
+      const errData = await response.json();
+      setCode(`Error: ${errData.error || 'Failed to generate code'}`);
+      setIsLoading(false);
+      return;
+    }
+
+    const data = await response.json();
+    setCode(data.code || '');
+  } catch (error) {
+    setCode(`Error: ${error.message}`);
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   const copyCode = async () => {
     try { await navigator.clipboard.writeText(code) } catch (_) {}

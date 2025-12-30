@@ -1,70 +1,100 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEdit3, FiImage, FiFileText, FiCode, FiVideo, FiFeather } from "react-icons/fi";
+import {
+  FiEdit3,
+  FiImage,
+  FiFileText,
+  FiCode,
+  FiVideo,
+  FiFeather,
+} from "react-icons/fi";
 
-// Demo data for the "Start Creating" cards, with react-icons
 const cards = [
   {
-    icon: <FiEdit3 size={34} color="#fc5f93" />,
-    iconBg: "#fbe0ec",
+    icon: <FiEdit3 size={30} color="#f8fafc" />,
     title: "AI Design Generator",
-    desc: "Create stunning designs from text descriptions",
-    features: ["Logo design", "Social media posts", "Web layouts", "Print materials"],
+    desc: "Turn prompts into polished layouts in seconds.",
     badge: "Popular",
-    badgeColor: "#ff5253",
+    badgeColor: "#f43f5e",
+    route: "/create/ai-design",
+    meta: "156 projects created",
+    efficiency: "94% efficiency",
+    lastUsed: "2 hours ago",
+    image:
+      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=80",
   },
   {
-    icon: <FiImage size={34} color="#14cbbe" />,
-    iconBg: "#d4f8f5",
+    icon: <FiImage size={30} color="#f8fafc" />,
     title: "Image Creator",
-    desc: "Generate high-quality images and artwork",
-    features: ["Photo-realistic images", "Digital art", "Illustrations", "Product mockups"],
+    desc: "Generate vivid artwork and product renders.",
     badge: "New",
     badgeColor: "#22c55e",
+    route: "/create/image-creator",
+    meta: "134 projects created",
+    efficiency: "91% efficiency",
+    lastUsed: "3 hours ago",
+    image:
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=900&q=80",
   },
   {
-    icon: <FiFileText size={34} color="#409cff" />,
-    iconBg: "#e0f5ff",
+    icon: <FiFileText size={30} color="#f8fafc" />,
     title: "Content Writer",
-    desc: "AI-powered content and copywriting",
-    features: ["Blog posts", "Marketing copy", "Social captions", "Email templates"],
+    desc: "Craft on-brand copy, scripts, and campaigns.",
+    route: "/create/content-writer",
+    meta: "118 projects created",
+    efficiency: "90% efficiency",
+    lastUsed: "45 mins ago",
+    image:
+      "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=900&q=80",
   },
   {
-    icon: <FiCode size={34} color="#f85c2c" />,
-    iconBg: "#ffe8db",
+    icon: <FiCode size={30} color="#f8fafc" />,
     title: "Code Generator",
-    desc: "Generate and optimize code snippets",
-    features: ["React components", "CSS animations", "API integrations", "Database queries"],
+    desc: "Ship production-ready snippets with AI.",
+    route: "/create/code-generator",
+    meta: "101 projects created",
+    efficiency: "88% efficiency",
+    lastUsed: "1 hour ago",
+    image:
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80",
   },
   {
-    icon: <FiVideo size={34} color="#a365ec" />,
-    iconBg: "#f2e8fd",
+    icon: <FiVideo size={30} color="#f8fafc" />,
     title: "Video Producer",
-    desc: "Create animated videos and presentations",
-    features: ["Animated logos", "Explainer videos", "Social media clips", "Presentations"],
+    desc: "Storyboard and export pro-grade clips.",
     badge: "Pro",
-    badgeColor: "#ffd347",
+    badgeColor: "#facc15",
+    route: "/create/video-producer",
+    meta: "67 projects created",
+    efficiency: "86% efficiency",
+    lastUsed: "7 hours ago",
+    image:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
   },
   {
-    icon: <FiFeather size={34} color="#fa8bb5" />,
-    iconBg: "#fae6f2",
+    icon: <FiFeather size={30} color="#f8fafc" />,
     title: "Brand Builder",
-    desc: "Complete brand identity packages",
-    features: ["Color palettes", "Typography", "Brand guidelines", "Asset library"],
+    desc: "Develop cohesive identity systems.",
+    route: "/create/brand-builder",
+    meta: "84 projects created",
+    efficiency: "89% efficiency",
+    lastUsed: "Today",
+    image:
+      "https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?auto=format&fit=crop&w=900&q=80",
   },
 ];
 
 const badgeStyle = (badgeColor) => ({
   background: badgeColor,
-  color: badgeColor === "#ffd347" ? "#694700" : "#fff",
+  color: badgeColor === "#facc15" ? "#5b4600" : "#fff",
   fontWeight: 700,
   fontSize: "0.82rem",
   borderRadius: "13px",
-  padding: "3px 12px",
+  padding: "4px 12px",
   position: "absolute",
-  top: 18,
-  right: 22,
-  boxShadow: badgeColor === "#ffd347" ? "0 1px 1px #b7a76422" : undefined,
+  top: 20,
+  right: 20,
+  boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
   zIndex: 2,
 });
 
@@ -73,13 +103,13 @@ export const CreateCrds = () => {
   return (
     <div
       style={{
-        background: "none",
+        background: "linear-gradient(135deg, #f8f9ff 0%, #ffffff 45%, #f8f9ff 100%)",
         minHeight: 700,
         width: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "28px 0 32px 0",
+        padding: "48px 20px 64px 20px",
       }}
     >
       <div
@@ -87,9 +117,10 @@ export const CreateCrds = () => {
           width: "100%",
           maxWidth: 1400,
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)", // 3 equal columns
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           gap: "28px",
-          justifyContent: "center",
+          margin: "0 auto",
+          justifyItems: "center",
         }}
       >
         {cards.map((card, i) => (
@@ -97,18 +128,8 @@ export const CreateCrds = () => {
             key={i}
             card={card}
             onStart={() => {
-              if (card.title === "AI Design Generator") {
-                navigate("/create/ai-design");
-              } else if (card.title === "Image Creator") {
-                navigate("/create/image-creator");
-              } else if (card.title === "Content Writer") {
-                navigate("/create/content-writer");
-              } else if (card.title === "Code Generator") {
-                navigate("/create/code-generator");
-              } else if (card.title === "Video Producer") {
-                navigate("/create/video-producer");
-              } else if (card.title === "Brand Builder") {
-                navigate("/create/brand-builder");
+              if (card.route) {
+                navigate(card.route);
               }
               
             }}
@@ -124,105 +145,139 @@ const Card = ({ card, onStart }) => {
     <div
       style={{
         position: "relative",
-        background: "#fff",
-        borderRadius: 22,
-        boxShadow: "0 3px 16px #e9e4f33d",
-        border: "1.7px solid #efeefa",
-        padding: "34px 36px 28px 32px",
-        minHeight: 316,
+        overflow: "hidden",
+        borderRadius: 24,
+        boxShadow: "0 20px 35px rgba(15, 23, 42, 0.2)",
+        minHeight: 320,
+        width: "100%",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-start",
-        alignItems: "flex-start",
-        transition: "transform 0.17s cubic-bezier(.4,1,.7,1), box-shadow 0.17s",
+        justifyContent: "flex-end",
+        background: "#0f172a",
+        transition: "transform 0.25s ease, box-shadow 0.25s ease",
         cursor: "pointer",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "scale(1.027)";
-        e.currentTarget.style.boxShadow = "0 10px 32px #c5bdfa33";
-        e.currentTarget.style.border = "1.7px solid #b79cfb";
+        e.currentTarget.style.transform = "translateY(-6px)";
+        e.currentTarget.style.boxShadow = "0 25px 45px rgba(15, 23, 42, 0.35)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "scale(1)";
-        e.currentTarget.style.boxShadow = "0 3px 16px #e9e4f33d";
-        e.currentTarget.style.border = "1.7px solid #efeefa";
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 20px 35px rgba(15, 23, 42, 0.2)";
       }}
     >
-      {card.badge && <span style={badgeStyle(card.badgeColor)}>{card.badge}</span>}
-      <div
+      {card.badge && (
+        <span style={badgeStyle(card.badgeColor)} className="card-badge">
+          {card.badge}
+        </span>
+      )}
+      <img
+        src={card.image}
+        alt={card.title}
         style={{
-          marginBottom: 14,
-          marginTop: 3,
-          background: card.iconBg,
-          borderRadius: "13px",
-          width: 48,
-          height: 48,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {card.icon}
-      </div>
-      <div
-        style={{
-          fontSize: "1.22rem",
-          fontWeight: 700,
-          color: "#181d3a",
-          marginBottom: 7,
-          letterSpacing: "-.01em",
-        }}
-      >
-        {card.title}
-      </div>
-      <div
-        style={{
-          color: "#868bad",
-          fontSize: "1.085rem",
-          marginBottom: 12,
-          minHeight: 26,
-        }}
-      >
-        {card.desc}
-      </div>
-      <ul
-        style={{
-          margin: 0,
-          padding: 0,
-          marginBottom: 18,
-          listStyleType: "disc",
-          paddingLeft: 22,
-          color: "#4d55a3",
-          fontSize: "1.03rem",
-          fontWeight: 400,
-          opacity: 0.91,
-        }}
-      >
-        {card.features.map((feature, idx) => (
-          <li key={idx} style={{ marginBottom: 1 }}>
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <button
-        style={{
-          marginTop: "auto",
-          background: "linear-gradient(90deg,#a365ec 18%,#4baaff 98%)",
-          color: "#fff",
-          fontWeight: 700,
-          fontSize: "1.08rem",
-          padding: "10px 0px",
-          borderRadius: "13px",
-          border: "none",
+          position: "absolute",
+          inset: 0,
           width: "100%",
-          boxShadow: "0 0px 5px #a09acd23",
-          letterSpacing: "0.01em",
-          cursor: "pointer",
+          height: "100%",
+          objectFit: "cover",
+          filter: "brightness(0.55)",
         }}
-        onClick={onStart}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(200deg, rgba(4, 4, 5, 0) 0%, rgba(69, 62, 70, 0.75) 65%)",
+        }}
+      />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+          padding: "26px 28px 28px 28px",
+          color: "#f8fafc",
+        }}
       >
-        Start Creating
-      </button>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <span
+            style={{
+              background: "rgba(187, 193, 200, 0.65)",
+              borderRadius: 50,
+              width: 48,
+              height: 48,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {card.icon}
+          </span>
+          <div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+              {card.title}
+            </div>
+            <div style={{ fontSize: "0.92rem", color: "#cbd5f5" }}>
+              {card.meta}
+            </div>
+          </div>
+        </div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: "0.98rem",
+            color: "#e2e8f0",
+            lineHeight: 1.5,
+          }}
+        >
+          {card.desc}
+        </p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            color: "#cbd5f5",
+          }}
+        >
+          <div>
+            <div>{card.efficiency}</div>
+            
+          </div>
+          <div style={{ fontSize: "0.78rem", opacity: 0.9 }}>
+            {card.route?.replace("/create/", "").replace("-", " ")}
+          </div>
+        </div>
+        <button
+          style={{
+            marginTop: 18,
+            background: "linear-gradient(120deg, rgba(248,250,252,0.95), #fff)",
+            color: "#0f172a",
+            fontWeight: 700,
+            fontSize: "0.98rem",
+            padding: "11px 0px",
+            borderRadius: 999,
+            border: "none",
+            width: "100%",
+            boxShadow: "0 12px 24px rgba(15, 23, 42, 0.25)",
+            cursor: "pointer",
+          }}
+          onClick={onStart}
+        >
+          Start Creating
+        </button>
+      </div>
     </div>
   );
 };

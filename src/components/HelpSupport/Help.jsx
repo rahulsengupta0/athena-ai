@@ -1,7 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Help.css';
+import ChatModal from './ChatModal'
+import EmailSupport from './EmailSupport'
+import PhoneSupport from './PhoneSupport';
 
 const Help = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null);
+  const contactSectionRef = useRef(null);
+
+  const openModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalType(null);
+  };
+
+  const renderModalContent = () => {
+    if (!modalType) return null;
+
+    if (modalType === 'chat') {
+          return <ChatModal />;
+        }
+
+    if (modalType === 'email') {
+      return <EmailSupport />;
+        }
+
+    if (modalType === 'phone') {
+      return <PhoneSupport onClose={() => setModalType(null)} />;
+    }
+
+    return null;
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedFilter, setSelectedFilter] = useState('FAQ');
@@ -130,8 +165,7 @@ const Help = () => {
   };
 
   const handleContactSupport = () => {
-    // Add contact support logic here
-    console.log('Opening contact support...');
+    setSelectedFilter('Contact');
   };
 
   const renderContent = () => {
@@ -198,31 +232,34 @@ const Help = () => {
 
     if (selectedFilter === 'Contact') {
       return (
-        <div className="contact-section">
+        <div className="contact-section" ref={contactSectionRef}>
           <h2 className="section-title">Contact Support</h2>
           <div className="contact-options">
             <div className="contact-card">
               <div className="contact-icon">💬</div>
               <h3>Live Chat</h3>
               <p>Get instant help from our support team</p>
-              <button className="contact-btn">Start Chat</button>
+              <button className="contact-btn" onClick={() => openModal('chat')}>Start Chat</button>
             </div>
+
             <div className="contact-card">
               <div className="contact-icon">📧</div>
               <h3>Email Support</h3>
               <p>Send us a detailed message</p>
-              <button className="contact-btn">Send Email</button>
+              <button className="contact-btn" onClick={() => openModal('email')}>Send Email</button>
             </div>
+
             <div className="contact-card">
               <div className="contact-icon">📞</div>
               <h3>Phone Support</h3>
               <p>Speak directly with our team</p>
-              <button className="contact-btn">Call Now</button>
+              <button className="contact-btn" onClick={() => openModal('phone')}>Call Now</button>
             </div>
           </div>
         </div>
       );
     }
+
 
     if (selectedFilter === 'Feedback') {
       return (
@@ -255,6 +292,12 @@ const Help = () => {
 
     return null;
   };
+
+  useEffect(() => {
+    if (selectedFilter === 'Contact' && contactSectionRef.current) {
+      contactSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedFilter]);
 
   return (
     <div className="help-container">
@@ -318,25 +361,51 @@ const Help = () => {
               </button>
             ))}
           </div>
-          <div className="category-filters">
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={`category-filter-btn ${selectedCategory === category ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
+
+          {/* 👇 Hide category filters when Contact or Feedback is selected */}
+          {selectedFilter !== 'Contact' && selectedFilter !== 'Feedback' && (
+          <div
+            className={`category-filters ${
+              selectedFilter === 'Contact' || selectedFilter === 'Feedback' ? 'hidden' : ''
+            }`}
+          >
+            {selectedFilter !== 'Contact' && selectedFilter !== 'Feedback' &&
+              categories.map((category) => (
+                <button
+                  key={category}
+                  className={`category-filter-btn ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
           </div>
+
+          )}
         </div>
       </div>
 
-      <div className="content-section">
-        {renderContent()}
-      </div>
-    </div>
-  );
-};
+
+            <div className="content-section">
+              {renderContent()}
+            </div>
+
+            {isModalOpen && (
+              <div className="modal-overlay" onClick={closeModal}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <button className="modal-close" onClick={closeModal} aria-label="Close">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                  {renderModalContent()}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
 
 export default Help;

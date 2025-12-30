@@ -1,109 +1,8 @@
-import React from "react";
-
-// Demo data for creations (unchanged)
-const creations = [
-  {
-    id: 1,
-    emoji: "✨",
-    title: "A modern minimalist website design for a…",
-    description: "AI-generated design based on your description",
-    tag: "design",
-    actions: ["favorite", "download", "open"],
-  },
-  {
-    id: 2,
-    emoji: "✨",
-    title: "A professional business proposal template with…",
-    description: "AI-generated document based on your description",
-    tag: "document",
-    actions: [],
-  },
-  {
-    id: 3,
-    emoji: "🖼️",
-    title: "A dreamy sunset over lavender fields,…",
-    description: "AI-generated image based on your description",
-    tag: "image",
-    actions: [],
-  },
-  {
-    id: 4,
-    emoji: "🎬",
-    title: "An animated logo reveal for a tech startup",
-    description: "AI-generated video based on your description",
-    tag: "video",
-    actions: [],
-  },
-  {
-    id: 5,
-    emoji: "🎨",
-    title: "Social Media Post - Wellness Brand",
-    description: "Vibrant Instagram post for organic wellness products",
-    tag: "design",
-    actions: [],
-  },
-  {
-    id: 6,
-    emoji: "🚀",
-    title: "Hero Banner – Tech Startup",
-    description: "Modern hero section with call-to-action",
-    tag: "design",
-    actions: [],
-  },
-  {
-    id: 7,
-    emoji: "📷",
-    title: "Product Photography",
-    description: "Professional product shots with soft lighting",
-    tag: "image",
-    actions: [],
-  },
-  {
-    id: 8,
-    emoji: "💻",
-    title: "Landing Page Code",
-    description: "Responsive React component with Tailwind CSS",
-    tag: "code",
-    actions: [],
-  },
-];
-
-// Action icon buttons (replace with SVGs/icons if you want)
-const actionIcons = {
-  favorite: "♡",
-  download: "⬇️",
-  open: "Open",
-};
-
-// SVG icons for Export and Share buttons
-const ExportIcon = () => (
-  <svg
-    style={{ width: 18, height: 18, marginRight: 6, verticalAlign: "middle" }}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-  >
-    <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17h16" />
-  </svg>
-);
-
-const ShareIcon = () => (
-  <svg
-    style={{ width: 18, height: 18, marginRight: 6, verticalAlign: "middle" }}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-  >
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
-  </svg>
-);
+import React from 'react';
+import TemplateCategories from './TemplateCategories';
 
 export const Creation = () => {
+<<<<<<< HEAD
   const [isMobile, setIsMobile] = React.useState(false);
   const [isTablet, setIsTablet] = React.useState(false);
 
@@ -458,6 +357,9 @@ export const Creation = () => {
       </div>
     </div>
   );
+=======
+  return <TemplateCategories />;
+>>>>>>> rc
 };
 
 export default Creation;
