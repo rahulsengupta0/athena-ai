@@ -11,10 +11,13 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
 
+# Environment variables
 .env
-**/.env
+.env.local
+.env.development
+.env.production
+backend/.env
 
 # Editor directories and files
 .vscode/*
@@ -27,12 +30,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Python
 python-bg-remover/env/
-python-bg-remover/env/
-
-backend/.env
-
-.env
 __pycache__/
 *.pyc
 
