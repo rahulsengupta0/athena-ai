@@ -235,7 +235,20 @@ const PresentationStudio = () => {
 
   const handleEditSlide = (index, field, value) => {
     const updated = [...generatedSlides];
-    if (Array.isArray(updated[index][field]) && Array.isArray(value)) {
+    
+    // Handle updating a specific index in an array (for bullets)
+    if (typeof value === 'object' && value.index !== undefined && value.value !== undefined) {
+      if (Array.isArray(updated[index][field])) {
+        const newArray = [...updated[index][field]];
+        newArray[value.index] = value.value;
+        updated[index][field] = newArray;
+      } else {
+        // If the field is not an array, initialize it as one with the value at the given index
+        const newArray = [];
+        newArray[value.index] = value.value;
+        updated[index][field] = newArray;
+      }
+    } else if (Array.isArray(updated[index][field]) && Array.isArray(value)) {
       updated[index][field] = value;
     } else {
       updated[index][field] = value;

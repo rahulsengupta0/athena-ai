@@ -158,7 +158,7 @@ const EditorSection = ({
             />
             {generatedSlides[selectedSlide]?.type === "bullet" && (
               <div>
-                {generatedSlides[selectedSlide].bullets.map((bullet, i) => (
+                {(Array.isArray(generatedSlides[selectedSlide].bullets) ? generatedSlides[selectedSlide].bullets : []).map((bullet, i) => (
                   <input
                     key={i}
                     value={bullet}
