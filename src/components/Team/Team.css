@@ -51,6 +51,9 @@
 .member-badge.admin{ background:#e0f2fe; color:#0369a1; }
 .member-badge.member{ background:#e5f9f2; color:#0f766e; }
 .member-role { color:#6b7280; font-size:0.9rem; }
+<<<<<<< HEAD
+.icon-btn { background:none; border:none; color:#9ca3af; font-size:1.25rem; cursor:pointer; }
+=======
 .icon-btn { background:none; border:none; color:#9ca3af; font-size:1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0.5rem; border-radius:8px; transition:background 0.15s ease; }
 .icon-btn:hover { background:#f3f4f6; }
 
@@ -95,6 +98,7 @@
 .menu-item.danger:hover {
   background: #fee2e2;
 }
+>>>>>>> rc
 
 .member-meta { margin-top:0.75rem; }
 .meta-row { display:flex; align-items:center; gap:0.5rem; color:#6b7280; font-size:0.9rem; }
@@ -102,6 +106,8 @@
 .meta-pill { background:#f3f4f6; color:#374151; border-radius:999px; padding:4px 10px; font-size:0.8rem; font-weight:600; }
 .meta-muted { color:#9ca3af; font-size:0.8rem; }
 
+<<<<<<< HEAD
+=======
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -344,6 +350,7 @@
   color: #9ca3af;
 }
 
+>>>>>>> rc
 /* Responsive */
 @media (max-width: 1024px) {
   .team-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -357,9 +364,12 @@
   .team-search-row { flex-direction:column; align-items:stretch; }
   .search-input { width:100%; min-width:0; }
   .members-grid { grid-template-columns:1fr; padding: 0 1rem 1rem; }
+<<<<<<< HEAD
+=======
   .modal-content { margin: 1rem; }
   .invite-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .invite-actions { width: 100%; justify-content: flex-end; }
+>>>>>>> rc
 }
 
 

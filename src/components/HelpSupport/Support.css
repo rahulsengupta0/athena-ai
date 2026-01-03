@@ -636,6 +636,9 @@
 
 .support-container .modal-body {
   padding: 1.25rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .support-container .modal-body h3 {
@@ -643,11 +646,16 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #1f2937;
+  word-break: normal;
+  white-space: normal;
 }
 
 .support-container .modal-body p {
   margin: 0 0 1rem;
   color: var(--support-text-muted);
+  word-break: normal;
+  white-space: normal;
+  line-height: 1.5;
 }
 
 .support-container .category-filters::-webkit-scrollbar,

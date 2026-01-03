@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import api from '../../../services/api'
 
 const wrapper = { background: '#fff', border: '1.6px solid #efeefa', borderRadius: 16, boxShadow: '0 3px 16px #e9e4f33d' }
 
@@ -56,22 +57,8 @@ const handleGenerate = async () => {
   setOutput('');
 
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const data = await api.generateContent(brief);
 
-    const response = await fetch(`${API_BASE_URL}/api/content/generate-content`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: brief }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      setOutput('Error: ' + (errorData.error || 'Failed to generate content'));
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await response.json();
     setOutput(data.result || 'No content received');
   } catch (error) {
     setOutput('Error: ' + error.message);

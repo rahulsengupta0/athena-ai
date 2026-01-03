@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Layers, Eye, EyeOff, Trash2, Copy, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 
-const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, onToggleVisibility, onDuplicateLayer, onReorderLayers }) => {
+const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, onToggleVisibility, onDuplicateLayer, onReorderLayers, onUpdateLayer }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [draggedLayerId, setDraggedLayerId] = useState(null);
   const [dragOverLayerId, setDragOverLayerId] = useState(null);
+  const [renamingLayerId, setRenamingLayerId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const handleDragStart = (layerId) => {
     setDraggedLayerId(layerId);
@@ -55,6 +57,27 @@ const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, o
       return '🖼';
     }
     return '•';
+  };
+
+  const startRenameLayer = (layer, e) => {
+    if (e) e.stopPropagation();
+    setRenamingLayerId(layer.id);
+    setRenameValue(layer.name || '');
+  };
+
+  const commitRenameLayer = () => {
+    if (!renamingLayerId || !onUpdateLayer) return;
+    const trimmed = renameValue.trim();
+    if (trimmed) {
+      onUpdateLayer(renamingLayerId, { name: trimmed });
+    }
+    setRenamingLayerId(null);
+    setRenameValue('');
+  };
+
+  const cancelRenameLayer = () => {
+    setRenamingLayerId(null);
+    setRenameValue('');
   };
 
   return (
@@ -179,6 +202,36 @@ const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, o
                   >
                     {getLayerIcon(layer)}
                   </span>
+                  {renamingLayerId === layer.id ? (
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={commitRenameLayer}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          commitRenameLayer();
+                        }
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          cancelRenameLayer();
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        flex: 1,
+                        padding: '4px 6px',
+                        border: '1px solid rgba(79, 70, 229, 0.5)',
+                        borderRadius: '6px',
+                        fontSize: '0.85rem',
+                        fontWeight: isSelected ? 600 : 500,
+                        outline: 'none',
+                        backgroundColor: 'white',
+                        minWidth: 0,
+                      }}
+                    />
+                  ) : (
                   <span
                     style={{
                       flex: 1,
@@ -189,10 +242,14 @@ const LayerManager = ({ layers, selectedLayerId, onSelectLayer, onDeleteLayer, o
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
+                        cursor: 'text',
                     }}
+                      onDoubleClick={(e) => startRenameLayer(layer, e)}
+                      title="Double-click to rename"
                     >
                       {layer.name || `Layer ${originalIndex + 1}`}
                     </span>
+                  )}
                   <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                     <button
                       onClick={(e) => {

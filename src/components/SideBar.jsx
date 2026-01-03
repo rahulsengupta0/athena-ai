@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX, FiShield ,FiLayout  } from 'react-icons/fi';
+import { FiGrid, FiPlus, FiFolder, FiStar, FiZap, FiImage, FiFileText, FiVideo, FiUsers, FiBarChart, FiHelpCircle, FiSettings, FiMenu, FiX, FiShield, FiLayout, FiArrowLeft } from 'react-icons/fi';
 import { useSidebar } from '../contexts/SidebarContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -207,11 +207,6 @@ const SideBar = () => {
     if (isMobile) setIsOpen(false);
   }, [activePath, isMobile]);
 
-  // Auto collapse sidebar on route change for desktop
-  React.useEffect(() => {
-    if (!isMobile) setIsCollapsed(true);
-  }, [activePath, isMobile, setIsCollapsed]);
-
   // Prevent background scroll when mobile drawer is open
   React.useEffect(() => {
     if (!isMobile) return;
@@ -329,211 +324,235 @@ const SideBar = () => {
         {(!isCollapsed || isMobile) && (
           <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Athena AI</span>
         )}
-      </div>
 
-      {/* Sections */}
-      <div style={{
-        flex: 1,
-        minHeight: 0,
-        overflowY: "auto",
-        marginTop: isCollapsed && !isMobile ? "60px" : "0"
-      }} className="custom-scrollbar">
-        {SECTIONS.map((section) => (
-          <div key={section}>
-            {(!isCollapsed || isMobile) && (
-              <div
-                style={{
-                  fontSize: "0.78rem",
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                  margin: "20px 0 6px 20px",
-                  color: sectionColor,
-                }}
-              >
-                {section}
-              </div>
-            )}
-            <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-              {navItems.filter((item) => item.section === section).map((item) => {
-                const isActive = activePath === item.path;
-                return (
-                  <li key={item.key}>
-                    <button
-                      onClick={() => {
-                        navigate(item.path);
-                        if (isMobile) setIsOpen(false);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        width: "100%",
-                        border: "none",
-                        outline: "none",
-                        padding: isCollapsed && !isMobile ? "11px 12px" : "11px 20px",
-                        cursor: "pointer",
-                        backgroundColor: isActive ? activeBg : "transparent",
-                        color: isActive ? activeTextColor : textColor,
-                        fontWeight: isActive ? 600 : 500,
-                        fontSize: "1rem",
-                        transition: "background 0.15s",
-                        justifyContent: isCollapsed && !isMobile ? "center" : "flex-start",
-                      }}
-                      title={isCollapsed && !isMobile ? item.label : undefined}
-                    >
-                      <span
-                        style={{
-                          color: iconColor,
-                          display: "flex",
-                          alignItems: "center",
-                          marginRight: isCollapsed && !isMobile ? "0" : "14px",
-                        }}
-                      >
-                        {item.icon}
-                      </span>
-                      {(!isCollapsed || isMobile) && (
-                        <>
-                          <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
-                          {item.sublabel && (
-                            <span style={sublabelStyles[item.sublabelClass || "new"]}>{item.sublabel}</span>
-                          )}
-                        </>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div
-        style={{
-          padding: isCollapsed && !isMobile ? "16px 12px" : "16px 20px",
-          borderTop: "1px solid #4a4594",
-          background: "#4a4594",
-          position: "relative"
-        }}
-      >
+        {/* Header */}
         <div style={{
+          padding: isCollapsed && !isMobile ? "28px 12px 12px 12px" : "28px 20px 12px 20px",
           display: "flex",
           alignItems: "center",
           gap: 10,
           justifyContent: isCollapsed && !isMobile ? "center" : "flex-start"
-        }}
-        onMouseEnter={() => setIsHoveringProfile(true)}
-        onMouseLeave={() => setIsHoveringProfile(false)}
-        >
+        }}>
           <div
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: "#ffffff",
-              color: "#5f5aad",
-              fontWeight: 700,
+              width: 36,
+              height: 36,
+              borderRadius: "12px",
+              background: "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "1.0rem",
-              overflow: "hidden"
             }}
           >
-            {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
-              <img
-                src={profile.avatar}
-                alt="avatar"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <span>
-                {(profile?.firstName?.[0] || 'A').toUpperCase()}
-                {(profile?.lastName?.[0] || 'T').toUpperCase()}
-              </span>
-            )}
+            <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.35rem" }}>🧭</span>
           </div>
           {(!isCollapsed || isMobile) && (
-            <div>
-              <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#ffffff" }}>
-                {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
+            <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Athena AI</span>
+          )}
+        </div>
+
+        {/* Sections */}
+        <div style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+        }} className="custom-scrollbar">
+          {SECTIONS.map((section) => (
+            <div key={section}>
+              {(!isCollapsed || isMobile) && (
+                <div
+                  style={{
+                    fontSize: "0.78rem",
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    margin: "20px 0 6px 20px",
+                    color: sectionColor,
+                  }}
+                >
+                  {section}
+                </div>
+              )}
+              <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
+                {navItems.filter((item) => item.section === section).map((item) => {
+                  const isActive = activePath === item.path;
+                  return (
+                    <li key={item.key}>
+                      <button
+                        onClick={() => {
+                          navigate(item.path);
+                          if (isMobile) setIsOpen(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%",
+                          border: "none",
+                          outline: "none",
+                          padding: isCollapsed && !isMobile ? "11px 12px" : "11px 20px",
+                          cursor: "pointer",
+                          backgroundColor: isActive ? activeBg : "transparent",
+                          color: isActive ? activeTextColor : textColor,
+                          fontWeight: isActive ? 600 : 500,
+                          fontSize: "1rem",
+                          transition: "background 0.15s",
+                          justifyContent: isCollapsed && !isMobile ? "center" : "flex-start",
+                        }}
+                        title={isCollapsed && !isMobile ? item.label : undefined}
+                      >
+                        <span
+                          style={{
+                            color: iconColor,
+                            display: "flex",
+                            alignItems: "center",
+                            marginRight: isCollapsed && !isMobile ? "0" : "14px",
+                          }}
+                        >
+                          {item.icon}
+                        </span>
+                        {(!isCollapsed || isMobile) && (
+                          <>
+                            <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
+                            {item.sublabel && (
+                              <span style={sublabelStyles[item.sublabelClass || "new"]}>{item.sublabel}</span>
+                            )}
+                          </>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: isCollapsed && !isMobile ? "16px 12px" : "16px 20px",
+            borderTop: "1px solid #4a4594",
+            background: "#4a4594",
+            position: "relative"
+          }}
+        >
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            justifyContent: isCollapsed && !isMobile ? "center" : "flex-start"
+          }}
+          onMouseEnter={() => setIsHoveringProfile(true)}
+          onMouseLeave={() => setIsHoveringProfile(false)}
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                background: "#ffffff",
+                color: "#5f5aad",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.0rem",
+                overflow: "hidden"
+              }}
+            >
+              {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
+                <img
+                  src={profile.avatar}
+                  alt="avatar"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span>
+                  {(profile?.firstName?.[0] || 'A').toUpperCase()}
+                  {(profile?.lastName?.[0] || 'T').toUpperCase()}
+                </span>
+              )}
+            </div>
+            {(!isCollapsed || isMobile) && (
+              <div>
+                <div style={{ fontWeight: 600, fontSize: "0.96rem", color: "#ffffff" }}>
+                  {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
+                </div>
+                {profile?.plan && (
+                  <div style={{ fontSize: "0.8rem", color: "#b8b5d6" }}>
+                    {profile.plan}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Hover profile mini-card */}
+          {isHoveringProfile && isCollapsed && !isMobile && (
+            <div
+              style={{
+                position: "absolute",
+                left: 68,
+                bottom: 16,
+                background: "#ffffff",
+                color: "#0f172a",
+                border: "1px solid #e2e8f0",
+                borderRadius: 12,
+                boxShadow: "0 12px 32px rgba(15,23,42,0.18)",
+                padding: 12,
+                minWidth: 220,
+                zIndex: 1200,
+              }}
+              role="dialog"
+              aria-label="Profile preview"
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "#f1f5f9",
+                    color: "#5f5aad",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.95rem",
+                    overflow: "hidden"
+                  }}
+                >
+                  {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
+                    <img
+                      src={profile.avatar}
+                      alt="avatar"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <span>
+                      {(profile?.firstName?.[0] || 'A').toUpperCase()}
+                      {(profile?.lastName?.[0] || 'T').toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a" }}>
+                    {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#475569", overflow: "hidden", textOverflow: "ellipsis" }} title={profile?.email || ''}>
+                    {profile?.email || '—'}
+                  </div>
+                </div>
               </div>
               {profile?.plan && (
-                <div style={{ fontSize: "0.8rem", color: "#b8b5d6" }}>
-                  {profile.plan}
+                <div style={{ fontSize: "0.82rem", color: "#64748b" }}>
+                  Plan: <span style={{ color: "#111827", fontWeight: 600 }}>{profile.plan}</span>
                 </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Hover profile mini-card */}
-        {isHoveringProfile && isCollapsed && !isMobile && (
-          <div
-            style={{
-              position: "absolute",
-              left: 68,
-              bottom: 16,
-              background: "#ffffff",
-              color: "#0f172a",
-              border: "1px solid #e2e8f0",
-              borderRadius: 12,
-              boxShadow: "0 12px 32px rgba(15,23,42,0.18)",
-              padding: 12,
-              minWidth: 220,
-              zIndex: 1200,
-            }}
-            role="dialog"
-            aria-label="Profile preview"
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "#f1f5f9",
-                  color: "#5f5aad",
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.95rem",
-                  overflow: "hidden"
-                }}
-              >
-                {profile && profile.avatar && String(profile.avatar).startsWith('http') ? (
-                  <img
-                    src={profile.avatar}
-                    alt="avatar"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span>
-                    {(profile?.firstName?.[0] || 'A').toUpperCase()}
-                    {(profile?.lastName?.[0] || 'T').toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a" }}>
-                  {profile ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'User' : 'User'}
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "#475569", overflow: "hidden", textOverflow: "ellipsis" }} title={profile?.email || ''}>
-                  {profile?.email || '—'}
-                </div>
-              </div>
-            </div>
-            {profile?.plan && (
-              <div style={{ fontSize: "0.82rem", color: "#64748b" }}>
-                Plan: <span style={{ color: "#111827", fontWeight: 600 }}>{profile.plan}</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
-    </div>
     </>
   );
 };

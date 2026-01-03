@@ -36,6 +36,9 @@
   border-radius: 18px;
   max-width: 75%;
   word-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
   line-height: 1.6;
   font-size: 0.95rem;
   animation: fadeIn 0.25s ease-in-out;

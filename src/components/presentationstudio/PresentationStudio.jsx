@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import PromptSection from './PromptSection';
 import EditorSection from './EditorSection';
-import { generatePresentation, exportPresentation } from './presentationService';
+import { generatePresentation, exportPresentation, rewriteContent, generateImage } from './PresentationService';
 import './styles/PresentationStudio.css';
+
+const API_BASE_URL = '/api/pp';
 
 const PresentationStudio = () => {
   const navigate = useNavigate();
@@ -20,144 +22,142 @@ const PresentationStudio = () => {
   const [generationStep, setGenerationStep] = useState(0);
   const [generatedSlides, setGeneratedSlides] = useState([]);
   const [selectedSlide, setSelectedSlide] = useState(0);
+  const [presentationTheme, setPresentationTheme] = useState({ backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
 
+// ----------------- handleGenerate -----------------
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
-
     setIsGenerating(true);
     setGenerationStep(0);
 
     try {
-      // Simulate API call to Gamma with progress steps
-      const steps = [
-        'Structuring story...',
-        'Visualizing content...',
-        'Designing slides...',
-        'Finalizing presentation...'
-      ];
-
-      for (let i = 0; i < steps.length; i++) {
-        setGenerationStep(i);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Call Gamma API to generate presentation
-      const params = {
+      const data = await generatePresentation({
         prompt,
         tone,
         length,
         mediaStyle,
         useBrandStyle,
         outlineText
-      };
+      });
 
-      // Uncomment the following line when you have a valid Gamma API key
-      // const gammaResponse = await generatePresentation(params);
+      // Update the theme with the one from the backend
+      setPresentationTheme(data.theme || { backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
 
-      // For now, we'll use mock data
-      const mockSlides = [
-        { id: 1, title: 'Introduction', content: 'Welcome to our presentation on the future of AI technology. Today we will explore how artificial intelligence is transforming industries and reshaping our daily lives.', image: null },
-        { id: 2, title: 'Main Topic', content: 'AI Applications:\n• Healthcare diagnostics\n• Autonomous vehicles\n• Financial trading\n• Customer service automation', image: null },
-        { id: 3, title: 'Technology Overview', content: 'Machine Learning:\nDeep learning neural networks\nNatural language processing\nComputer vision systems\nReinforcement learning algorithms', image: null },
-        { id: 4, title: 'Market Insights', content: 'Global AI Market:\n• Projected to reach $1.8 trillion by 2030\n• 37% annual growth rate\n• Major investments from tech giants\n• Increasing adoption across sectors', image: null },
-        { id: 5, title: 'Conclusion', content: 'Key Takeaways:\n• AI is revolutionizing industries\n• Ethical considerations are crucial\n• Investment opportunities are growing\n• Continuous learning is essential', image: null }
-      ];
+      const normalizedSlides = data.slides.map((slide, index) => ({
+        id: Date.now() + index,
+        title: slide.title || `Slide ${index + 1}`,
+        bullets: Array.isArray(slide.bullets) ? slide.bullets : (slide.bullets ? [slide.bullets] : []),
+        content: Array.isArray(slide.bullets) ? slide.bullets.join('\n') : slide.bullets || '',
+        type: slide.type || 'bullet',
+        image: slide.image || null
+      }));
 
-      setGeneratedSlides(mockSlides);
-      setIsGenerating(false);
+      setGeneratedSlides(normalizedSlides);
       setSelectedSlide(0);
     } catch (error) {
       console.error('Error generating presentation:', error);
-      // Show error to user
+      alert(`Error generating presentation: ${error.message}`);
+    } finally {
       setIsGenerating(false);
-      // For demo purposes, we'll still show mock data even if API fails
-      const mockSlides = [
-        { id: 1, title: 'Introduction', content: 'Welcome to our presentation on the future of AI technology. Today we will explore how artificial intelligence is transforming industries and reshaping our daily lives.', image: null },
-        { id: 2, title: 'Main Topic', content: 'AI Applications:\n• Healthcare diagnostics\n• Autonomous vehicles\n• Financial trading\n• Customer service automation', image: null },
-        { id: 3, title: 'Technology Overview', content: 'Machine Learning:\nDeep learning neural networks\nNatural language processing\nComputer vision systems\nReinforcement learning algorithms', image: null },
-        { id: 4, title: 'Market Insights', content: 'Global AI Market:\n• Projected to reach $1.8 trillion by 2030\n• 37% annual growth rate\n• Major investments from tech giants\n• Increasing adoption across sectors', image: null },
-        { id: 5, title: 'Conclusion', content: 'Key Takeaways:\n• AI is revolutionizing industries\n• Ethical considerations are crucial\n• Investment opportunities are growing\n• Continuous learning is essential', image: null }
-      ];
-
-      setGeneratedSlides(mockSlides);
-      setIsGenerating(false);
-      setSelectedSlide(0);
     }
   };
 
-  const handleEditSlide = (index, field, value) => {
-    const updatedSlides = [...generatedSlides];
-    updatedSlides[index][field] = value;
-    setGeneratedSlides(updatedSlides);
-  };
+  // ----------------- handleAiRewrite -----------------
+  const handleAiRewrite = async (instruction) => {
+    try {
+      const updatedSlides = [...generatedSlides];
+      const currentSlide = updatedSlides[selectedSlide];
 
-  const handleAiRewrite = (instruction) => {
-    // Simulate AI rewrite
-    const updatedSlides = [...generatedSlides];
-    const currentSlide = updatedSlides[selectedSlide];
+      // Convert bullets array to string for AI processing if needed
+      const contentToProcess = Array.isArray(currentSlide.bullets) ?
+        currentSlide.bullets.join('\n') : currentSlide.content || '';
 
-    // Mock AI transformations
-    if (instruction === 'simplify') {
-      currentSlide.content = currentSlide.content
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .map(line => `• ${line}`)
-        .join('\n');
-    } else if (instruction === 'expand') {
-      currentSlide.content = `${currentSlide.content}
+      const result = await rewriteContent(contentToProcess, instruction);
 
-Key Insights:
-• Additional insight 1
-• Additional insight 2
-• Additional insight 3`;
-    } else if (instruction === 'persuasive') {
-      currentSlide.content = ` compelling ${currentSlide.content.toLowerCase()} that drives action and engagement`;
+      // If the slide has bullets array, update it as array, otherwise update content
+      if (Array.isArray(currentSlide.bullets)) {
+        currentSlide.bullets = result.rewrittenContent.split('\n');
+      } else {
+        currentSlide.content = result.rewrittenContent;
+      }
+
+      setGeneratedSlides(updatedSlides);
+    } catch (error) {
+      console.error('Error rewriting content:', error);
+      alert(`Failed to rewrite content: ${error.message}`);
     }
-
-    setGeneratedSlides(updatedSlides);
   };
 
-  const handleAddImage = () => {
-    // Simulate adding an image
-    const updatedSlides = [...generatedSlides];
-    updatedSlides[selectedSlide].image = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80';
-    setGeneratedSlides(updatedSlides);
+  // ----------------- handleAddImage -----------------
+  const handleAddImage = async () => {
+    try {
+      const currentSlide = generatedSlides[selectedSlide];
+
+      // Use content or bullets for image generation
+      const contentForImage = Array.isArray(currentSlide.bullets) ?
+        currentSlide.bullets.join(' ') : currentSlide.content || '';
+
+      const result = await generateImage(`${currentSlide.title}. ${contentForImage.substring(0, 100)}...`);
+
+      const updatedSlides = [...generatedSlides];
+      updatedSlides[selectedSlide].image = result.imageUrl;
+      setGeneratedSlides(updatedSlides);
+    } catch (error) {
+      console.error('Error adding image:', error);
+      alert(`Failed to add image: ${error.message}`);
+    }
   };
 
+  // ----------------- handleExport -----------------
   const handleExport = async (format) => {
     if (generatedSlides.length === 0) return;
 
     setIsExporting(true);
 
     try {
-      // In a real implementation, you would call the Gamma API to export
-      // For now, we'll simulate the export process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const blob = await exportPresentation(generatedSlides, format);
+      const url = window.URL.createObjectURL(blob);
 
-      // Uncomment the following lines when you have a valid Gamma API key
-      // const presentationId = 'mock-presentation-id'; // This would come from the generated presentation
-      // const exportResult = await exportPresentation(presentationId, format);
-
-      // Simulate download
-      alert(`Presentation exported as ${format.toUpperCase()} successfully!`);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `presentation.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (error) {
       console.error('Error exporting presentation:', error);
-      alert('Failed to export presentation. Please try again.');
+      alert(`Failed to export presentation: ${error.message}`);
     } finally {
       setIsExporting(false);
     }
   };
 
+
+
   const handleSavePresentation = async () => {
     if (generatedSlides.length === 0) return;
 
     try {
-      // In a real implementation, you would save the presentation to your backend
-      // For now, we'll just show a success message
-      alert('Presentation saved successfully!');
+      // Save the presentation to the backend
+      const response = await fetch(`${API_BASE_URL}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slides: generatedSlides
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save presentation: ${response.status}`);
+      }
+
+      const result = await response.json();
+      alert(`Presentation saved successfully with ID: ${result.id}!`);
     } catch (error) {
       console.error('Error saving presentation:', error);
-      alert('Failed to save presentation. Please try again.');
+      alert(`Failed to save presentation: ${error.message}`);
     }
   };
 
@@ -165,14 +165,29 @@ Key Insights:
     if (generatedSlides.length === 0) return;
 
     try {
-      // In a real implementation, you would generate a shareable link
-      // For now, we'll just copy a mock link to the clipboard
-      const mockLink = 'https://athena-ai.presentation/demo';
-      navigator.clipboard.writeText(mockLink);
+      // Generate a shareable link through the backend
+      const response = await fetch(`${API_BASE_URL}/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slides: generatedSlides
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate share link: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const shareLink = result.shareUrl;
+
+      navigator.clipboard.writeText(shareLink);
       alert('Presentation link copied to clipboard!');
     } catch (error) {
       console.error('Error sharing presentation:', error);
-      alert('Failed to generate share link. Please try again.');
+      alert(`Failed to generate share link: ${error.message}`);
     }
   };
 
@@ -182,7 +197,9 @@ Key Insights:
       {
         id: Date.now() + Math.random(), // Ensure unique ID
         title: 'New Slide',
+        bullets: [],
         content: '',
+        type: 'bullet',
         image: null
       };
     setGeneratedSlides([...generatedSlides, newSlide]);
@@ -215,6 +232,29 @@ Key Insights:
     const updatedSlides = [...generatedSlides];
     updatedSlides.splice(index + 1, 0, duplicatedSlide);
     setGeneratedSlides(updatedSlides);
+  };
+
+  const handleEditSlide = (index, field, value) => {
+    const updated = [...generatedSlides];
+
+    // Handle updating a specific index in an array (for bullets)
+    if (typeof value === 'object' && value.index !== undefined && value.value !== undefined) {
+      if (Array.isArray(updated[index][field])) {
+        const newArray = [...updated[index][field]];
+        newArray[value.index] = value.value;
+        updated[index][field] = newArray;
+      } else {
+        // If the field is not an array, initialize it as one with the value at the given index
+        const newArray = [];
+        newArray[value.index] = value.value;
+        updated[index][field] = newArray;
+      }
+    } else if (Array.isArray(updated[index][field]) && Array.isArray(value)) {
+      updated[index][field] = value;
+    } else {
+      updated[index][field] = value;
+    }
+    setGeneratedSlides(updated);
   };
 
   return (
@@ -259,6 +299,7 @@ Key Insights:
             handleAddChart={() => alert('Chart added to slide!')}
             handleAddSlide={handleAddSlide}
             setSelectedSlide={setSelectedSlide}
+            presentationTheme={presentationTheme}
           />
         )}
       </div>

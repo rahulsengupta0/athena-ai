@@ -11,6 +11,7 @@ import AIImageGenerator from './AIImageGenerator';
 import FloatingToolbar from './FloatingToolbar';
 import TextEnhanceButton from './TextEnhanceButton';
 import { enhanceText } from './TextEnhanceService';
+import TextStyleModal from './TextStyleModal';
 
 const CanvaEditor = () => {
   const { id: projectId } = useParams();
@@ -128,6 +129,8 @@ const CanvaEditor = () => {
   const [includeProjectFile, setIncludeProjectFile] = useState(true);
   const [isSavingWorksheet, setIsSavingWorksheet] = useState(false);
   const [isEnhancingText, setIsEnhancingText] = useState(false);
+  const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
+  const [showStyleModal, setShowStyleModal] = useState(false);
   const [isHeading, setIsHeading] = useState(false);
   // Custom scroller state
   const [scrollMetrics, setScrollMetrics] = useState({
@@ -315,19 +318,16 @@ const CanvaEditor = () => {
   // Eraser functionality - only affect drawing layers under cursor
   const handleEraserAction = (x, y) => {
     const eraserRadius = drawingSettings.brushSize / 2;
-
     // Find layers that intersect with the eraser area
     const layersToErase = layers.filter(layer => {
       if (!layer.visible) return false;
       // Only allow erasing on drawing layers; ignore shapes/images/text entirely
       if (layer.type !== 'drawing') return false;
-
       // Check if eraser circle intersects with layer bounds
       const layerLeft = layer.x;
       const layerRight = layer.x + layer.width;
       const layerTop = layer.y;
       const layerBottom = layer.y + layer.height;
-
       // Check if eraser circle intersects with layer rectangle
       const closestX = Math.max(layerLeft, Math.min(x, layerRight));
       const closestY = Math.max(layerTop, Math.min(y, layerBottom));
@@ -341,13 +341,11 @@ const CanvaEditor = () => {
       const newLayers = layers.map(layer => {
         const layerToErase = layersToErase.find(l => l.id === layer.id);
         if (!layerToErase) return layer;
-
         // For drawing layers, create holes by removing path points near the eraser
         const newPath = layer.path.filter(point => {
           const distance = Math.hypot(point.x - (x - layer.x), point.y - (y - layer.y));
           return distance > eraserRadius;
         });
-
         if (newPath.length < 2) {
           // If too few points remain, delete only this drawing layer
           return null;
@@ -394,7 +392,6 @@ const CanvaEditor = () => {
   const handleToolSelect = (toolId) => {
     setSelectedTool(toolId);
     setSelectedLayer(null);
-
     // Set drawing mode when selecting drawing tools
     if (['brush', 'pen', 'eraser'].includes(toolId)) {
       setDrawingSettings(prev => ({ ...prev, drawingMode: toolId }));
@@ -2064,6 +2061,35 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     }
   };
 
+  // Add styled image to canvas
+  const handleAddStyledImageToCanvas = (imageUrl) => {
+    const newLayer = {
+      id: Date.now().toString(),
+      type: 'image',
+      name: 'Styled Text',
+      src: imageUrl,
+      x: (canvasSize.width - 200) / 2,
+      y: (canvasSize.height - 100) / 2,
+      width: 200,
+      height: 100,
+      opacity: 100,
+      visible: true,
+      locked: false,
+      mode: 'normal',
+      filters: [],
+      shadows: []
+    };
+
+    setLayers(prevLayers => {
+      const newLayers = [...prevLayers, newLayer];
+      saveToHistory(newLayers);
+      return newLayers;
+    });
+
+    // Select the newly added layer
+    setSelectedLayer(newLayer.id);
+  };
+
   const handleShapeSettingsChange = (property, value) => {
     setShapeSettings(prev => ({ ...prev, [property]: value }));
     if (selectedLayer) {
@@ -2146,7 +2172,6 @@ const nextY = layer.y + deltaY;
       const minMs = 8; // throttle
       if (now - lastTimeRef.current < minMs) return;
       const point = getCanvasPoint(e.clientX, e.clientY);
-
       if (selectedTool === 'eraser') {
         // Handle eraser dragging
         handleEraserAction(point.x, point.y);
@@ -2154,7 +2179,6 @@ const nextY = layer.y + deltaY;
         lastPointRef.current = point;
         return;
       }
-
       const lastPoint = lastPointRef.current || point;
       const minDist = Math.max(1, drawingSettings.brushSize * 0.25);
       if (Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) < minDist) return;
@@ -2193,19 +2217,16 @@ const nextY = layer.y + deltaY;
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       return;
     }
-
     if (drawingSettings.isDrawing && currentPath.length > 1) {
       // Calculate bounding box for the drawing path
       const minX = Math.min(...currentPath.map(p => p.x));
       const maxX = Math.max(...currentPath.map(p => p.x));
       const minY = Math.min(...currentPath.map(p => p.y));
       const maxY = Math.max(...currentPath.map(p => p.y));
-
       // Add padding for brush size
       const padding = Math.max(drawingSettings.brushSize / 2, 5);
       const width = maxX - minX + padding * 2;
       const height = maxY - minY + padding * 2;
-
       // Only create drawing layer if it has meaningful size
       if (width > 5 && height > 5) {
         // Normalize path coordinates relative to the bounding box
@@ -2214,7 +2235,6 @@ const nextY = layer.y + deltaY;
           x: point.x - minX + padding,
           y: point.y - minY + padding
         }));
-
         const newDrawingPath = {
           id: Date.now(),
           type: 'drawing',
@@ -2231,7 +2251,6 @@ const nextY = layer.y + deltaY;
           visible: true,
           locked: false
         };
-
         setLayers(prevLayers => {
           const newLayers = [...prevLayers, newDrawingPath];
           saveToHistory(newLayers);
@@ -2239,7 +2258,6 @@ const nextY = layer.y + deltaY;
         });
         setSelectedLayer(newDrawingPath.id);
       }
-
       setDrawingSettings(prev => ({ ...prev, isDrawing: false }));
       setCurrentPath([]);
     } else if (drawingSettings.isDrawing) {
@@ -2383,7 +2401,6 @@ const nextY = layer.y + deltaY;
   const handleDrawingMouseDown = (e) => {
     if (!['brush', 'pen', 'eraser'].includes(selectedTool)) return;
     const { x, y } = getCanvasPoint(e.clientX, e.clientY);
-
     if (selectedTool === 'eraser') {
       // Start eraser drawing mode and erase content under cursor
       setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
@@ -2392,7 +2409,6 @@ const nextY = layer.y + deltaY;
       lastTimeRef.current = performance.now();
       return;
     }
-
     setDrawingSettings(prev => ({ ...prev, isDrawing: true }));
     const firstPoint = { x, y, pressure: 1 };
     lastPointRef.current = firstPoint;
@@ -2469,7 +2485,6 @@ const nextY = layer.y + deltaY;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     if (selectedTool !== 'select' && !['brush', 'pen', 'eraser'].includes(selectedTool)) {
       handleAddElement(x, y);
     } else if (selectedTool === 'select') {
@@ -2822,7 +2837,6 @@ canvasArea: {
           </div>
           <span style={{ fontWeight: 700, fontSize: "1.12rem", color: "#ffffff" }}>Design Tools</span>
         </div>
-
         {/* Selection Tool */}
         <div>
           <button
@@ -3528,7 +3542,6 @@ canvasArea: {
               <h4 style={{ fontSize: '14px', margin: '0 0 12px 0', color: '#374151' }}>
                 {selectedTool === 'eraser' ? 'Eraser Settings' : 'Drawing Settings'}
               </h4>
-
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Size' : 'Brush Size'}: {drawingSettings.brushSize}px
@@ -3542,7 +3555,6 @@ canvasArea: {
                   style={{ width: '100%' }}
                 />
               </div>
-
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   {selectedTool === 'eraser' ? 'Eraser Color' : 'Color'}
@@ -3554,7 +3566,6 @@ canvasArea: {
                   style={{ width: '100%', height: '32px', border: '1px solid #d1d5db', borderRadius: '4px' }}
                 />
               </div>
-
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Opacity: {drawingSettings.opacity}%
@@ -3568,7 +3579,6 @@ canvasArea: {
                   style={{ width: '100%' }}
                 />
               </div>
-
               <div>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>
                   Tool Mode
@@ -4212,7 +4222,6 @@ position: 'relative',
             )}
           </button>
         </div>
-
         {!isRightSidebarCollapsed && (
           <>
             {layers.length === 0 ? (
