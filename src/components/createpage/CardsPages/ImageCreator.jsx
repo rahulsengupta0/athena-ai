@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import api from '../../../services/api'
 
 const EXAMPLES = [
   'A serene mountain landscape at sunset with reflective lake',
@@ -34,23 +35,8 @@ const handleGenerate = async () => {
   setImageUrl('');
 
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const data = await api.generateAIImage(prompt, style, ratio, quality);
 
-    const response = await fetch(`${API_BASE_URL}/api/ai-image/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, style, ratio, quality }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error:', errorData.error);
-      setImageUrl('');
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await response.json();
     setImageUrl(data.imageUrl || '');
   } catch (error) {
     console.error('Error:', error.message);

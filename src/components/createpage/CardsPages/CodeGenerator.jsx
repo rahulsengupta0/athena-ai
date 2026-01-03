@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import api from '../../../services/api'
 
 const wrapper = { background: '#fff', border: '1.6px solid #efeefa', borderRadius: 16, boxShadow: '0 3px 16px #e9e4f33d' }
 
@@ -93,23 +94,8 @@ const onGenerate = async () => {
   setIsLoading(true);
   setCode('');
   try {
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const data = await api.generateCode(prompt, language, framework);
 
-const response = await fetch(`${API_BASE_URL}/api/codegen/generate-code`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ prompt, language, framework }),
-});
-
-
-    if (!response.ok) {
-      const errData = await response.json();
-      setCode(`Error: ${errData.error || 'Failed to generate code'}`);
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await response.json();
     setCode(data.code || '');
   } catch (error) {
     setCode(`Error: ${error.message}`);

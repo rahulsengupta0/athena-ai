@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const BrandKitModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -27,8 +28,6 @@ const handleCreate = async () => {
     return;
   }
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
   setCreatingBrandKit(true);
 
   try {
@@ -42,20 +41,14 @@ const handleCreate = async () => {
       posterDescription: brandForm.posterDescription,
     };
 
-    const userToken = localStorage.getItem("token");
-
-    const response = await fetch(`${API_BASE_URL}/api/generate-brandkit`, {
+    const data = await api.request('/api/generate-brandkit', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${userToken}`,
       },
       body: JSON.stringify(payload),
     });
 
-    if (!response.ok) throw new Error("Failed to generate brand kit");
-
-    const data = await response.json();
     navigate("/brand-kit-result", { state: data });
     onClose();
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
@@ -93,17 +92,20 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = isSignup
-  ? `${import.meta.env.VITE_API_BASE_URL}/api/auth/register`
-  : `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`;
-
-      const res = await axios.post(url, formData);
-      await login(res.data.token);
+      let response;
+      if (isSignup) {
+        response = await api.register(formData);
+      } else {
+        response = await api.login(formData);
+      }
+      
+      await login(response.token);
       navigate('/home');
     } catch (err) {
+      console.error('Login/Signup error:', err);
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
-        (err.response?.data?.msg || 'Please try again.')
+        (err.message || 'Please try again.')
       );
     } finally {
       setIsLoading(false);

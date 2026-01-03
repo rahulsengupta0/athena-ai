@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import api from '../../services/api';
 
 export default function ArtisticImageGenerator() {
   const location = useLocation();
@@ -47,8 +48,6 @@ export default function ArtisticImageGenerator() {
     return;
   }
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
   setLoading(true);
 
   try {
@@ -56,17 +55,7 @@ export default function ArtisticImageGenerator() {
     if (imageFile) formData.append('file', imageFile);
     formData.append('prompt', prompt);
 
-    const response = await fetch(`${API_BASE_URL}/apply-style`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Failed: ${errText}`);
-    }
-
-    const data = await response.json();
+    const data = await api.applyStyle(formData);
 
     if (!data.image) throw new Error('No image returned from backend');
 

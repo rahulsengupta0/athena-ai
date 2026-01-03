@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../../services/api';
 const formats = [
   { key: 'pdf', label: 'PDF', icon: '📄' },
   { key: 'docx', label: 'DOCX', icon: '📝' },
@@ -22,11 +22,9 @@ function DocumentGenerator() {
   // ---------------- FETCH USER DOCUMENTS ----------------
   const fetchMyDocuments = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/my-documents`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const data = await api.request('/api/my-documents', {
+        method: 'GET',
       });
-      const data = await res.json();
       setUserDocs(data.files || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -45,17 +43,13 @@ function DocumentGenerator() {
     setFileUrl('');
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/generate-document`, {
+      const result = await api.request('/api/generate-document', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ prompt, format }),
       });
-
-      const result = await res.json();
 
       if (result.fileUrl) {
         setFileUrl(result.fileUrl);
@@ -76,17 +70,13 @@ function DocumentGenerator() {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/delete-document`, {
+      const data = await api.request('/api/delete-document', {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ key })
       });
-
-      const data = await res.json();
 
       if (data.success) {
         fetchMyDocuments();
