@@ -37,7 +37,7 @@ function BackgroundRemover() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/remove-bg/", {
+      const response = await fetch("/api/image/remove-bg", {
         method: "POST",
         body: formData,
       });
