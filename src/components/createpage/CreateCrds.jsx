@@ -131,7 +131,6 @@ export const CreateCrds = () => {
               if (card.route) {
                 navigate(card.route);
               }
-              
             }}
           />
         ))}

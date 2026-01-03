@@ -6,13 +6,19 @@ import {
 } from 'react-icons/fi';
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
 import { calculateTextDimensions, isHeadingLayer } from '../../utils/textUtils';
 import { enhanceText } from './TextEnhanceService';
 import TextEnhanceButton from './TextEnhanceButton';
 import TextStyleButton from './TextStyleButton';
 import TextStyleModal from './TextStyleModal';
 import { generateTextStyles } from './TextStyleService';
+<<<<<<< HEAD
+=======
 >>>>>>> rc
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
 
 const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -33,11 +39,17 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
   const [height, setHeight] = useState(textElement?.height || 50);
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
   const [isEnhancingText, setIsEnhancingText] = useState(false);
   const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
   const [showStyleModal, setShowStyleModal] = useState(false);
   const [isHeading, setIsHeading] = useState(isHeadingLayer(textElement));
+<<<<<<< HEAD
+=======
 >>>>>>> rc
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
 
   const textAreaRef = useRef(null);
 
@@ -264,6 +276,9 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
   const handleEnhanceText = async () => {
     if (!text || !text.trim()) {
       alert('Please enter some text to enhance');
@@ -317,7 +332,10 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
     window.dispatchEvent(new CustomEvent('addStyledImageToCanvas', { detail: { imageUrl } }));
   };
 
+<<<<<<< HEAD
+=======
 >>>>>>> rc
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -331,8 +349,11 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
         {/* Text Content */}
         <div>
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
           <label style={styles.label}>Text:</label>
 =======
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <label style={styles.label}>Text:</label>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -362,7 +383,10 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
               <span>Is Heading</span>
             </label>
           </div>
+<<<<<<< HEAD
+=======
 >>>>>>> rc
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
           <textarea
             ref={textAreaRef}
             value={text}
@@ -563,6 +587,9 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
       {showStyleModal && (
         <TextStyleModal 
           text={text}
@@ -571,7 +598,10 @@ const TextEditor = ({ textElement, onUpdate, onClose }) => {
         />
       )}
 
+<<<<<<< HEAD
+=======
 >>>>>>> rc
+>>>>>>> 1fd2f6f4f1f2c36f668a88d0b4e1d61ad9a43151
       <div style={styles.actions}>
         <button
           style={{ ...styles.actionButton, ...styles.secondaryButton }}
