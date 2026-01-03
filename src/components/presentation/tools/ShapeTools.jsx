@@ -11,6 +11,7 @@ import {
   ArrowDown,
   ChevronDown,
   ChevronRight,
+  Minus,
 } from 'lucide-react';
 
 const SHAPE_PRESETS = [
@@ -195,6 +196,19 @@ const SHAPE_PRESETS = [
       width: 100,
       height: 200,
       fillColor: '#6366f1',
+    },
+  },
+  {
+    id: 'line',
+    label: 'Line',
+    description: 'Straight line',
+    icon: <Minus size={16} />,
+    preset: {
+      type: 'shape',
+      shape: 'line',
+      width: 400,
+      height: 4,
+      fillColor: '#0f172a',
     },
   },
 ];

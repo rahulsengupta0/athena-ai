@@ -113,16 +113,3 @@ const TextEnhanceControls = ({ layer, onApply }) => {
 };
 
 export default TextEnhanceControls;
-
-
-
-
-
-
-
-
-
-
-
-
-
