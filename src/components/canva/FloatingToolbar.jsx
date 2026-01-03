@@ -1,7 +1,6 @@
 import React from 'react';
 import { FiCopy, FiTrash2 } from 'react-icons/fi';
 import TextEnhanceButton from './TextEnhanceButton';
-import TextStyleButton from './TextStyleButton';
 
 /**
  * FloatingToolbar - Floating action bar that appears above selected elements
@@ -31,7 +30,7 @@ const FloatingToolbar = ({
         onChange={(e) => onColorChange(e.target.value)}
         style={styles.floatingColor}
       />
-      
+
       {/* Duplicate Button */}
       <button
         title="Duplicate"
@@ -43,7 +42,7 @@ const FloatingToolbar = ({
       >
         <FiCopy size={16} color="#111827" />
       </button>
-      
+
       {/* Delete Button */}
       <button
         title="Delete"
@@ -55,27 +54,16 @@ const FloatingToolbar = ({
       >
         <FiTrash2 size={16} color="#dc2626" />
       </button>
-      
+
       {/* Enhance Button (only for text layers) */}
       {layer.type === 'text' && (
-        <>
-          <TextEnhanceButton
-            onClick={onEnhance}
-            disabled={isEnhancing || !hasTextContent}
-            isEnhancing={isEnhancing}
-            variant="floating"
-            size={16}
-          />
-          <TextStyleButton
-            onClick={() => {
-              // Dispatch event to open the modal in the parent component
-              window.dispatchEvent(new CustomEvent('openTextStyleModal'));
-            }}
-            disabled={!hasTextContent}
-            variant="floating"
-            size={16}
-          />
-        </>
+        <TextEnhanceButton
+          onClick={onEnhance}
+          disabled={isEnhancing || !hasTextContent}
+          isEnhancing={isEnhancing}
+          variant="floating"
+          size={16}
+        />
       )}
     </div>
   );

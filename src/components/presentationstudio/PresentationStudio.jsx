@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import PromptSection from './PromptSection';
 import EditorSection from './EditorSection';
-import { generatePresentation, getPresentation, exportPresentation } from './presentationService';
+import { generatePresentation, exportPresentation } from './presentationService';
 import './styles/PresentationStudio.css';
-
-const API_BASE_URL = '/api/pp';
 
 const PresentationStudio = () => {
   const navigate = useNavigate();
@@ -30,6 +28,20 @@ const PresentationStudio = () => {
     setGenerationStep(0);
 
     try {
+      // Simulate API call to Gamma with progress steps
+      const steps = [
+        'Structuring story...',
+        'Visualizing content...',
+        'Designing slides...',
+        'Finalizing presentation...'
+      ];
+
+      for (let i = 0; i < steps.length; i++) {
+        setGenerationStep(i);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // Call Gamma API to generate presentation
       const params = {
         prompt,
         tone,
@@ -39,120 +51,39 @@ const PresentationStudio = () => {
         outlineText
       };
 
-      console.log('Sending presentation generation request:', params);
+      // Uncomment the following line when you have a valid Gamma API key
+      // const gammaResponse = await generatePresentation(params);
 
-      const gammaResponse = await generatePresentation(params);
-      console.log('Gamma API Response:', gammaResponse);
+      // For now, we'll use mock data
+      const mockSlides = [
+        { id: 1, title: 'Introduction', content: 'Welcome to our presentation on the future of AI technology. Today we will explore how artificial intelligence is transforming industries and reshaping our daily lives.', image: null },
+        { id: 2, title: 'Main Topic', content: 'AI Applications:\n• Healthcare diagnostics\n• Autonomous vehicles\n• Financial trading\n• Customer service automation', image: null },
+        { id: 3, title: 'Technology Overview', content: 'Machine Learning:\nDeep learning neural networks\nNatural language processing\nComputer vision systems\nReinforcement learning algorithms', image: null },
+        { id: 4, title: 'Market Insights', content: 'Global AI Market:\n• Projected to reach $1.8 trillion by 2030\n• 37% annual growth rate\n• Major investments from tech giants\n• Increasing adoption across sectors', image: null },
+        { id: 5, title: 'Conclusion', content: 'Key Takeaways:\n• AI is revolutionizing industries\n• Ethical considerations are crucial\n• Investment opportunities are growing\n• Continuous learning is essential', image: null }
+      ];
 
-      // Check if we got the slides directly
-      if (gammaResponse.slides || gammaResponse.presentation) {
-        /**
-         * 🔹 Normalize Gamma response into slides your editor understands
-         */
-        const slidesFromGamma =
-          gammaResponse?.slides ||
-          gammaResponse?.presentation?.pages ||
-          [];
-
-        if (!slidesFromGamma.length) {
-          // If no slides returned, create some basic slides to show the user
-          console.warn('No slides returned from Gamma API, creating basic slides');
-          const basicSlides = [
-            { id: 1, title: 'Presentation Generated', content: 'Your presentation has been generated successfully!', image: null },
-            { id: 2, title: 'Customize Your Presentation', content: 'You can now edit and customize your presentation content', image: null }
-          ];
-          setGeneratedSlides(basicSlides);
-          setSelectedSlide(0);
-          return;
-        }
-
-        const normalizedSlides = slidesFromGamma.map((slide, index) => ({
-          id: slide.id || Date.now() + index,
-          title: slide.title || slide.heading || `Slide ${index + 1}`,
-          content: Array.isArray(slide.content)
-            ? slide.content.join('\n')
-            : slide.body || slide.content || '',
-          image:
-            slide.image ||
-            slide.image_url ||
-            slide.media?.image ||
-            null
-        }));
-
-        setGeneratedSlides(normalizedSlides);
-        setSelectedSlide(0);
-      } else if (gammaResponse.generationId) {
-        // Need to poll for the generated content
-        let attempts = 0;
-        const maxAttempts = 30; // Max 30 attempts (about 5 minutes with 10s delays)
-        
-        while (attempts < maxAttempts) {
-          attempts++;
-          
-          // Wait 10 seconds between attempts
-          await new Promise(resolve => setTimeout(resolve, 10000));
-          
-          try {
-            // Fetch the current status
-            const statusResponse = await getPresentation(gammaResponse.generationId);
-            console.log('Status check response:', statusResponse);
-            
-            // Check if generation is complete
-            if (statusResponse.status === 'completed' || statusResponse.gammaUrl) {
-              // Extract slides from the response
-              // Note: This structure depends on what the Gamma API actually returns
-              // You may need to adjust this based on the actual API response
-              const slidesFromGamma = statusResponse.slides || statusResponse.presentation?.pages || [];
-              
-              if (!slidesFromGamma.length) {
-                // If we still don't have slides, create some basic ones
-                console.warn('No slides returned from Gamma API during polling, creating basic slides');
-                const basicSlides = [
-                  { id: 1, title: 'Presentation Generated', content: 'Your presentation has been generated successfully!', image: null },
-                  { id: 2, title: 'Customize Your Presentation', content: 'You can now edit and customize your presentation content', image: null }
-                ];
-                setGeneratedSlides(basicSlides);
-              } else {
-                const normalizedSlides = slidesFromGamma.map((slide, index) => ({
-                  id: slide.id || Date.now() + index,
-                  title: slide.title || slide.heading || `Slide ${index + 1}`,
-                  content: Array.isArray(slide.content)
-                    ? slide.content.join('\n')
-                    : slide.body || slide.content || '',
-                  image:
-                    slide.image ||
-                    slide.image_url ||
-                    slide.media?.image ||
-                    null
-                }));
-                
-                setGeneratedSlides(normalizedSlides);
-              }
-              setSelectedSlide(0);
-              return; // Exit the function successfully
-            } else if (statusResponse.status === 'failed') {
-              throw new Error(statusResponse.error || 'Generation failed');
-            }
-            // If status is still pending, continue polling
-          } catch (statusError) {
-            console.error('Error checking generation status:', statusError);
-            // Continue polling unless we've reached max attempts
-          }
-        }
-        
-        // If we've reached max attempts without completion
-        throw new Error('Generation timed out. Please try again.');
-      } else {
-        throw new Error('No generation ID or slides returned from API');
-      }
+      setGeneratedSlides(mockSlides);
+      setIsGenerating(false);
+      setSelectedSlide(0);
     } catch (error) {
       console.error('Error generating presentation:', error);
-      alert(`Error generating presentation: ${error.message}`);
-    } finally {
+      // Show error to user
       setIsGenerating(false);
+      // For demo purposes, we'll still show mock data even if API fails
+      const mockSlides = [
+        { id: 1, title: 'Introduction', content: 'Welcome to our presentation on the future of AI technology. Today we will explore how artificial intelligence is transforming industries and reshaping our daily lives.', image: null },
+        { id: 2, title: 'Main Topic', content: 'AI Applications:\n• Healthcare diagnostics\n• Autonomous vehicles\n• Financial trading\n• Customer service automation', image: null },
+        { id: 3, title: 'Technology Overview', content: 'Machine Learning:\nDeep learning neural networks\nNatural language processing\nComputer vision systems\nReinforcement learning algorithms', image: null },
+        { id: 4, title: 'Market Insights', content: 'Global AI Market:\n• Projected to reach $1.8 trillion by 2030\n• 37% annual growth rate\n• Major investments from tech giants\n• Increasing adoption across sectors', image: null },
+        { id: 5, title: 'Conclusion', content: 'Key Takeaways:\n• AI is revolutionizing industries\n• Ethical considerations are crucial\n• Investment opportunities are growing\n• Continuous learning is essential', image: null }
+      ];
+
+      setGeneratedSlides(mockSlides);
+      setIsGenerating(false);
+      setSelectedSlide(0);
     }
   };
-
 
   const handleEditSlide = (index, field, value) => {
     const updatedSlides = [...generatedSlides];
@@ -160,129 +91,58 @@ const PresentationStudio = () => {
     setGeneratedSlides(updatedSlides);
   };
 
-  const handleAiRewrite = async (instruction) => {
-    try {
-      const updatedSlides = [...generatedSlides];
-      const currentSlide = updatedSlides[selectedSlide];
-      
-      // Call backend to perform AI rewrite
-      const response = await fetch(`${API_BASE_URL}/rewrite`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: currentSlide.content,
-          instruction: instruction
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to rewrite content: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      currentSlide.content = result.rewrittenContent;
-      
-      setGeneratedSlides(updatedSlides);
-    } catch (error) {
-      console.error('Error rewriting content:', error);
-      alert(`Failed to rewrite content: ${error.message}`);
+  const handleAiRewrite = (instruction) => {
+    // Simulate AI rewrite
+    const updatedSlides = [...generatedSlides];
+    const currentSlide = updatedSlides[selectedSlide];
+
+    // Mock AI transformations
+    if (instruction === 'simplify') {
+      currentSlide.content = currentSlide.content
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => `• ${line}`)
+        .join('\n');
+    } else if (instruction === 'expand') {
+      currentSlide.content = `${currentSlide.content}
+
+Key Insights:
+• Additional insight 1
+• Additional insight 2
+• Additional insight 3`;
+    } else if (instruction === 'persuasive') {
+      currentSlide.content = ` compelling ${currentSlide.content.toLowerCase()} that drives action and engagement`;
     }
+
+    setGeneratedSlides(updatedSlides);
   };
 
-  const handleAddImage = async () => {
-    try {
-      // In a real implementation, this would open a modal or file picker
-      // For now, we'll generate an AI image based on the slide content
-      const currentSlide = generatedSlides[selectedSlide];
-      
-      const response = await fetch(`${API_BASE_URL}/generate-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: `${currentSlide.title}. ${currentSlide.content.substring(0, 100)}...`
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to generate image: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      const updatedSlides = [...generatedSlides];
-      updatedSlides[selectedSlide].image = result.imageUrl;
-      setGeneratedSlides(updatedSlides);
-    } catch (error) {
-      console.error('Error adding image:', error);
-      alert(`Failed to add image: ${error.message}`);
-    }
+  const handleAddImage = () => {
+    // Simulate adding an image
+    const updatedSlides = [...generatedSlides];
+    updatedSlides[selectedSlide].image = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80';
+    setGeneratedSlides(updatedSlides);
   };
 
   const handleExport = async (format) => {
     if (generatedSlides.length === 0) return;
-    
+
     setIsExporting(true);
-    
+
     try {
-      // Get the presentation ID from the generated slides
-      // This would come from the actual generated presentation
-      const presentationId = generatedSlides[0]?.id || 'default-presentation-id';
-      
-      // Call the backend to export the presentation
-      const exportResult = await exportPresentation(presentationId, format);
-      
-      // Log the export result for debugging
-      console.log('Export Result:', exportResult);
-      
-      // Handle the export result appropriately
-      // For example, you might get a download URL or file data
-      if (exportResult.downloadUrl) {
-        // Automatically download the file
-        const link = document.createElement('a');
-        link.href = exportResult.downloadUrl;
-        link.download = `presentation.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        alert(`Presentation exported as ${format.toUpperCase()} successfully!`);
-      }
+      // In a real implementation, you would call the Gamma API to export
+      // For now, we'll simulate the export process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Uncomment the following lines when you have a valid Gamma API key
+      // const presentationId = 'mock-presentation-id'; // This would come from the generated presentation
+      // const exportResult = await exportPresentation(presentationId, format);
+
+      // Simulate download
+      alert(`Presentation exported as ${format.toUpperCase()} successfully!`);
     } catch (error) {
       console.error('Error exporting presentation:', error);
-      // Provide more detailed error information for export
-      let errorMessage = error.message || 'Failed to export presentation. Please try again.';
-      
-      // If it's an HTTP error, provide more context
-      if (errorMessage.includes('HTTP error! status:')) {
-        const statusMatch = errorMessage.match(/status: (\d+)/);
-        const statusCode = statusMatch ? statusMatch[1] : 'unknown';
-        
-        switch(statusCode) {
-          case '401':
-            errorMessage = 'Invalid API key. Please check your Gamma API key configuration.';
-            break;
-          case '403':
-            errorMessage = 'Access denied. Please check your Gamma API key permissions.';
-            break;
-          case '404':
-            errorMessage = 'Export endpoint not found. This may indicate an issue with the API configuration. Please verify your Gamma API key is valid and you have a Pro account or higher.';
-            break;
-          case '429':
-            errorMessage = 'Rate limit exceeded. Please wait before making more requests.';
-            break;
-          case '500':
-            errorMessage = 'Server error during export. Please try again later.';
-            break;
-          default:
-            errorMessage = `Export failed with status ${statusCode}. Please check your configuration.`;
-        }
-      }
-      
-      alert(`Failed to export presentation: ${errorMessage}`);
+      alert('Failed to export presentation. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -290,63 +150,34 @@ const PresentationStudio = () => {
 
   const handleSavePresentation = async () => {
     if (generatedSlides.length === 0) return;
-    
+
     try {
-      // Save the presentation to the backend
-      const response = await fetch(`${API_BASE_URL}/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slides: generatedSlides
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to save presentation: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      alert(`Presentation saved successfully with ID: ${result.id}!`);
+      // In a real implementation, you would save the presentation to your backend
+      // For now, we'll just show a success message
+      alert('Presentation saved successfully!');
     } catch (error) {
       console.error('Error saving presentation:', error);
-      alert(`Failed to save presentation: ${error.message}`);
+      alert('Failed to save presentation. Please try again.');
     }
   };
 
   const handleSharePresentation = async () => {
     if (generatedSlides.length === 0) return;
-    
+
     try {
-      // Generate a shareable link through the backend
-      const response = await fetch(`${API_BASE_URL}/share`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slides: generatedSlides
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to generate share link: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      const shareLink = result.shareUrl;
-      
-      navigator.clipboard.writeText(shareLink);
+      // In a real implementation, you would generate a shareable link
+      // For now, we'll just copy a mock link to the clipboard
+      const mockLink = 'https://athena-ai.presentation/demo';
+      navigator.clipboard.writeText(mockLink);
       alert('Presentation link copied to clipboard!');
     } catch (error) {
       console.error('Error sharing presentation:', error);
-      alert(`Failed to generate share link: ${error.message}`);
+      alert('Failed to generate share link. Please try again.');
     }
   };
 
   const handleAddSlide = (template = null) => {
-    const newSlide = template ? 
+    const newSlide = template ?
       { ...template, id: Date.now() + Math.random() } : // Ensure unique ID
       {
         id: Date.now() + Math.random(), // Ensure unique ID
@@ -389,15 +220,15 @@ const PresentationStudio = () => {
   return (
     <div className="presentation-studio">
       <div className="presentation-studio-container">
-        <Header 
+        <Header
           handleSavePresentation={handleSavePresentation}
           handleExport={handleExport}
           handleSharePresentation={handleSharePresentation}
           isExporting={isExporting}
         />
-        
+
         {generatedSlides.length === 0 ? (
-          <PromptSection 
+          <PromptSection
             prompt={prompt}
             setPrompt={setPrompt}
             tone={tone}

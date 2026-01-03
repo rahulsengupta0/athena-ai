@@ -11,7 +11,6 @@ import AIImageGenerator from './AIImageGenerator';
 import FloatingToolbar from './FloatingToolbar';
 import TextEnhanceButton from './TextEnhanceButton';
 import { enhanceText } from './TextEnhanceService';
-import TextStyleModal from './TextStyleModal';
 
 const CanvaEditor = () => {
   const { id: projectId } = useParams();
@@ -129,8 +128,6 @@ const CanvaEditor = () => {
   const [includeProjectFile, setIncludeProjectFile] = useState(true);
   const [isSavingWorksheet, setIsSavingWorksheet] = useState(false);
   const [isEnhancingText, setIsEnhancingText] = useState(false);
-  const [isGeneratingStyles, setIsGeneratingStyles] = useState(false);
-  const [showStyleModal, setShowStyleModal] = useState(false);
   const [isHeading, setIsHeading] = useState(false);
   // Custom scroller state
   const [scrollMetrics, setScrollMetrics] = useState({
@@ -528,49 +525,6 @@ const handleAddElement = (x = 100, y = 100, toolOverride = null) => {
     }
     saveToHistory(newLayers);
   };
-
-  // Keyboard shortcuts and custom events
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && selectedLayer) {
-        handleLayerDelete(selectedLayer);
-      }
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'z') {
-          e.preventDefault();
-          undo();
-        } else if (e.key === 'y') {
-          e.preventDefault();
-          redo();
-        }
-      }
-    };
-
-    const handleOpenTextStyleModal = () => {
-      const selectedTextLayer = layers.find(l => l.id === selectedLayer && l.type === 'text');
-      if (selectedTextLayer && selectedTextLayer.text && selectedTextLayer.text.trim()) {
-        setShowStyleModal(true);
-      }
-    };
-
-    const handleAddStyledImageFromEvent = (e) => {
-      try {
-        handleAddStyledImageToCanvas(e.detail.imageUrl);
-      } catch (error) {
-        console.error('Error adding styled image to canvas:', error);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('openTextStyleModal', handleOpenTextStyleModal);
-    window.addEventListener('addStyledImageToCanvas', handleAddStyledImageFromEvent);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('openTextStyleModal', handleOpenTextStyleModal);
-      window.removeEventListener('addStyledImageToCanvas', handleAddStyledImageFromEvent);
-    };
-  }, [selectedLayer, handleLayerDelete, undo, redo, layers]);
 
   const handleLayerToggleVisibility = (layerId) => {
     const newLayers = layers.map(l =>
@@ -2108,35 +2062,6 @@ const drawHeartPath = (ctx, x, y, w, h) => {
     } finally {
       setIsEnhancingText(false);
     }
-  };
-
-  // Add styled image to canvas
-  const handleAddStyledImageToCanvas = (imageUrl) => {
-    const newLayer = {
-      id: Date.now().toString(),
-      type: 'image',
-      name: 'Styled Text',
-      src: imageUrl,
-      x: (canvasSize.width - 200) / 2,
-      y: (canvasSize.height - 100) / 2,
-      width: 200,
-      height: 100,
-      opacity: 100,
-      visible: true,
-      locked: false,
-      mode: 'normal',
-      filters: [],
-      shadows: []
-    };
-    
-    setLayers(prevLayers => {
-      const newLayers = [...prevLayers, newLayer];
-      saveToHistory(newLayers);
-      return newLayers;
-    });
-    
-    // Select the newly added layer
-    setSelectedLayer(newLayer.id);
   };
 
   const handleShapeSettingsChange = (property, value) => {
@@ -4835,14 +4760,6 @@ position: 'relative',
           </div>
         )}
       </div>
-      
-      {showStyleModal && (
-        <TextStyleModal 
-          text={layers.find(l => l.id === selectedLayer && l.type === 'text')?.text || ''}
-          onClose={() => setShowStyleModal(false)}
-          onAddToCanvas={handleAddStyledImageToCanvas}
-        />
-      )}
     </div>
   );
 };

@@ -9,7 +9,6 @@ app.use(cors());             // Enable CORS
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "http://localhost:5174",
   //"https://athena-ai-1-5pif.onrender.com",  // ADD THIS
   "https://athena-ai-theta.vercel.app",
   "http://localhost:5174",
@@ -60,9 +59,7 @@ const templateRoutes = require('./routes/templateRoutes');
 app.use('/api/templates', templateRoutes);
 
 const textEnhanceRoutes = require('./routes/textEnhanceRoutes');
-const textStyleRoutes = require('./routes/textStyleRoutes');
 app.use('/api/text-enhance', textEnhanceRoutes);
-app.use('/api/text-style', textStyleRoutes);
 
 
 // ✅ Mount routes

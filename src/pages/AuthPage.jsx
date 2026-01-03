@@ -9,11 +9,11 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isSignup, setIsSignup] = useState(false);
-  const [formData, setFormData] = useState({ 
-    firstName: '', 
-    lastName: '', 
-    email: '', 
-    password: '' 
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ const AuthPage = () => {
   // Handle token-based authentication from LMS
   useEffect(() => {
     const token = searchParams.get('token');
-    
+
     // Skip if no token or if we've already processed this token
     if (!token || processedTokenRef.current === token) {
       return;
@@ -35,27 +35,27 @@ const AuthPage = () => {
     const handleTokenAuth = async () => {
       // Clear any existing token first to prevent AuthContext from using an old one
       localStorage.removeItem('token');
-      
+
       setIsLoading(true);
       setError(null);
 
       try {
         // Verify the token with the backend
         const response = await api.verifyToken(token);
-        
+
         if (response.success && response.token) {
           // Store the token in localStorage and wait for profile fetch
           await login(response.token);
-          
+
           if (response.created) {
             // New user - show welcome message before redirecting
             setMessage('Account created and authenticated! Redirecting...');
             setTimeout(() => {
-              navigate('/home', { replace: true });
+              navigate('/create', { replace: true });
             }, 1000);
           } else {
             // Existing user - redirect immediately to Create page
-            navigate('/home', { replace: true });
+            navigate('/create', { replace: true });
           }
         } else {
           setError(response.msg || 'Invalid or expired session');
@@ -67,7 +67,7 @@ const AuthPage = () => {
       } catch (err) {
         console.error('Token verification failed:', err);
         setError(err.message || 'Invalid or expired session');
-        
+
         // Redirect to home after showing error
         setTimeout(() => {
           navigate('/', { replace: true });
@@ -99,7 +99,7 @@ const AuthPage = () => {
 
       const res = await axios.post(url, formData);
       await login(res.data.token);
-      navigate('/home');
+      navigate('/create');
     } catch (err) {
       alert(
         (isSignup ? 'Signup' : 'Login') + ' failed! ' +
@@ -157,7 +157,7 @@ const AuthPage = () => {
               </p>
             </>
           )}
-          
+
           {message && !isLoading && (
             <>
               <div style={{
@@ -184,7 +184,7 @@ const AuthPage = () => {
               </h2>
             </>
           )}
-          
+
           {error && !isLoading && (
             <>
               <div style={{
@@ -225,7 +225,7 @@ const AuthPage = () => {
             </>
           )}
         </div>
-        
+
         <style>
           {`
             @keyframes spin {
@@ -430,8 +430,8 @@ const AuthPage = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             style={{
               padding: '14px 20px',

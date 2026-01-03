@@ -2,24 +2,24 @@ import React from 'react';
 import { FiSettings, FiRefreshCw } from 'react-icons/fi';
 import { MdAutoAwesome } from 'react-icons/md';
 
-const PromptSection = ({ 
-  prompt, 
-  setPrompt, 
-  tone, 
-  setTone, 
-  length, 
-  setLength, 
-  mediaStyle, 
-  setMediaStyle, 
-  useBrandStyle, 
-  setUseBrandStyle, 
-  showAdvanced, 
-  setShowAdvanced, 
-  outlineText, 
-  setOutlineText, 
-  handleGenerate, 
-  isGenerating, 
-  generationStep 
+const PromptSection = ({
+  prompt,
+  setPrompt,
+  tone,
+  setTone,
+  length,
+  setLength,
+  mediaStyle,
+  setMediaStyle,
+  useBrandStyle,
+  setUseBrandStyle,
+  showAdvanced,
+  setShowAdvanced,
+  outlineText,
+  setOutlineText,
+  handleGenerate,
+  isGenerating,
+  generationStep
 }) => {
   const tones = ['Professional', 'Friendly', 'Minimal', 'Corporate', 'Creative'];
   const lengths = ['5', '10', '15', '20'];
@@ -49,77 +49,54 @@ const PromptSection = ({
             />
           </div>
 
-          {/* Options Grid (Cards Instead of Dropdowns) */}
-          <div className="presentation-studio-card-options">
-            {/* Tone Cards */}
+          {/* Options Grid */}
+          <div className="presentation-studio-options-grid">
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">Tone</label>
-              <div className="presentation-studio-card-grid">
+              <label className="presentation-studio-label">
+                Tone
+              </label>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="presentation-studio-select"
+              >
                 {tones.map(t => (
-                  <div
-                    key={t}
-                    className={`presentation-studio-card-option ${tone === t ? "selected" : ""}`}
-                    onClick={() => setTone(t)}
-                    data-tone={t}
-                  >
-                    {t !== 'Professional' && t !== 'Friendly' && t !== 'Minimal' && t !== 'Corporate' && (
-                      <img 
-                        src={`/assets/tone/${t.toLowerCase()}.png`} 
-                        alt={t} 
-                        className="presentation-studio-card-image"
-                      />
-                    )}
-                    <span>{t}</span>
-                  </div>
+                  <option key={t} value={t}>{t}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            {/* Length Cards */}
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">Length</label>
-              <div className="presentation-studio-card-grid">
+              <label className="presentation-studio-label">
+                Length
+              </label>
+              <select
+                value={length}
+                onChange={(e) => setLength(e.target.value)}
+                className="presentation-studio-select"
+              >
                 {lengths.map(l => (
-                  <div
-                    key={l}
-                    className={`presentation-studio-card-option ${length === l ? "selected" : ""}`}
-                    onClick={() => setLength(l)}
-                    data-length={l}
-                  >
-                    <span>{l} slides</span>
-                  </div>
+                  <option key={l} value={l}>{l} slides</option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            {/* Media Style Cards */}
             <div className="presentation-studio-form-group">
-              <label className="presentation-studio-label">Media Style</label>
-              <div className="presentation-studio-card-grid">
+              <label className="presentation-studio-label">
+                Media Style
+              </label>
+              <select
+                value={mediaStyle}
+                onChange={(e) => setMediaStyle(e.target.value)}
+                className="presentation-studio-select"
+              >
                 {mediaStyles.map(s => (
-                  <div
-                    key={s}
-                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Graphics' ? 'ai-graphics-card' : ''} ${s === 'Stock Images' ? 'stock-images-card' : ''} ${s === 'None' ? 'none-card' : ''}`}
-                    onClick={() => setMediaStyle(s)}
-                    {...(s === 'AI Graphics' ? { 'data-media': 'ai-graphics' } : {})}
-                    {...(s === 'Stock Images' ? { 'data-media': 'stock-images' } : {})}
-                    {...(s === 'None' ? { 'data-media': 'none' } : {})}
-                  >
-                    {s !== 'AI Graphics' && s !== 'Stock Images' && s !== 'None' && (
-                      <img 
-                        src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`} 
-                        alt={s} 
-                        className="presentation-studio-card-image"
-                      />
-                    )}
-                    <span>{s}</span>
-                  </div>
+                  <option key={s} value={s}>{s}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            {/* Brand Style Checkbox */}
-            <div className="presentation-studio-checkbox-group" style={{ marginTop: "1rem" }}>
+            <div className="presentation-studio-checkbox-group">
               <input
                 type="checkbox"
                 id="brandStyle"
@@ -173,9 +150,9 @@ const PromptSection = ({
                           PDF, DOC, DOCX (MAX. 10MB)
                         </p>
                       </div>
-                      <input 
-                        type="file" 
-                        className="presentation-studio-file-input" 
+                      <input
+                        type="file"
+                        className="presentation-studio-file-input"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             // Handle file upload
@@ -215,13 +192,13 @@ const PromptSection = ({
               )}
             </button>
           </div>
-          
+
           {/* Progress bar during generation */}
           {isGenerating && (
             <div className="presentation-studio-progress-container">
               <div className="presentation-studio-progress-bar">
-                <div 
-                  className="presentation-studio-progress-fill" 
+                <div
+                  className="presentation-studio-progress-fill"
                   style={{ width: `${((generationStep + 1) / 4) * 100}%` }}
                 ></div>
               </div>

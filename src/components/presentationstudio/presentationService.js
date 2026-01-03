@@ -23,28 +23,12 @@ export const generatePresentation = async (params) => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data;
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error generating presentation:', error);
     throw error;
@@ -66,28 +50,12 @@ export const getPresentation = async (presentationId) => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data;
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching presentation:', error);
     throw error;
@@ -111,28 +79,12 @@ export const updatePresentation = async (presentationId, updates) => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data;
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error updating presentation:', error);
     throw error;
@@ -154,28 +106,12 @@ export const deletePresentation = async (presentationId) => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data.success;
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data.success;
   } catch (error) {
     console.error('Error deleting presentation:', error);
     throw error;
@@ -196,28 +132,12 @@ export const listPresentations = async () => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data.presentations || [];
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data.presentations || [];
   } catch (error) {
     console.error('Error listing presentations:', error);
     throw error;
@@ -241,28 +161,12 @@ export const exportPresentation = async (presentationId, format) => {
     });
 
     if (!response.ok) {
-      // Check if response has content before trying to parse as JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      } else {
-        // If not JSON, get text content
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! status: ${response.status}`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    // Check if response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      return data;
-    } else {
-      // If not JSON, get text content
-      const text = await response.text();
-      throw new Error(`Unexpected response format: ${text}`);
-    }
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error exporting presentation:', error);
     throw error;

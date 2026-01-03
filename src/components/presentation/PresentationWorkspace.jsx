@@ -13,7 +13,6 @@ import {
   ChevronRight,
   X,
   Timer,
-  HardDrive,
 } from 'lucide-react';
 import SelectionTool from './tools/SelectionTool';
 import TextTools from './tools/TextTools';
@@ -262,7 +261,7 @@ const ShapeLayer = React.forwardRef((
   const shapeRef = useRef(null);
   const imageRef = useRef(null);
   const [imageData, setImageData] = useState(null);
-  
+
   // Load image for image fill (CSS-like approach)
   useEffect(() => {
     if (layer.fillType === 'image' && layer.fillImageSrc) {
@@ -281,42 +280,42 @@ const ShapeLayer = React.forwardRef((
       setImageData(null);
     }
   }, [layer.fillType, layer.fillImageSrc]);
-  
+
   // Determine which ref to use for effects based on fill type
   const hasImageFill = layer.fillType === 'image' && layer.fillImageSrc && imageData;
   const effectsTargetRef = hasImageFill ? imageRef : shapeRef;
-  
+
   // Apply effects to the appropriate target (image or shape)
   useLayerEffects(effectsTargetRef, layer.effects, scale, hasImageFill ? [imageData] : []);
-  
+
   // Calculate image dimensions for cover/contain (same logic as CSS background-size)
   const imageDims = useMemo(() => {
     if (!imageData || !layer.fillImageSrc || layer.fillType !== 'image') {
       return null;
     }
-    
+
     const { width: imgWidth, height: imgHeight } = imageData;
     const fit = layer.fillImageFit || 'cover';
-    
+
     // Calculate scale (same logic as CSS background-size: cover/contain)
     const scaleX = scaledWidth / imgWidth;
     const scaleY = scaledHeight / imgHeight;
     const scale = fit === 'contain' ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
-    
+
     const drawWidth = imgWidth * scale;
     const drawHeight = imgHeight * scale;
-    
+
     // Center the image (same as CSS background-position: center)
     const offsetX = (scaledWidth - drawWidth) / 2;
     const offsetY = (scaledHeight - drawHeight) / 2;
-    
+
     return { width: drawWidth, height: drawHeight, x: offsetX, y: offsetY };
   }, [imageData, scaledWidth, scaledHeight, layer.fillImageFit, layer.fillType, layer.fillImageSrc]);
 
   const renderShape = () => {
     const hasImageFillRender = layer.fillType === 'image' && layer.fillImageSrc && imageDims;
     const clipFunc = hasImageFillRender ? getShapeClipFunc(layer.shape, scaledWidth, scaledHeight) : null;
-    
+
     // Render shape with image fill or color fill
     const renderShapeContent = () => {
       if (hasImageFillRender) {
@@ -364,13 +363,13 @@ const ShapeLayer = React.forwardRef((
           </Group>
         );
       }
-      
+
       // Render color fill (normal rendering)
       if (layer.shape === 'circle') {
         const radius = Math.min(scaledWidth, scaledHeight) / 2;
         return <Circle ref={shapeRef} x={radius} y={radius} radius={radius} fill={layer.fillColor} />;
       }
-      
+
       if (layer.shape === 'ellipse') {
         return (
           <Ellipse
@@ -383,7 +382,7 @@ const ShapeLayer = React.forwardRef((
           />
         );
       }
-      
+
       if (layer.shape === 'rectangle') {
         return (
           <Rect
@@ -397,12 +396,12 @@ const ShapeLayer = React.forwardRef((
           />
         );
       }
-      
+
       const points = getShapePoints(layer.shape, scaledWidth, scaledHeight);
       if (points.length === 0) return null;
       return <Line ref={shapeRef} points={points} closed fill={layer.fillColor} stroke={layer.fillColor} />;
     };
-    
+
     return renderShapeContent();
   };
 
@@ -469,7 +468,7 @@ const createLayer = (definition, coordinates) => {
       'arrow-up': 'Arrow Up',
       'arrow-down': 'Arrow Down',
     };
-    
+
     return {
       ...base,
       type: 'shape',
@@ -494,7 +493,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   // Constants for canvas sizing
   const maxCanvasWidth = 980;
   const maxCanvasHeight = 620;
-  
+
   // Calculate initial zoom to fit canvas in viewport
   const initialZoom = useMemo(() => {
     const { width, height } = layout;
@@ -551,7 +550,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
 
   // History management hook
   const { historyIndex, historyLength, saveToHistory, handleUndo, handleRedo } = useHistory(slides);
-  
+
   // Update zoom when layout changes
   useEffect(() => {
     setZoom(initialZoom);
@@ -590,14 +589,14 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     requestAnimationFrame(() => {
       if (container && zoomTargetRef.current.scrollLeft !== null) {
         const { scrollLeft, scrollTop } = zoomTargetRef.current;
-        
+
         // Clamp scroll positions to valid range (0 to max scroll)
         const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
         const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
-        
+
         container.scrollLeft = Math.max(0, Math.min(maxScrollLeft, scrollLeft));
         container.scrollTop = Math.max(0, Math.min(maxScrollTop, scrollTop));
-        
+
         // Reset the target
         zoomTargetRef.current = { scrollLeft: null, scrollTop: null };
       }
@@ -613,50 +612,50 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     const handleWheel = (e) => {
       e.evt.preventDefault();
       e.evt.stopPropagation();
-      
+
       // Get mouse position relative to the container
       const containerRect = container.getBoundingClientRect();
       const mouseX = e.evt.clientX - containerRect.left;
       const mouseY = e.evt.clientY - containerRect.top;
-      
+
       // Get current scroll position
       const scrollLeft = container.scrollLeft;
       const scrollTop = container.scrollTop;
-      
+
       // Padding of the container
       const padding = 20;
-      
+
       // Calculate the canvas point under the mouse (in scaled coordinates)
       // Mouse position relative to canvas content = mouse position - padding + scroll
       const canvasX = mouseX - padding + scrollLeft;
       const canvasY = mouseY - padding + scrollTop;
-      
+
       // Calculate zoom delta based on scroll direction
       const deltaY = e.evt.deltaY || 0;
       const zoomSpeed = 0.1;
-      
+
       // Use functional update to get latest zoom value and calculate new scroll
       setZoom((currentZoom) => {
         const delta = deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
         const newZoom = Math.max(0.1, Math.min(3, currentZoom * delta));
-        
+
         // Calculate the canvas point in actual canvas coordinates (not scaled)
         // canvasX and canvasY are in scaled coordinates, so divide by current zoom
         const canvasPointX = canvasX / currentZoom;
         const canvasPointY = canvasY / currentZoom;
-        
+
         // Calculate new scroll position to keep the same canvas point under the mouse
         // After zoom, the canvas point will be at: canvasPoint * newZoom (in scaled coordinates)
         // To keep it under the mouse: newScroll = (canvasPoint * newZoom) - (mouse - padding)
         const newScrollLeft = canvasPointX * newZoom - (mouseX - padding);
         const newScrollTop = canvasPointY * newZoom - (mouseY - padding);
-        
+
         // Store the target scroll position to be applied after DOM updates
         zoomTargetRef.current = {
           scrollLeft: newScrollLeft,
           scrollTop: newScrollTop,
         };
-        
+
         return newZoom;
       });
     };
@@ -730,15 +729,15 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     const container = canvasContainerRef.current;
     const availableWidth = container.clientWidth - 40; // Account for padding
     const availableHeight = container.clientHeight - 40;
-    
+
     if (availableWidth <= 0 || availableHeight <= 0) return initialZoom;
-    
+
     const { width, height } = layout;
     const scaleX = availableWidth / width;
     const scaleY = availableHeight / height;
     // Calculate the scale needed to fit the canvas in the viewport
     const fitScale = Math.min(scaleX, scaleY);
-    
+
     // Don't zoom in beyond 100% (actual size)
     return Math.min(fitScale, 1);
   };
@@ -762,7 +761,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       // Calculate zoom delta based on scroll direction
       const zoomSpeed = 0.1;
       const delta = e.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed; // Zoom out on scroll down, zoom in on scroll up
@@ -798,26 +797,26 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     // Only start panning on left mouse button
     const button = e.button !== undefined ? e.button : (e.evt && e.evt.button !== undefined ? e.evt.button : 0);
     if (button !== 0) return;
-    
+
     // Determine if this is a Konva event or regular DOM event
     const isKonvaEvent = !!e.evt;
     let shouldStartPanning = false;
-    
+
     if (isKonvaEvent) {
       // For Konva Stage events
       const stage = e.target.getStage();
       if (!stage) return;
-      
+
       const targetName = e.target.name();
       const isBackground = e.target === stage || targetName === 'background';
-      
+
       // Simple check: if it's not the stage or background, it's probably an element
       const nodeType = e.target.getType && e.target.getType();
-      const isElement = nodeType && 
+      const isElement = nodeType &&
                        ['Text', 'Rect', 'Circle', 'Line', 'Ellipse', 'Group'].includes(nodeType) &&
-                       e.target !== stage && 
+                       e.target !== stage &&
                        targetName !== 'background';
-      
+
       // Always allow panning when clicking on background (if no element is selected)
       // Also allow when selection tool is active, no preset, no selected element, and not clicking on an element
       if (isBackground) {
@@ -829,8 +828,8 @@ const PresentationWorkspace = ({ layout, onBack }) => {
       }
     } else {
       // For container div events
-      const isContainerClick = e.target === e.currentTarget || 
-                                e.target === container || 
+      const isContainerClick = e.target === e.currentTarget ||
+                                e.target === container ||
                                 (e.target.closest && e.target.closest('[data-canvas-container]') === container);
       shouldStartPanning = isContainerClick && selectedTool === 'select' && !selectedPreset && !selectedLayerId;
     }
@@ -855,7 +854,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     const clientX = e.clientX || (e.evt && e.evt.clientX) || 0;
     const clientY = e.clientY || (e.evt && e.evt.clientY) || 0;
     const containerRect = container.getBoundingClientRect();
-    
+
     panStartRef.current = {
       x: clientX - containerRect.left,
       y: clientY - containerRect.top,
@@ -885,7 +884,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     const containerRect = container.getBoundingClientRect();
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
-    
+
     const deltaX = currentX - panStartRef.current.x;
     const deltaY = currentY - panStartRef.current.y;
 
@@ -909,7 +908,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const handlePanEnd = () => {
     const container = canvasContainerRef.current;
     setIsPanning(false);
-    
+
     if (container) {
       container.style.cursor = '';
     }
@@ -948,7 +947,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
   const handleStageClick = (e) => {
     const stage = e.target.getStage();
     if (!stage) return;
-    
+
     // Don't handle clicks when panning or if we just panned
     if (isPanning || hasPannedRef.current) {
       // Reset the flag after a short delay
@@ -957,7 +956,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
       }, 100);
       return;
     }
-    
+
     // If selection tool is active, don't create new layers
     if (selectedTool === 'select') {
       // If clicking on empty space, deselect
@@ -977,7 +976,7 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     if (!selectedPreset || !activeSlide) {
       return;
     }
-    
+
     // Check if we clicked on a shape/text, if so, don't create a new layer
     // Allow clicks on background or stage itself
     if (e.target !== stage && e.target.name() !== 'background') {
@@ -1124,11 +1123,11 @@ const handleApplyEnhancedText = (enhancedText) => {
       node = node.getParent();
     }
     if (!node) return;
-    
+
     // scale already includes zoom, so we divide by it to get canvas coordinates
     let newX = node.x() / scale;
     let newY = node.y() / scale;
-    
+
     updateActiveSlide((slide) => {
       const updatedSlide = {
         ...slide,
@@ -1146,7 +1145,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       saveToHistory(updatedSlides);
       return updatedSlide;
     });
-    
+
     // Reset node position to keep it in sync with the new coordinates
     // scale already includes zoom
     node.position({ x: newX * scale, y: newY * scale });
@@ -1596,7 +1595,7 @@ const handleApplyEnhancedText = (enhancedText) => {
       layers: [],
       animationDuration: DEFAULT_SLIDE_DURATION,
     };
-    
+
     let updatedSlides;
     if (currentIndex === -1) {
       // If no active slide, add at the end
@@ -1617,14 +1616,14 @@ const handleApplyEnhancedText = (enhancedText) => {
       // Don't allow deleting the last slide
       return;
     }
-    
+
     const slideIndex = slides.findIndex((slide) => slide.id === slideId);
     if (slideIndex === -1) return;
-    
+
     const updatedSlides = slides.filter((slide) => slide.id !== slideId);
     setSlides(updatedSlides);
     saveToHistory(updatedSlides);
-    
+
     // If we deleted the active slide, switch to another one
     if (slideId === activeSlideId) {
       const newIndex = slideIndex > 0 ? slideIndex - 1 : 0;
@@ -1646,12 +1645,6 @@ const handleApplyEnhancedText = (enhancedText) => {
     setSlides(updatedSlides);
     saveToHistory(updatedSlides);
     setActiveSlideId(duplicate.id);
-  };
-
-  const handleSave = () => {
-    // TODO: Implement actual save logic (e.g., API call)
-    console.log('Saving presentation...', { slides, layout });
-    alert('Presentation data saved to console. This is a placeholder for actual save functionality.');
   };
 
   const baseBackground = 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)';
@@ -1780,26 +1773,6 @@ const handleApplyEnhancedText = (enhancedText) => {
           </div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={handleSave}
-            title="Save presentation"
-            style={{
-              border: '1px solid rgba(15, 23, 42, 0.1)',
-              background: 'rgba(15, 23, 42, 0.04)',
-              borderRadius: 10,
-              padding: '6px 14px',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              color: '#0f172a',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <HardDrive size={16} style={{ marginRight: '6px' }} />
-            Save
-          </button>
           <UndoRedoControls
             historyIndex={historyIndex}
             historyLength={historyLength}
@@ -2317,13 +2290,13 @@ const handleApplyEnhancedText = (enhancedText) => {
                 onMouseDown={handlePanStart}
                 data-canvas-stage
                   style={{
-                  cursor: isPanning 
-                    ? 'grabbing' 
-                    : selectedPreset 
-                    ? 'crosshair' 
+                  cursor: isPanning
+                    ? 'grabbing'
+                    : selectedPreset
+                    ? 'crosshair'
                     : selectedTool === 'select' && !selectedPreset && !selectedLayerId
-                    ? 'grab' 
-                    : 'default' 
+                    ? 'grab'
+                    : 'default'
                 }}
                 onMouseMove={(e) => {
                   // Update cursor on hover
@@ -2604,7 +2577,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         }}
                       />
                     </label>
-                    
+
                     <FontFamilySelector
                       value={selectedLayer.fontFamily}
                       onChange={(fontFamily) => {
@@ -2620,7 +2593,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         }
                       }}
                     />
-                    
+
                     <div style={{ display: 'flex', gap: 12 }}>
                       <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Font size</span>
@@ -2665,7 +2638,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         />
                       </label>
                     </div>
-                    
+
                     <FontStyleControls
                       fontWeight={selectedLayer.fontWeight}
                       fontStyle={selectedLayer.fontStyle}
@@ -2680,7 +2653,7 @@ const handleApplyEnhancedText = (enhancedText) => {
                         }
                       }}
                     />
-                    
+
                     <TextAlignControls
                       value={selectedLayer.textAlign || 'left'}
                       onChange={(textAlign) => handleLayerChange({ textAlign })}

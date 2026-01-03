@@ -3,7 +3,6 @@ const router = express.Router();
 const auth = require('../middlewares/auth');
 const Project = require('../model/Project');
 const Favorite = require('../model/Favorite');
-const Presentation = require('../model/Presentation');
 const BrandKit = require('../model/BrandKit');
 const User = require('../model/User');
 const UserFile = require('../model/UserFile');
@@ -432,73 +431,6 @@ router.delete('/brandkits/:id', auth, async (req, res) => {
   } catch (err) {
     console.error('Delete brand kit error:', err);
     res.status(500).json({ error: 'Server Error', msg: err.message });
-  }
-});
-
-// ============= PRESENTATION ROUTES =============
-
-// Get all presentations for a user
-router.get('/presentation', auth, async (req, res) => {
-  try {
-    const presentations = await Presentation.find({ user: req.user.id }).sort({ updatedAt: -1 });
-    res.json(presentations);
-  } catch (err) {
-    console.error('Get presentations error:', err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Get a single presentation by ID
-router.get('/presentation/:id', auth, async (req, res) => {
-  try {
-    const presentation = await Presentation.findOne({ _id: req.params.id, user: req.user.id });
-    if (!presentation) {
-      return res.status(404).json({ msg: 'Presentation not found' });
-    }
-    res.json(presentation);
-  } catch (err) {
-    console.error('Get presentation by ID error:', err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Create a new presentation
-router.post('/presentation', auth, async (req, res) => {
-  try {
-    const { name, layout, slides } = req.body;
-    const newPresentation = new Presentation({
-      name: name || 'Untitled Presentation',
-      user: req.user.id,
-      layout,
-      slides,
-    });
-    await newPresentation.save();
-    console.log("Presentation Saved.")
-    res.status(201).json(newPresentation);
-  } catch (err) {
-    console.error('Create presentation error:', err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Update an existing presentation
-router.put('/presentation/:id', auth, async (req, res) => {
-  try {
-    const { name, layout, slides } = req.body;
-    const presentation = await Presentation.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.id },
-      { name, layout, slides, updatedAt: Date.now() },
-      { new: true }
-    );
-
-    if (!presentation) {
-      return res.status(404).json({ msg: 'Presentation not found' });
-    }
-
-    res.json(presentation);
-  } catch (err) {
-    console.error('Update presentation error:', err);
-    res.status(500).send('Server Error');
   }
 });
 
