@@ -2,24 +2,24 @@ import React from 'react';
 import { FiSettings, FiRefreshCw } from 'react-icons/fi';
 import { MdAutoAwesome } from 'react-icons/md';
 
-const PromptSection = ({
-  prompt,
-  setPrompt,
-  tone,
-  setTone,
-  length,
-  setLength,
-  mediaStyle,
-  setMediaStyle,
-  useBrandStyle,
-  setUseBrandStyle,
-  showAdvanced,
-  setShowAdvanced,
-  outlineText,
-  setOutlineText,
-  handleGenerate,
-  isGenerating,
-  generationStep
+const PromptSection = ({ 
+  prompt, 
+  setPrompt, 
+  tone, 
+  setTone, 
+  length, 
+  setLength, 
+  mediaStyle, 
+  setMediaStyle, 
+  useBrandStyle, 
+  setUseBrandStyle, 
+  showAdvanced, 
+  setShowAdvanced, 
+  outlineText, 
+  setOutlineText, 
+  handleGenerate, 
+  isGenerating, 
+  generationStep 
 }) => {
   const tones = ['Professional', 'Friendly', 'Minimal', 'Corporate', 'Creative'];
   const lengths = ['5', '10', '15', '20'];
@@ -63,9 +63,9 @@ const PromptSection = ({
                     data-tone={t}
                   >
                     {t !== 'Professional' && t !== 'Friendly' && t !== 'Minimal' && t !== 'Corporate' && (
-                      <img
-                        src={`/assets/tone/${t.toLowerCase()}.png`}
-                        alt={t}
+                      <img 
+                        src={`/assets/tone/${t.toLowerCase()}.png`} 
+                        alt={t} 
                         className="presentation-studio-card-image"
                       />
                     )}
@@ -106,9 +106,9 @@ const PromptSection = ({
                     {...(s === 'None' ? { 'data-media': 'none' } : {})}
                   >
                     {s !== 'AI Graphics' && s !== 'Stock Images' && s !== 'None' && (
-                      <img
-                        src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`}
-                        alt={s}
+                      <img 
+                        src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`} 
+                        alt={s} 
                         className="presentation-studio-card-image"
                       />
                     )}
@@ -173,9 +173,9 @@ const PromptSection = ({
                           PDF, DOC, DOCX (MAX. 10MB)
                         </p>
                       </div>
-                      <input
-                        type="file"
-                        className="presentation-studio-file-input"
+                      <input 
+                        type="file" 
+                        className="presentation-studio-file-input" 
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             // Handle file upload
@@ -215,13 +215,13 @@ const PromptSection = ({
               )}
             </button>
           </div>
-
+          
           {/* Progress bar during generation */}
           {isGenerating && (
             <div className="presentation-studio-progress-container">
               <div className="presentation-studio-progress-bar">
-                <div
-                  className="presentation-studio-progress-fill"
+                <div 
+                  className="presentation-studio-progress-fill" 
                   style={{ width: `${((generationStep + 1) / 4) * 100}%` }}
                 ></div>
               </div>

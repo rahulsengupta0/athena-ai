@@ -29,10 +29,6 @@ const validateApiKey = (req, res, next) => {
  */
 router.post('/get-presentation-data', validateApiKey, async (req, res) => {
   try {
-    const { prompt, tone, length, mediaStyle, useBrandStyle, outlineText } = req.body;
-
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
     const { topic, tone, length, mediaStyle, useBrandStyle, outlineText } = req.body;
 
     if (!topic) {
