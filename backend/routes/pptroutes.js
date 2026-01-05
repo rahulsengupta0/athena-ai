@@ -51,7 +51,7 @@ router.post('/get-presentation-data', validateApiKey, async (req, res) => {
     // Validate mediaStyle
     const validMediaStyles = ['AI Graphics', 'Stock Images', 'None'];
     const validatedMediaStyle = validMediaStyles.includes(mediaStyle) ? mediaStyle : 'AI Graphics';
-
+    console.log('Validated media style:', validatedMediaStyle);
     // Prepare the OpenAI prompt for generating presentation content
     const openaiPrompt = `
       Create a detailed presentation about: ${topic}
@@ -120,6 +120,7 @@ router.post('/get-presentation-data', validateApiKey, async (req, res) => {
       }
       
       presentationData = JSON.parse(responseText);
+      console.log('Presentation data:', presentationData);
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       console.error('Raw response:', completion.choices[0]?.message?.content);
