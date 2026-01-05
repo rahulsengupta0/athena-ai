@@ -165,6 +165,35 @@ class ApiService {
     });
   }
 
+  // Presentations
+  async getPresentations() {
+    return this.request('/api/user-data/presentation', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async getPresentation(id) {
+    return this.request(`/api/user-data/presentation/${id}`, {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async createPresentation(presentationData) {
+    return this.request('/api/user-data/presentation', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(presentationData),
+    });
+  }
+
+  async updatePresentation(id, presentationData) {
+    return this.request(`/api/user-data/presentation/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(presentationData),
+    });
+  }
+
   // Favorites
   async getFavorites() {
     return this.request('/api/user-data/favorites', {
@@ -342,26 +371,6 @@ class ApiService {
   }
 
   // ============= AUTH METHODS =============
-  async login(credentials) {
-    return this.request('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-  }
-
-  async register(userData) {
-    return this.request('/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
-  }
-
   async verifyToken(token) {
     return this.request('/api/auth/verify', {
       method: 'POST',
@@ -462,73 +471,6 @@ class ApiService {
       console.error('Error fetching template JSON:', error);
       throw error;
     }
-  }
-
-  // ============= AI IMAGE GENERATION =============
-  async generateAIImage(prompt, style, ratio, quality) {
-    return this.request('/api/ai-image/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt, style, ratio, quality }),
-    });
-  }
-
-  // ============= CODE GENERATION =============
-  async generateCode(prompt, language, framework) {
-    return this.request('/api/codegen/generate-code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt, language, framework }),
-    });
-  }
-
-  // ============= CONTENT GENERATION =============
-  async generateContent(prompt) {
-    return this.request('/api/content/generate-content', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt }),
-    });
-  }
-
-  // ============= DOCUMENT GENERATION =============
-  async generateDocument(prompt, format) {
-    return this.request('/api/generate-document', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, format }),
-    });
-  }
-
-  async getMyDocuments() {
-    return this.request('/api/my-documents', {
-      headers: getAuthHeaders(),
-    });
-  }
-
-  async deleteDocument(key) {
-    return this.request('/api/delete-document', {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ key }),
-    });
-  }
-
-  // ============= APPLY STYLE =============
-  async applyStyle(formData) {
-    return this.request('/apply-style', {
-      method: 'POST',
-      headers: {
-        'Authorization': getAuthHeaders().Authorization
-      },
-      body: formData,
-    });
   }
 }
 

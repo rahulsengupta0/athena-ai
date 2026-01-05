@@ -70,7 +70,7 @@ const uploadGeneratedImage = async (base64Image) => {
     formData.append("file", file);
     formData.append("featureFolder", "ai design generation");
 
-    const res = await api.post("/upload", formData, {
+    const res = await api.post("/api/upload", formData, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },

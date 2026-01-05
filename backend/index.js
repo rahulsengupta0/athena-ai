@@ -48,7 +48,7 @@ app.use(express.json());
    ✅ ROUTES
 ================================ */
 
-const uploadRoutes = require("./routes/upload");
+const uploadRoutes = require("./routes/uploadRoutes");
 const brandKitRoutes = require("./routes/brandKit");
 const generateDocument = require("./routes/generateDocument");
 const authRoutes = require("./routes/authRoutes");
