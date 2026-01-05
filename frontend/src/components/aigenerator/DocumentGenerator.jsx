@@ -22,9 +22,7 @@ function DocumentGenerator() {
   // ---------------- FETCH USER DOCUMENTS ----------------
   const fetchMyDocuments = async () => {
     try {
-      const data = await api.request('/api/my-documents', {
-        method: 'GET',
-      });
+      const data = await api.getMyDocuments();
       setUserDocs(data.files || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -43,13 +41,7 @@ function DocumentGenerator() {
     setFileUrl('');
 
     try {
-      const result = await api.request('/api/generate-document', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt, format }),
-      });
+      const result = await api.generateDocument(prompt, format);
 
       if (result.fileUrl) {
         setFileUrl(result.fileUrl);
@@ -70,13 +62,7 @@ function DocumentGenerator() {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
 
     try {
-      const data = await api.request('/api/delete-document', {
-        method: 'DELETE',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key })
-      });
+      const data = await api.deleteDocument(key);
 
       if (data.success) {
         fetchMyDocuments();
