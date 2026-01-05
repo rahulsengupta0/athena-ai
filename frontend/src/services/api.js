@@ -497,6 +497,29 @@ class ApiService {
     });
   }
 
+  // ============= DOCUMENT GENERATION =============
+  async generateDocument(prompt, format) {
+    return this.request('/api/generate-document', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ prompt, format }),
+    });
+  }
+
+  async getMyDocuments() {
+    return this.request('/api/my-documents', {
+      headers: getAuthHeaders(),
+    });
+  }
+
+  async deleteDocument(key) {
+    return this.request('/api/delete-document', {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ key }),
+    });
+  }
+
   // ============= APPLY STYLE =============
   async applyStyle(formData) {
     return this.request('/apply-style', {
