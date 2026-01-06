@@ -10,7 +10,7 @@ export const generatePresentation = async (params) => {
   const response = await fetch(`${API_BASE_URL}/get-presentation-data`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       topic: params.prompt,
       tone: params.tone,
       length: params.length,

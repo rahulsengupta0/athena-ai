@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import PromptSection from './PromptSection';
 import EditorSection from './EditorSection';
-import { generatePresentation, exportPresentation, rewriteContent, generateImage } from './PresentationService';
+import { generatePresentation, exportPresentation, rewriteContent, generateImage } from './presentationService.js';
 import './styles/PresentationStudio.css';
 
 const API_BASE_URL = '/api/pp';
@@ -31,13 +31,13 @@ const PresentationStudio = () => {
     setGenerationStep(0);
 
     try {
-      const data = await generatePresentation({ 
+      const data = await generatePresentation({
         prompt,
         tone,
         length,
         mediaStyle,
         useBrandStyle,
-        outlineText 
+        outlineText
       });
 
       // Update the theme with the one from the backend
@@ -67,13 +67,13 @@ const PresentationStudio = () => {
     try {
       const updatedSlides = [...generatedSlides];
       const currentSlide = updatedSlides[selectedSlide];
-      
+
       // Convert bullets array to string for AI processing if needed
-      const contentToProcess = Array.isArray(currentSlide.bullets) ? 
+      const contentToProcess = Array.isArray(currentSlide.bullets) ?
         currentSlide.bullets.join('\n') : currentSlide.content || '';
-      
+
       const result = await rewriteContent(contentToProcess, instruction);
-      
+
       // If the slide has bullets array, update it as array, otherwise update content
       if (Array.isArray(currentSlide.bullets)) {
         currentSlide.bullets = result.rewrittenContent.split('\n');
@@ -92,11 +92,11 @@ const PresentationStudio = () => {
   const handleAddImage = async () => {
     try {
       const currentSlide = generatedSlides[selectedSlide];
-      
+
       // Use content or bullets for image generation
-      const contentForImage = Array.isArray(currentSlide.bullets) ? 
+      const contentForImage = Array.isArray(currentSlide.bullets) ?
         currentSlide.bullets.join(' ') : currentSlide.content || '';
-      
+
       const result = await generateImage(`${currentSlide.title}. ${contentForImage.substring(0, 100)}...`);
 
       const updatedSlides = [...generatedSlides];
@@ -116,6 +116,7 @@ const PresentationStudio = () => {
     try {
       const blob = await exportPresentation(generatedSlides, format);
       const url = window.URL.createObjectURL(blob);
+      console.log(generatedSlides);
 
       const link = document.createElement('a');
       link.href = url;
@@ -135,7 +136,7 @@ const PresentationStudio = () => {
 
   const handleSavePresentation = async () => {
     if (generatedSlides.length === 0) return;
-    
+
     try {
       // Save the presentation to the backend
       const response = await fetch(`${API_BASE_URL}/save`, {
@@ -147,11 +148,11 @@ const PresentationStudio = () => {
           slides: generatedSlides
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to save presentation: ${response.status}`);
       }
-      
+
       const result = await response.json();
       alert(`Presentation saved successfully with ID: ${result.id}!`);
     } catch (error) {
@@ -162,7 +163,7 @@ const PresentationStudio = () => {
 
   const handleSharePresentation = async () => {
     if (generatedSlides.length === 0) return;
-    
+
     try {
       // Generate a shareable link through the backend
       const response = await fetch(`${API_BASE_URL}/share`, {
@@ -174,14 +175,14 @@ const PresentationStudio = () => {
           slides: generatedSlides
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to generate share link: ${response.status}`);
       }
-      
+
       const result = await response.json();
       const shareLink = result.shareUrl;
-      
+
       navigator.clipboard.writeText(shareLink);
       alert('Presentation link copied to clipboard!');
     } catch (error) {
@@ -191,7 +192,7 @@ const PresentationStudio = () => {
   };
 
   const handleAddSlide = (template = null) => {
-    const newSlide = template ? 
+    const newSlide = template ?
       { ...template, id: Date.now() + Math.random() } : // Ensure unique ID
       {
         id: Date.now() + Math.random(), // Ensure unique ID
@@ -235,7 +236,7 @@ const PresentationStudio = () => {
 
   const handleEditSlide = (index, field, value) => {
     const updated = [...generatedSlides];
-    
+
     // Handle updating a specific index in an array (for bullets)
     if (typeof value === 'object' && value.index !== undefined && value.value !== undefined) {
       if (Array.isArray(updated[index][field])) {
@@ -259,15 +260,15 @@ const PresentationStudio = () => {
   return (
     <div className="presentation-studio">
       <div className="presentation-studio-container">
-        <Header 
+        <Header
           handleSavePresentation={handleSavePresentation}
           handleExport={handleExport}
           handleSharePresentation={handleSharePresentation}
           isExporting={isExporting}
         />
-        
+
         {generatedSlides.length === 0 ? (
-          <PromptSection 
+          <PromptSection
             prompt={prompt}
             setPrompt={setPrompt}
             tone={tone}
