@@ -22,8 +22,8 @@ const PromptSection = ({
   generationStep 
 }) => {
   const tones = ['Professional', 'Friendly', 'Minimal', 'Corporate', 'Creative'];
-  const lengths = ['5', '10', '15', '20'];
-  const mediaStyles = ['AI Graphics', 'Stock Images', 'None'];
+  const lengths = ['2', '3', '5', '7', '10'];
+  const mediaStyles = ['AI Images', 'No Media'];
 
   return (
     <div className="presentation-studio-creation-hub">
@@ -99,19 +99,11 @@ const PromptSection = ({
                 {mediaStyles.map(s => (
                   <div
                     key={s}
-                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Graphics' ? 'ai-graphics-card' : ''} ${s === 'Stock Images' ? 'stock-images-card' : ''} ${s === 'None' ? 'none-card' : ''}`}
+                    className={`presentation-studio-card-option ${mediaStyle === s ? "selected" : ""} ${s === 'AI Images' ? 'ai-images-card' : ''} ${s === 'No Media' ? 'no-media-card' : ''}`}
                     onClick={() => setMediaStyle(s)}
-                    {...(s === 'AI Graphics' ? { 'data-media': 'ai-graphics' } : {})}
-                    {...(s === 'Stock Images' ? { 'data-media': 'stock-images' } : {})}
-                    {...(s === 'None' ? { 'data-media': 'none' } : {})}
+                    {...(s === 'AI Images' ? { 'data-media': 'ai-images' } : {})}
+                    {...(s === 'No Media' ? { 'data-media': 'no-media' } : {})}
                   >
-                    {s !== 'AI Graphics' && s !== 'Stock Images' && s !== 'None' && (
-                      <img 
-                        src={`/assets/media/${s.toLowerCase().replace(" ", "-")}.png`} 
-                        alt={s} 
-                        className="presentation-studio-card-image"
-                      />
-                    )}
                     <span>{s}</span>
                   </div>
                 ))}
@@ -210,7 +202,7 @@ const PromptSection = ({
               ) : (
                 <>
                   <MdAutoAwesome className="presentation-studio-generate-icon" />
-                  Generate Presentation
+                  Generate Outline
                 </>
               )}
             </button>

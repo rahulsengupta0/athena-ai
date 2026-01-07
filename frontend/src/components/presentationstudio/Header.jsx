@@ -48,21 +48,21 @@ const Header = ({
             <div className="presentation-studio-dropdown-menu">
               <button 
                 onClick={() => {
-                  handleExport('pdf');
-                  setIsDropdownOpen(false);
-                }}
-                className="presentation-studio-dropdown-item"
-              >
-                Export as PDF
-              </button>
-              <button 
-                onClick={() => {
                   handleExport('pptx');
                   setIsDropdownOpen(false);
                 }}
                 className="presentation-studio-dropdown-item"
               >
                 Export as PowerPoint
+              </button>
+              <button 
+                onClick={() => {
+                  handleExport('pdf');
+                  setIsDropdownOpen(false);
+                }}
+                className="presentation-studio-dropdown-item"
+              >
+                Export as PDF
               </button>
               <button 
                 onClick={() => {

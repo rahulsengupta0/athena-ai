@@ -24,16 +24,16 @@ export const generatePresentation = async (params) => {
 };
 
 /**
- * Export presentation as PPTX
+ * Export presentation as different formats
  * @param {Array} slides - Edited slides array
- * @param {string} format - Format, e.g., 'pptx'
+ * @param {string} format - Format, e.g., 'pptx', 'pdf'
  * @returns {Promise<Blob>} - Blob data for download
  */
-export const exportPresentation = async (slides, format) => {
+export const exportPresentation = async (slides, theme, format) => {
   const response = await fetch(`${API_BASE_URL}/generate-ppt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ topic: '', editedData: { slides } })
+    body: JSON.stringify({ topic: 'presentation', editedData: { slides, theme } })
   });
   if (!response.ok) throw new Error(`Failed to export presentation: ${response.status}`);
   return response.blob();

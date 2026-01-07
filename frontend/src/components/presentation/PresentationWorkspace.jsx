@@ -575,7 +575,7 @@ const createLayer = (definition, coordinates) => {
 
 const DEFAULT_SLIDE_DURATION = 5;
 
-const PresentationWorkspace = ({ layout, onBack }) => {
+const PresentationWorkspace = ({ layout, onBack, initialData }) => {
   // Constants for canvas sizing
   const maxCanvasWidth = 980;
   const maxCanvasHeight = 620;
@@ -586,15 +586,30 @@ const PresentationWorkspace = ({ layout, onBack }) => {
     return Math.min(maxCanvasWidth / width, maxCanvasHeight / height);
   }, [layout]);
 
-  const [slides, setSlides] = useState(() => [
-    {
-      id: 'slide-1',
-      name: 'Slide 1',
-      background: '#ffffff',
-      layers: [],
-      animationDuration: DEFAULT_SLIDE_DURATION,
-    },
-  ]);
+  // Initialize slides from initialData if provided, otherwise use default
+  const initializeSlides = () => {
+    if (initialData && initialData.slides && Array.isArray(initialData.slides)) {
+      // Convert final PPT JSON format to PresentationWorkspace format
+      return initialData.slides.map((slide, index) => ({
+        id: slide.id || `slide-${index + 1}`,
+        name: slide.name || slide.title || `Slide ${index + 1}`,
+        background: slide.background || slide.backgroundColor || '#ffffff',
+        layers: slide.layers || [],
+        animationDuration: slide.animationDuration || DEFAULT_SLIDE_DURATION,
+      }));
+    }
+    return [
+      {
+        id: 'slide-1',
+        name: 'Slide 1',
+        background: '#ffffff',
+        layers: [],
+        animationDuration: DEFAULT_SLIDE_DURATION,
+      },
+    ];
+  };
+
+  const [slides, setSlides] = useState(initializeSlides);
   const [activeSlideId, setActiveSlideId] = useState('slide-1');
   const [selectedTool, setSelectedTool] = useState('select');
   const [selectedPreset, setSelectedPreset] = useState(null);
