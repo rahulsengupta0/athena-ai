@@ -16,7 +16,8 @@ const allowedOrigins = [
 
   "https://athena-ai-theta.vercel.app",
   "https://athena-airc.vercel.app",
-
+   "https://athena-ai-six-bice.vercel.app",
+   
   "https://athena-ai-1-5pif.onrender.com" // backend (Render)
 ];
 
