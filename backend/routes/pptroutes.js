@@ -24,22 +24,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  */
 router.post('/get-presentation-data', validateOpenAIApiKey, authMiddleware, async (req, res) => {
   try {
-    // 1. GET USER ID FROM TOKEN
-    // Your auth.js sets req.user = { id: ... }
     const userId = req.user.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'User ID not found in token' });
     }
 
-    // 2. EXTRACT BODY PARAMETERS
     const { topic, tone, length, mediaStyle, outlineText } = req.body;
 
     if (!topic) {
       return res.status(400).json({ error: 'Topic is required' });
     }
 
-    // 3. VALIDATION
     const validLength = parseInt(length) || 10;
     if (validLength < 1 || validLength > 20) {
       return res.status(400).json({ error: 'Length must be between 1 and 20' });
@@ -54,7 +50,6 @@ router.post('/get-presentation-data', validateOpenAIApiKey, authMiddleware, asyn
     const validMediaStyles = ['AI Graphics', 'Stock Images', 'None'];
     const validatedMediaStyle = validMediaStyles.includes(mediaStyle) ? mediaStyle : 'AI Graphics';
 
-    // 4. OPENAI PROMPT ENGINEERING
     const openaiPrompt = `
       You are an expert presentation planner.
 
@@ -132,11 +127,9 @@ router.post('/get-presentation-data', validateOpenAIApiKey, authMiddleware, asyn
 
     let presentationData;
 
-    // 6. PARSE & SAVE
     try {
       let responseText = completion.choices[0]?.message?.content?.trim();
 
-      // Clean markdown code blocks if present
       if (responseText.startsWith('```json')) {
         responseText = responseText.replace(/^```json/, '').replace(/```$/, '').trim();
       } else if (responseText.startsWith('```')) {
@@ -146,7 +139,7 @@ router.post('/get-presentation-data', validateOpenAIApiKey, authMiddleware, asyn
       presentationData = JSON.parse(responseText);
 
       const newPresentation = new PresentationOutline({
-        userId: userId, // From auth token
+        userId: userId,
         meta: {
           topic: presentationData.meta.topic || topic,
           tone: presentationData.meta.tone || normalizedTone,
@@ -159,11 +152,20 @@ router.post('/get-presentation-data', validateOpenAIApiKey, authMiddleware, asyn
       const savedPresentation = await newPresentation.save();
       console.log('Saved Presentation ID:', savedPresentation._id);
 
+      const responseData = savedPresentation.toObject();
+
+      if (responseData.slides && Array.isArray(responseData.slides)) {
+        responseData.slides = responseData.slides.map(slide => {
+          const { imagePrompt, _id, ...cleanSlide } = slide;
+          return cleanSlide;
+        });
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Presentation generated and saved successfully',
         presentationId: savedPresentation._id,
-        data: savedPresentation
+        data: responseData // This object now has no imagePrompt or _id in slides
       });
 
     } catch (parseError) {
