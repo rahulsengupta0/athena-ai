@@ -312,6 +312,9 @@
   font-family: 'Inter', 'Poppins', Arial, sans-serif;
   width: 100%;
   justify-content: center;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 768px) {
@@ -327,12 +330,18 @@
   box-shadow: 0 12px 32px rgba(151, 96, 255, 0.3);
 }
 
+.presentation-studio-generate-button:active:not(.presentation-studio-generate-button-disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 4px 16px rgba(151, 96, 255, 0.2);
+}
+
 .presentation-studio-generate-button-disabled {
   background: var(--ps-bg-tertiary);
   cursor: not-allowed;
   color: var(--ps-text-muted);
   box-shadow: none;
   transform: none !important;
+  pointer-events: none;
 }
 
 .presentation-studio-generate-icon {

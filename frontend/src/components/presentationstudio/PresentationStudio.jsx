@@ -2,305 +2,241 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import PromptSection from './PromptSection';
-import EditorSection from './EditorSection';
-import { generatePresentation, exportPresentation, rewriteContent, generateImage } from './PresentationService';
+import OutlineEditor from './OutlineEditor';
+import { PresentationWorkspace } from '../presentation';
+import { generateOutline } from '../../services/PresentationStudioService';
 import './styles/PresentationStudio.css';
-
-const API_BASE_URL = '/api/pp';
 
 const PresentationStudio = () => {
   const navigate = useNavigate();
+
+  // Form data (Step 1: Input)
   const [prompt, setPrompt] = useState('');
   const [tone, setTone] = useState('Professional');
-  const [length, setLength] = useState('10');
-  const [mediaStyle, setMediaStyle] = useState('AI Graphics');
+  const [length, setLength] = useState('5');
+  const [mediaStyle, setMediaStyle] = useState('AI Images');
   const [useBrandStyle, setUseBrandStyle] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [outlineText, setOutlineText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [generationStep, setGenerationStep] = useState(0);
-  const [generatedSlides, setGeneratedSlides] = useState([]);
-  const [selectedSlide, setSelectedSlide] = useState(0);
-  const [presentationTheme, setPresentationTheme] = useState({ backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
 
-// ----------------- handleGenerate -----------------
-  const handleGenerate = async () => {
+  // Step 2: Outline data
+  const [outlineData, setOutlineData] = useState(null);
+
+  // Step 3: Final presentation data
+  const [finalPresentationData, setFinalPresentationData] = useState(null);
+
+  // Error state
+  const [error, setError] = useState(null);
+
+  // Transform backend response to OutlineEditor format
+  const transformOutlineResponse = (apiResponse) => {
+    if (!apiResponse || !apiResponse.data || !apiResponse.data.slides) {
+      return null;
+    }
+
+    const transformedSlides = apiResponse.data.slides.map((slide, index) => {
+      let content = { mode: 'raw', rawText: '' };
+
+      // Transform content based on contentType
+      if (slide.contentType === 'paragraph') {
+        content = { mode: 'raw', rawText: typeof slide.content === 'string' ? slide.content : String(slide.content || '') };
+      } else if (slide.contentType === 'bullets') {
+        if (Array.isArray(slide.content)) {
+          content = { 
+            mode: 'bullets', 
+            bullets: slide.content 
+          };
+        } else if (typeof slide.content === 'string') {
+          // Convert string to array of bullets
+          content = { 
+            mode: 'bullets', 
+            bullets: slide.content.split('\n').filter(line => line.trim())
+          };
+        } else {
+          content = { mode: 'raw', rawText: String(slide.content || '') };
+        }
+      } else if (slide.contentType === 'comparison') {
+        if (typeof slide.content === 'object' && slide.content !== null && !Array.isArray(slide.content)) {
+          content = { 
+            mode: 'comparison', 
+            left: Array.isArray(slide.content.left) ? slide.content.left : [],
+            right: Array.isArray(slide.content.right) ? slide.content.right : []
+          };
+        } else {
+          content = { mode: 'raw', rawText: String(slide.content || '') };
+        }
+      } else {
+        // Fallback: try to determine content type from content structure
+        if (typeof slide.content === 'string') {
+          content = { mode: 'raw', rawText: slide.content };
+        } else if (Array.isArray(slide.content)) {
+          content = { mode: 'bullets', bullets: slide.content };
+        } else if (typeof slide.content === 'object' && slide.content !== null) {
+          if (slide.content.left && slide.content.right) {
+            content = { 
+              mode: 'comparison', 
+              left: Array.isArray(slide.content.left) ? slide.content.left : [],
+              right: Array.isArray(slide.content.right) ? slide.content.right : []
+            };
+          } else {
+            content = { mode: 'raw', rawText: JSON.stringify(slide.content) };
+          }
+        }
+      }
+
+      return {
+        slideId: `slide-${slide.slideNo || index + 1}`,
+        slideNo: slide.slideNo || index + 1,
+        source: 'ai',
+        title: slide.title || '',
+        content: content,
+        layout: slide.layout || 'content',
+        contentType: slide.contentType || 'paragraph'
+      };
+    });
+
+    return {
+      presentationId: apiResponse.presentationId,
+      meta: apiResponse.data.meta || {},
+      topic: apiResponse.data.meta?.topic || prompt,
+      tone: apiResponse.data.meta?.tone || tone,
+      length: apiResponse.data.meta?.slideCount || length,
+      mediaStyle: mediaStyle,
+      slides: transformedSlides
+    };
+  };
+
+  // Step 1: Generate Outline
+  const handleGenerateOutline = async () => {
     if (!prompt.trim()) return;
     setIsGenerating(true);
     setGenerationStep(0);
+    setError(null);
 
     try {
-      const data = await generatePresentation({ 
-        prompt,
-        tone,
-        length,
-        mediaStyle,
-        useBrandStyle,
-        outlineText 
+      // Call the service
+      const response = await generateOutline({
+        topic: prompt,
+        tone: tone.toLowerCase(),
+        length: parseInt(length) || 5,
+        mediaStyle: mediaStyle,
+        outlineText: outlineText
       });
 
-      // Update the theme with the one from the backend
-      setPresentationTheme(data.theme || { backgroundColor: '#ffffff', textColor: '#000000', font: 'inherit' });
-
-      const normalizedSlides = data.slides.map((slide, index) => ({
-        id: Date.now() + index,
-        title: slide.title || `Slide ${index + 1}`,
-        bullets: Array.isArray(slide.bullets) ? slide.bullets : (slide.bullets ? [slide.bullets] : []),
-        content: Array.isArray(slide.bullets) ? slide.bullets.join('\n') : slide.bullets || '',
-        type: slide.type || 'bullet',
-        image: slide.image || null
-      }));
-
-      setGeneratedSlides(normalizedSlides);
-      setSelectedSlide(0);
+      // Transform the response to OutlineEditor format
+      const transformedOutline = transformOutlineResponse(response);
+      if (transformedOutline) {
+        setOutlineData(transformedOutline);
+      } else {
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
-      console.error('Error generating presentation:', error);
-      alert(`Error generating presentation: ${error.message}`);
+      console.error('Error generating outline:', error);
+      setError(error.message || 'Failed to generate outline. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // ----------------- handleAiRewrite -----------------
-  const handleAiRewrite = async (instruction) => {
-    try {
-      const updatedSlides = [...generatedSlides];
-      const currentSlide = updatedSlides[selectedSlide];
-      
-      // Convert bullets array to string for AI processing if needed
-      const contentToProcess = Array.isArray(currentSlide.bullets) ? 
-        currentSlide.bullets.join('\n') : currentSlide.content || '';
-      
-      const result = await rewriteContent(contentToProcess, instruction);
-      
-      // If the slide has bullets array, update it as array, otherwise update content
-      if (Array.isArray(currentSlide.bullets)) {
-        currentSlide.bullets = result.rewrittenContent.split('\n');
-      } else {
-        currentSlide.content = result.rewrittenContent;
-      }
+  // Step 3: Handle final presentation from OutlineEditor
+  const handleFinalize = (finalPresentation) => {
+    setFinalPresentationData(finalPresentation);
+  };
 
-      setGeneratedSlides(updatedSlides);
-    } catch (error) {
-      console.error('Error rewriting content:', error);
-      alert(`Failed to rewrite content: ${error.message}`);
+  // Reset to start over
+  const handleReset = () => {
+    setOutlineData(null);
+    setFinalPresentationData(null);
+    setPrompt('');
+    setTone('Professional');
+    setLength('5');
+    setMediaStyle('AI Images');
+    setUseBrandStyle(false);
+    setOutlineText('');
+    setError(null);
+  };
+
+
+  // Determine which step to show
+  const renderCurrentStep = () => {
+    // Step 3: Final Presentation Workspace
+    if (finalPresentationData) {
+      // Convert final PPT JSON to PresentationWorkspace format
+      // Assuming finalPresentationData has slides array with proper structure
+      const layout = finalPresentationData.layout || { width: 1920, height: 1080 };
+      return (
+        <PresentationWorkspace
+          layout={layout}
+          initialData={finalPresentationData}
+          onBack={handleReset}
+        />
+      );
     }
-  };
 
-  // ----------------- handleAddImage -----------------
-  const handleAddImage = async () => {
-    try {
-      const currentSlide = generatedSlides[selectedSlide];
-      
-      // Use content or bullets for image generation
-      const contentForImage = Array.isArray(currentSlide.bullets) ? 
-        currentSlide.bullets.join(' ') : currentSlide.content || '';
-      
-      const result = await generateImage(`${currentSlide.title}. ${contentForImage.substring(0, 100)}...`);
-
-      const updatedSlides = [...generatedSlides];
-      updatedSlides[selectedSlide].image = result.imageUrl;
-      setGeneratedSlides(updatedSlides);
-    } catch (error) {
-      console.error('Error adding image:', error);
-      alert(`Failed to add image: ${error.message}`);
+    // Step 2: Outline Editor
+    if (outlineData) {
+      return (
+        <OutlineEditor
+          outlineData={outlineData}
+          onFinalize={handleFinalize}
+        />
+      );
     }
-  };
 
-  // ----------------- handleExport -----------------
-  const handleExport = async (format) => {
-    if (generatedSlides.length === 0) return;
-    setIsExporting(true);
-
-    try {
-      const blob = await exportPresentation(generatedSlides, format);
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `presentation.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error('Error exporting presentation:', error);
-      alert(`Failed to export presentation: ${error.message}`);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-
-
-  const handleSavePresentation = async () => {
-    if (generatedSlides.length === 0) return;
-    
-    try {
-      // Save the presentation to the backend
-      const response = await fetch(`${API_BASE_URL}/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slides: generatedSlides
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to save presentation: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      alert(`Presentation saved successfully with ID: ${result.id}!`);
-    } catch (error) {
-      console.error('Error saving presentation:', error);
-      alert(`Failed to save presentation: ${error.message}`);
-    }
-  };
-
-  const handleSharePresentation = async () => {
-    if (generatedSlides.length === 0) return;
-    
-    try {
-      // Generate a shareable link through the backend
-      const response = await fetch(`${API_BASE_URL}/share`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slides: generatedSlides
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to generate share link: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      const shareLink = result.shareUrl;
-      
-      navigator.clipboard.writeText(shareLink);
-      alert('Presentation link copied to clipboard!');
-    } catch (error) {
-      console.error('Error sharing presentation:', error);
-      alert(`Failed to generate share link: ${error.message}`);
-    }
-  };
-
-  const handleAddSlide = (template = null) => {
-    const newSlide = template ? 
-      { ...template, id: Date.now() + Math.random() } : // Ensure unique ID
-      {
-        id: Date.now() + Math.random(), // Ensure unique ID
-        title: 'New Slide',
-        bullets: [],
-        content: '',
-        type: 'bullet',
-        image: null
-      };
-    setGeneratedSlides([...generatedSlides, newSlide]);
-    setSelectedSlide(generatedSlides.length);
-  };
-
-  const handleDeleteSlide = (index) => {
-    if (generatedSlides.length <= 1) return;
-    const updatedSlides = generatedSlides.filter((_, i) => i !== index);
-    setGeneratedSlides(updatedSlides);
-    // Update selected slide index if needed
-    if (selectedSlide >= updatedSlides.length) {
-      setSelectedSlide(updatedSlides.length - 1);
-    } else if (selectedSlide > index) {
-      // If we deleted a slide before the selected slide, adjust the index
-      setSelectedSlide(selectedSlide - 1);
-    } else if (selectedSlide === index) {
-      // If we deleted the selected slide, select the previous one or first one
-      setSelectedSlide(Math.max(0, index - 1));
-    }
-  };
-
-  const handleDuplicateSlide = (index) => {
-    const slideToDuplicate = generatedSlides[index];
-    const duplicatedSlide = {
-      ...slideToDuplicate,
-      id: Date.now() + Math.random(), // Ensure unique ID
-      title: `${slideToDuplicate.title} (Copy)`
-    };
-    const updatedSlides = [...generatedSlides];
-    updatedSlides.splice(index + 1, 0, duplicatedSlide);
-    setGeneratedSlides(updatedSlides);
-  };
-
-  const handleEditSlide = (index, field, value) => {
-    const updated = [...generatedSlides];
-    
-    // Handle updating a specific index in an array (for bullets)
-    if (typeof value === 'object' && value.index !== undefined && value.value !== undefined) {
-      if (Array.isArray(updated[index][field])) {
-        const newArray = [...updated[index][field]];
-        newArray[value.index] = value.value;
-        updated[index][field] = newArray;
-      } else {
-        // If the field is not an array, initialize it as one with the value at the given index
-        const newArray = [];
-        newArray[value.index] = value.value;
-        updated[index][field] = newArray;
-      }
-    } else if (Array.isArray(updated[index][field]) && Array.isArray(value)) {
-      updated[index][field] = value;
-    } else {
-      updated[index][field] = value;
-    }
-    setGeneratedSlides(updated);
+    // Step 1: Presentation Studio (Input)
+    return (
+      <>
+        <PromptSection
+          prompt={prompt}
+          setPrompt={setPrompt}
+          tone={tone}
+          setTone={setTone}
+          length={length}
+          setLength={setLength}
+          mediaStyle={mediaStyle}
+          setMediaStyle={setMediaStyle}
+          useBrandStyle={useBrandStyle}
+          setUseBrandStyle={setUseBrandStyle}
+          showAdvanced={showAdvanced}
+          setShowAdvanced={setShowAdvanced}
+          outlineText={outlineText}
+          setOutlineText={setOutlineText}
+          handleGenerate={handleGenerateOutline}
+          isGenerating={isGenerating}
+          generationStep={generationStep}
+        />
+        {error && (
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            background: '#fee2e2', 
+            border: '1px solid #fecaca', 
+            borderRadius: '8px',
+            color: '#991b1b',
+            textAlign: 'center'
+          }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+      </>
+    );
   };
 
   return (
     <div className="presentation-studio">
       <div className="presentation-studio-container">
-        <Header 
-          handleSavePresentation={handleSavePresentation}
-          handleExport={handleExport}
-          handleSharePresentation={handleSharePresentation}
-          isExporting={isExporting}
-        />
-        
-        {generatedSlides.length === 0 ? (
-          <PromptSection 
-            prompt={prompt}
-            setPrompt={setPrompt}
-            tone={tone}
-            setTone={setTone}
-            length={length}
-            setLength={setLength}
-            mediaStyle={mediaStyle}
-            setMediaStyle={setMediaStyle}
-            useBrandStyle={useBrandStyle}
-            setUseBrandStyle={setUseBrandStyle}
-            showAdvanced={showAdvanced}
-            setShowAdvanced={setShowAdvanced}
-            outlineText={outlineText}
-            setOutlineText={setOutlineText}
-            handleGenerate={handleGenerate}
-            isGenerating={isGenerating}
-            generationStep={generationStep}
-          />
-        ) : (
-          <EditorSection
-            generatedSlides={generatedSlides}
-            selectedSlide={selectedSlide}
-            handleEditSlide={handleEditSlide}
-            handleDuplicateSlide={handleDuplicateSlide}
-            handleDeleteSlide={handleDeleteSlide}
-            handleAiRewrite={handleAiRewrite}
-            handleAddImage={handleAddImage}
-            handleAddChart={() => alert('Chart added to slide!')}
-            handleAddSlide={handleAddSlide}
-            setSelectedSlide={setSelectedSlide}
-            presentationTheme={presentationTheme}
+        {!finalPresentationData && (
+          <Header
+            handleSavePresentation={() => {}}
+            handleExport={() => {}}
+            handleSharePresentation={() => {}}
+            isExporting={false}
           />
         )}
+
+        {renderCurrentStep()}
       </div>
     </div>
   );

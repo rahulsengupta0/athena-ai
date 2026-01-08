@@ -18,7 +18,7 @@ const Header = ({
           Create stunning presentations with AI in seconds
         </p>
       </div>
-      <div className="presentation-studio-header-actions">
+      {/* <div className="presentation-studio-header-actions">
         <button 
           onClick={handleSavePresentation}
           className="presentation-studio-button presentation-studio-button-primary"
@@ -48,21 +48,21 @@ const Header = ({
             <div className="presentation-studio-dropdown-menu">
               <button 
                 onClick={() => {
-                  handleExport('pdf');
-                  setIsDropdownOpen(false);
-                }}
-                className="presentation-studio-dropdown-item"
-              >
-                Export as PDF
-              </button>
-              <button 
-                onClick={() => {
                   handleExport('pptx');
                   setIsDropdownOpen(false);
                 }}
                 className="presentation-studio-dropdown-item"
               >
                 Export as PowerPoint
+              </button>
+              <button 
+                onClick={() => {
+                  handleExport('pdf');
+                  setIsDropdownOpen(false);
+                }}
+                className="presentation-studio-dropdown-item"
+              >
+                Export as PDF
               </button>
               <button 
                 onClick={() => {
@@ -83,7 +83,7 @@ const Header = ({
           <FiShare2 size={18} />
           <span>Share</span>
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
