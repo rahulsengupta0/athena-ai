@@ -185,7 +185,14 @@ const PromptSection = ({
           {/* Generate Button */}
           <div className="presentation-studio-generate-container">
             <button
-              onClick={handleGenerate}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isGenerating && prompt.trim()) {
+                  handleGenerate();
+                }
+              }}
               disabled={isGenerating || !prompt.trim()}
               className={`presentation-studio-generate-button ${isGenerating || !prompt.trim() ? 'presentation-studio-generate-button-disabled' : ''}`}
             >

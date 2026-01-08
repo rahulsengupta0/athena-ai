@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
+import { finalizePresentation } from '../../services/OutlineEditorService';
 import './styles/OutlineEditor.css';
 
 const OutlineEditor = ({ outlineData, onFinalize }) => {
@@ -9,13 +10,17 @@ const OutlineEditor = ({ outlineData, onFinalize }) => {
       return [];
     }
     return outlineData.slides.map((slide, index) => ({
-      slideId: slide.slideId || `slide-${index + 1}`,
+      slideId: slide.slideId || `slide-${slide.slideNo || index + 1}`,
+      slideNo: slide.slideNo || index + 1,
       source: slide.source || 'ai',
       title: slide.title || '',
-      content: slide.content || { mode: 'raw', rawText: '' }
+      content: slide.content || { mode: 'raw', rawText: '' },
+      layout: slide.layout || 'content',
+      contentType: slide.contentType || 'paragraph'
     }));
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleTitleChange = (index, newTitle) => {
     const updated = [...slides];
@@ -51,105 +56,35 @@ const OutlineEditor = ({ outlineData, onFinalize }) => {
     setSlides(updated);
   };
 
-  const generateMockFinalPresentation = (updatedOutline) => {
-    // Generate mock final presentation data
-    return {
-      layout: { width: 1920, height: 1080 },
-      theme: {
-        backgroundColor: '#ffffff',
-        textColor: '#000000',
-        accentColor: '#3b82f6',
-        font: 'Arial'
-      },
-      slides: updatedOutline.slides.map((slide, index) => ({
-        id: slide.slideId || `slide-${index + 1}`,
-        name: slide.title || `Slide ${index + 1}`,
-        background: '#ffffff',
-        layers: [
-          {
-            id: `layer-title-${index}`,
-            type: 'text',
-            name: 'Title',
-            text: slide.title,
-            x: 100,
-            y: 100,
-            fontSize: 48,
-            fontWeight: 'bold',
-            color: '#000000',
-            width: 800,
-            height: 100
-          },
-          {
-            id: `layer-content-${index}`,
-            type: 'text',
-            name: 'Content',
-            text: typeof slide.content === 'string' ? slide.content : (slide.content?.rawText || ''),
-            x: 100,
-            y: 250,
-            fontSize: 24,
-            fontWeight: 'normal',
-            color: '#333333',
-            width: 800,
-            height: 400
-          }
-        ],
-        animationDuration: 5
-      }))
-    };
-  };
-
   const handleFinalize = async () => {
     if (isGenerating) return;
     
     setIsGenerating(true);
+    setError(null);
+    
     try {
       // Prepare the updated outline JSON
       const updatedOutline = {
         ...outlineData,
         slides: slides.map(slide => ({
           slideId: slide.slideId,
+          slideNo: slide.slideNo,
           source: slide.source,
           title: slide.title,
-          content: slide.content
+          content: slide.content,
+          layout: slide.layout,
+          contentType: slide.contentType
         }))
       };
 
-      // Call finalize API
-      const response = await fetch('/api/presentation/finalize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedOutline)
-      });
-
-      let finalPresentation;
-      
-      if (!response.ok) {
-        // If API fails, use mock data for testing
-        console.warn('API not available, using mock final presentation data');
-        finalPresentation = generateMockFinalPresentation(updatedOutline);
-      } else {
-        finalPresentation = await response.json();
-      }
+      // Call finalize API using service
+      const finalPresentation = await finalizePresentation(updatedOutline);
       
       // Pass final presentation to parent
       onFinalize(finalPresentation);
     } catch (error) {
       console.error('Error finalizing presentation:', error);
-      // Use mock data when API is not available
-      console.warn('API not available, using mock final presentation data');
-      const updatedOutline = {
-        ...outlineData,
-        slides: slides.map(slide => ({
-          slideId: slide.slideId,
-          source: slide.source,
-          title: slide.title,
-          content: slide.content
-        }))
-      };
-      const mockFinalPresentation = generateMockFinalPresentation(updatedOutline);
-      onFinalize(mockFinalPresentation);
+      setError(error.message || 'Failed to finalize presentation. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -160,7 +95,16 @@ const OutlineEditor = ({ outlineData, onFinalize }) => {
     if (typeof content === 'string') return content;
     if (content.mode === 'raw') return content.rawText || '';
     if (content.mode === 'bullets' && Array.isArray(content.bullets)) {
-      return content.bullets.join('\n');
+      return content.bullets.map(bullet => `• ${bullet}`).join('\n');
+    }
+    if (content.mode === 'comparison') {
+      const left = Array.isArray(content.left) ? content.left.map(item => `• ${item}`).join('\n') : '';
+      const right = Array.isArray(content.right) ? content.right.map(item => `• ${item}`).join('\n') : '';
+      return `Left:\n${left}\n\nRight:\n${right}`;
+    }
+    // Handle array content (bullets format from backend)
+    if (Array.isArray(content)) {
+      return content.map(item => `• ${item}`).join('\n');
     }
     return '';
   };
@@ -233,6 +177,18 @@ const OutlineEditor = ({ outlineData, onFinalize }) => {
           </div>
 
           <div className="outline-editor-finalize">
+            {error && (
+              <div style={{ 
+                marginBottom: '1rem', 
+                padding: '1rem', 
+                background: '#fee2e2', 
+                border: '1px solid #fecaca', 
+                borderRadius: '8px',
+                color: '#991b1b'
+              }}>
+                <strong>Error:</strong> {error}
+              </div>
+            )}
             <button
               onClick={handleFinalize}
               disabled={isGenerating || slides.length === 0}

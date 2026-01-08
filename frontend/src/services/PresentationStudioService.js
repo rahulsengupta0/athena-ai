@@ -1,5 +1,40 @@
 const API_BASE_URL = '/api/pp';
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+};
+
+/**
+ * Generate outline for presentation from backend
+ * @param {Object} params - Parameters for outline generation
+ * @param {string} params.topic - Topic of the presentation
+ * @param {string} params.tone - Tone of the presentation (professional, friendly, etc.)
+ * @param {number} params.length - Number of slides
+ * @param {string} params.mediaStyle - Media style (AI Graphics, Stock Images, None)
+ * @param {string} params.outlineText - Optional outline text
+ * @returns {Promise<Object>} - Generated outline with slides
+ */
+export const generateOutline = async (params) => {
+  const response = await fetch(`${API_BASE_URL}/get-presentation-data`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      topic: params.topic,
+      tone: params.tone,
+      length: params.length,
+      mediaStyle: params.mediaStyle,
+      outlineText: params.outlineText
+    })
+  });
+  if (!response.ok) throw new Error(`Failed to generate outline: ${response.status}`);
+  return response.json();
+};
+
 /**
  * Generate presentation data from backend
  * @param {Object} params - Parameters for presentation generation
@@ -9,7 +44,7 @@ const API_BASE_URL = '/api/pp';
 export const generatePresentation = async (params) => {
   const response = await fetch(`${API_BASE_URL}/get-presentation-data`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       topic: params.prompt,
       tone: params.tone,
@@ -32,7 +67,7 @@ export const generatePresentation = async (params) => {
 export const exportPresentation = async (slides, theme, format) => {
   const response = await fetch(`${API_BASE_URL}/generate-ppt`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ topic: 'presentation', editedData: { slides, theme } })
   });
   if (!response.ok) throw new Error(`Failed to export presentation: ${response.status}`);
@@ -48,7 +83,7 @@ export const exportPresentation = async (slides, theme, format) => {
 export const rewriteContent = async (content, instruction) => {
   const response = await fetch(`${API_BASE_URL}/rewrite-slide`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ content, instruction })
   });
   if (!response.ok) throw new Error(`Failed to rewrite content: ${response.status}`);
@@ -63,7 +98,7 @@ export const rewriteContent = async (content, instruction) => {
 export const generateImage = async (prompt) => {
   const response = await fetch(`${API_BASE_URL}/generate-slide-image`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ prompt })
   });
   if (!response.ok) throw new Error(`Failed to generate image: ${response.status}`);

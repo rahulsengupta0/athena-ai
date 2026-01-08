@@ -1,7 +1,7 @@
 /* ===== Presentation Studio Root | Athena Theme ===== */
 @import './Header.css';
 @import './PromptSection.css';
-@import './EditorSection.css';
+
 
 :root {
   /* Theme Colors - Matching Athena AI Theme */
