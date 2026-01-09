@@ -1,85 +1,126 @@
-// src/components/landing/Hero.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import HeroBgGradient from "./HeroBgGradient";
-import "./Hero.css";
 
 const Hero = () => {
   return (
-    <section className="hero section reveal" id="hero">
+    <section id="hero" className="relative overflow-hidden py-24">
       <HeroBgGradient />
-      <div className="hero-inner">
-        <div className="hero-left">
-          <div className="kicker">Athena AI • Creative Suite</div>
-          <motion.h1 className="hero-title" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}>
-            What will you <span>create</span> today?
+
+      <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center">
+        {/* LEFT */}
+        <div className="text-center lg:text-left">
+          <span className="inline-block text-sm font-semibold text-indigo-600 mb-3">
+            Athena AI • Creative Suite
+          </span>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl sm:text-4xl lg:text-6xl font-extrabold leading-tight text-slate-900"
+          >
+            Create anything, <br />
+            <span className="text-indigo-600">faster with AI</span>
           </motion.h1>
-          <motion.p className="hero-lead" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: "easeOut", delay: 0.05 }}>
-            Design, write, generate code, and create videos — all powered by AI.
-            Build solo or collaborate with your team. Fast, flexible, and beautiful.
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            className="mt-5 max-w-xl mx-auto lg:mx-0 text-slate-600 text-base sm:text-lg"
+          >
+            Design visuals, write content, generate code, and build presentations —
+            all in one powerful AI workspace.
           </motion.p>
 
-          <motion.div className="hero-ctas" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}>
-            <a className="btn btn-cta" href="/login">Start Creating</a>
-            <a className="btn btn-ghost" href="/login">Explore Tools</a>
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-7 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
+          >
+            <a
+              href="/login"
+              className="px-7 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+            >
+              Start Creating
+            </a>
+            <a
+              href="/login"
+              className="px-7 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition"
+            >
+              Explore Tools
+            </a>
           </motion.div>
 
-          <div className="hero-features">
-            <div className="hf-item">AI Design Generator</div>
-            <div className="hf-sep" />
-            <div className="hf-item">Image & Video Editor</div>
-            <div className="hf-sep" />
-            <div className="hf-item">Team Collaboration</div>
+          {/* Features */}
+          <div className="mt-6 flex flex-wrap gap-3 justify-center lg:justify-start">
+            {["AI Design", "Image & Video", "Team Collaboration"].map((f) => (
+              <span
+                key={f}
+                className="px-4 py-2 rounded-full text-xs font-medium bg-white/80 border text-slate-600"
+              >
+                {f}
+              </span>
+            ))}
           </div>
         </div>
 
-        <div className="hero-right">
-          <motion.div className="mockup-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}>
-            <div className="mockup-topbar">
-              <div className="dot red" />
-              <div className="dot yellow" />
-              <div className="dot green" />
+        {/* RIGHT */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex justify-center"
+        >
+          <div className="w-full max-w-[420px] rounded-2xl bg-white border border-slate-200 shadow-xl p-5">
+            {/* Top bar */}
+            <div className="flex gap-2 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+              <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
             </div>
 
-            <div className="mockup-canvas">
-              <div className="mockup-leftpanel">
-                <div className="mp-item">Templates</div>
-                <div className="mp-item">Projects</div>
-                <div className="mp-item active">Designs</div>
-                <div className="mp-item">Assets</div>
+            {/* Content */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 rounded-xl border bg-slate-50 p-3">
+                <p className="text-xs text-slate-400 mb-1">AI Assistant</p>
+                <p className="text-sm text-slate-600">
+                  “Create a modern Instagram post for a startup”
+                </p>
               </div>
 
-              <div className="mockup-main">
-                <div className="mockup-stage">
-                  <div className="widget code">
-                    <div className="w-title">AI Code</div>
-                    <pre>{`<Button variant="primary">Create</Button>`}</pre>
-                  </div>
+              <div className="rounded-xl border bg-white p-3">
+                <p className="text-xs text-slate-400 mb-1">Code</p>
+                <pre className="text-xs font-mono text-slate-700">{`<Button>Launch</Button>`}</pre>
+              </div>
 
-                  <div className="widget image">
-                    <div className="w-title">Image Editor</div>
-                    <div className="img-sample" />
-                  </div>
-
-                  <div className="widget chat">
-                    <div className="w-title">AI Assist</div>
-                    <div className="chat-line">Describe your idea and Athena will help — try “instagram post”</div>
-                  </div>
-                </div>
+              <div className="rounded-xl border bg-gradient-to-r from-indigo-100 to-fuchsia-100 p-3">
+                <p className="text-xs text-slate-500 mb-1">Design</p>
+                <div className="h-10 rounded-lg bg-white/70" />
               </div>
             </div>
 
-            <div className="mockup-floating">
-              <div className="tag">New • Templates</div>
-              <div className="icons-inline">
-                <div className="ico-small">🎨</div>
-                <div className="ico-small">✍️</div>
-                <div className="ico-small">💻</div>
-                <div className="ico-small">🎬</div>
+            {/* Footer icons */}
+            <div className="mt-5 flex justify-between items-center">
+              <span className="text-xs font-semibold text-indigo-600">
+                New Templates
+              </span>
+              <div className="flex gap-2">
+                {["🎨", "✍️", "💻", "🎬"].map((i) => (
+                  <div
+                    key={i}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-600 text-white text-sm"
+                  >
+                    {i}
+                  </div>
+                ))}
               </div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
